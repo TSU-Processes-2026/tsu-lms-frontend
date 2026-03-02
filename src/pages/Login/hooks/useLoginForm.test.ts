@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { useLoginForm } from "./useLoginForm";
 
-describe("useLoginForm tests", () => {
+describe("useLoginForm validation data tests", () => {
   const mockOnSubmit = jest.fn();
 
   test("Поля формы должны инициализироваться пустыми значениями", () => {
@@ -141,4 +141,10 @@ describe("useLoginForm tests", () => {
 
     expect(result.current.errorMessage).toBe("");
   });
+});
+
+describe("navigation tests", () => {
+  test("После успешной авторизации ползователь должен быть перенаправлен на главную страницу", () => {});
+
+  test('При нажатии на кнопку " Зарегистрироваться" пользователь должен быть перенаправлен на страницу регистрации', () => {});
 });
