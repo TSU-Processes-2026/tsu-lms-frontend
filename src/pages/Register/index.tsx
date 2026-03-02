@@ -1,5 +1,5 @@
 import { BookOpen, ChevronLeft } from "lucide-react";
-import { RegisterForm } from "./ui/Form";
+import { RegisterForm } from "./components/Form";
 
 export const RegisterPage = () => {
   const handleRegister = (e: React.FormEvent) => {

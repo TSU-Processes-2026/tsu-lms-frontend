@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { BookOpen, ChevronLeft, AlertCircle } from "lucide-react";
-import { LoginForm } from "./ui/Form";
+import { LoginForm } from "./components/Form";
 
 export const LoginPage = () => {
   const handleLogin = (e: React.FormEvent) => {
