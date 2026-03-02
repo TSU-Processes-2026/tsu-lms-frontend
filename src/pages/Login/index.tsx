@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { BookOpen, ChevronLeft, AlertCircle } from "lucide-react";
-import { RegisterForm } from "./ui/Form";
+import { LoginForm } from "./ui/Form";
 
 export const LoginPage = () => {
   const handleLogin = (e: React.FormEvent) => {
@@ -32,7 +32,7 @@ export const LoginPage = () => {
           </h2>
           <p className="text-slate-500">Войдите в свой аккаунт</p>
         </div>
-        <RegisterForm onSubmit={handleLogin} />
+        <LoginForm onSubmit={handleLogin} />
       </div>
     </div>
   );

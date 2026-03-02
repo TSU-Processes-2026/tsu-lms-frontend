@@ -6,8 +6,8 @@ interface FormProps {
   onSubmit: any;
 }
 
-export const RegisterForm = ({ onSubmit }: FormProps) => {
-  const [email, setEmail] = useState("");
+export const LoginForm = ({ onSubmit }: FormProps) => {
+  const [username, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const handleRegister = () => {
@@ -27,13 +27,13 @@ export const RegisterForm = ({ onSubmit }: FormProps) => {
       <div className="space-y-5">
         <Input
           onChange={(e) => {
-            setEmail(e.target.value);
+            setUserName(e.target.value);
             setError("");
           }}
-          value={email}
-          label="Email"
-          type={"email"}
-          placeholder={"user@example.com"}
+          value={username}
+          label="Логин"
+          type={"text"}
+          placeholder={"ivanov_ivan"}
           required={true}
         />
         <Input
