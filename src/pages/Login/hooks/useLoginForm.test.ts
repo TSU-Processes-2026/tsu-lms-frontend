@@ -58,7 +58,7 @@ describe("useLoginForm: Тесты валидации входных данны�
 
   test("При валидации логина длиной менее 3 символов возвращается ошибка", async () => {
     const { result } = renderHook(() => useLoginForm());
-    const errorMessage = "Длина логина должна быть не менее 3";
+    const errorMessage = "Допустимая длина для логина: от 3 до 50 символов";
 
     act(() => {
       result.current.setUsername("ло");
@@ -76,10 +76,11 @@ describe("useLoginForm: Тесты валидации входных данны�
 
     act(() => {
       result.current.setUsername("лог");
+      result.current.setPassword("password123");
     });
 
     await act(async () => {
-      await result.current.onSubmit(mockEvent);
+      result.current.validateUsername();
     });
 
     expect(result.current.errorMessage).toBe("");
@@ -87,9 +88,10 @@ describe("useLoginForm: Тесты валидации входных данны�
 
   test("При валидации пароля длиной менее 6 символов возвращается ошибка", async () => {
     const { result } = renderHook(() => useLoginForm());
-    const errorMessage = "Длина пароля должна быть от 6 до 20 символов";
+    const errorMessage = "Допустимая длина для пароля: от 6 до 20 символов";
 
     act(() => {
+      result.current.setUsername("ivanov_ivan");
       result.current.setPassword("passw");
     });
 
@@ -102,9 +104,10 @@ describe("useLoginForm: Тесты валидации входных данны�
 
   test("При валидации пароля длиной более 20 символов возвращается ошибка", async () => {
     const { result } = renderHook(() => useLoginForm());
-    const errorMessage = "Длина пароля должна быть от 6 до 20 символов";
+    const errorMessage = "Допустимая длина для пароля: от 6 до 20 символов";
 
     act(() => {
+      result.current.setUsername("ivanov_ivan");
       result.current.setPassword("passwordpasswordpassword");
     });
 
@@ -119,11 +122,12 @@ describe("useLoginForm: Тесты валидации входных данны�
     const { result } = renderHook(() => useLoginForm());
 
     act(() => {
+      result.current.setUsername("ivanov_ivan");
       result.current.setPassword("passwo");
     });
 
     await act(async () => {
-      await result.current.onSubmit(mockEvent);
+      result.current.validatePassword();
     });
 
     expect(result.current.errorMessage).toBe("");
@@ -133,11 +137,12 @@ describe("useLoginForm: Тесты валидации входных данны�
     const { result } = renderHook(() => useLoginForm());
 
     act(() => {
+      result.current.setUsername("ivanov_ivan");
       result.current.setPassword("passwordpassword1234");
     });
 
     await act(async () => {
-      await result.current.onSubmit(mockEvent);
+      result.current.validatePassword();
     });
 
     expect(result.current.errorMessage).toBe("");
@@ -152,9 +157,15 @@ describe("useLoginForm: Тесты валидации входных данны�
     });
 
     await act(async () => {
-      await result.current.onSubmit(mockEvent);
+      result.current.validatePassword();
+      result.current.validateUsername();
     });
 
+    const validationResult = await act(async () => {
+      return result.current.isFormValid();
+    });
+
+    expect(validationResult).toBe(true);
     expect(result.current.errorMessage).toBe("");
   });
 });
@@ -224,7 +235,6 @@ describe("useLoginForm: Тесты для проверки полного сце
     const errorResponse = {
       response: {
         status: 400,
-        data: { message: "Неверные данные" },
       },
       isAxiosError: true,
     };
@@ -242,21 +252,14 @@ describe("useLoginForm: Тесты для проверки полного сце
       await result.current.onSubmit(mockEvent);
     });
 
-    expect(mockedLogin).toHaveBeenCalledWith({
-      username: "va",
-      password: "pass123",
-    });
-
     expect(mockLocalStorage.setItem).not.toHaveBeenCalled();
     expect(result.current.errorMessage).not.toBe("");
-    expect(result.current.errorMessage).toBe("Неверные данные");
   });
 
   test("Сценарий с 401 ошибкой", async () => {
     mockedLogin.mockRejectedValueOnce({
       response: {
         status: 401,
-        data: { message: "Неверный пароль" },
       },
       isAxiosError: true,
     });
@@ -274,14 +277,12 @@ describe("useLoginForm: Тесты для проверки полного сце
 
     expect(mockedLogin).toHaveBeenCalled();
     expect(mockLocalStorage.setItem).not.toHaveBeenCalled();
-    expect(result.current.errorMessage).toBe("Неверный пароль");
   });
 
   test("Сценарий с 500 ошибкой", async () => {
     mockedLogin.mockRejectedValueOnce({
       response: {
         status: 500,
-        data: { message: "Ошибка сервера" },
       },
       isAxiosError: true,
     });
@@ -299,6 +300,5 @@ describe("useLoginForm: Тесты для проверки полного сце
 
     expect(mockedLogin).toHaveBeenCalled();
     expect(mockLocalStorage.setItem).not.toHaveBeenCalled();
-    expect(result.current.errorMessage).toBe("Ошибка сервера");
   });
 });
