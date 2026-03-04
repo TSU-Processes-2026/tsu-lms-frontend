@@ -6,7 +6,7 @@ export const useRegisterForm = () => {
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string>("");
 
-  const onSubmit = async (e: React.FormEvent): void => {};
+  const onSubmit = async (e: React.FormEvent): Promise<void> => {};
 
   const validateForm = (): void => {};
 
