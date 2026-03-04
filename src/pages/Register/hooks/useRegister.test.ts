@@ -1,5 +1,7 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, render, renderHook } from "@testing-library/react";
 import { useRegisterForm } from "./useRegisterForm";
+import { register } from "../../../api/register/register";
+import { login } from "../../../api/authorization/login";
 import {
   CONFIRM_PASSWORD_EMPTY_ERROR_MESSAGE,
   CONFIRM_PASSWORD_FAILED_ERROR_MESSAGE,
@@ -8,6 +10,30 @@ import {
   PASSWORD_EMPTY_ERROR_MESSAGE,
   PASSWORD_LENGTH_ERROR_MESSAGE,
 } from "../../../constants/error/errorMessages";
+import { AxiosResponse } from "axios";
+import { TokenResponse } from "../../../types/token/TokenResponse";
+import { UserResponse } from "../../../types/user/UserResponse";
+import { HOME_PAGE_URL } from "../../../constants/paths/paths";
+
+jest.mock("../../../api/register/register");
+jest.mock("../../../api/authorization/login");
+const mockRegister = register as jest.MockedFunction<typeof register>;
+const mockedLogin = login as jest.MockedFunction<typeof login>;
+
+const mockLocalStorage = {
+  setItem: jest.fn(),
+  getItem: jest.fn(),
+  removeItem: jest.fn(),
+  clear: jest.fn(),
+};
+
+const mockEvent = {
+  preventDefault: jest.fn(),
+} as unknown as React.FormEvent;
+
+Object.defineProperty(window, "localStorage", {
+  value: mockLocalStorage,
+});
 
 describe("useRegisterForm: Тесты валидации входных данных", () => {
   beforeEach(() => {
@@ -189,4 +215,172 @@ describe("useRegisterForm: Тесты валидации входных данн
     expect(result.current.password).toBe(result.current.confirmPassword);
     expect(result.current.errorMessage).toBe("");
   });
+});
+
+describe("useRegisterForm: Тесты для проверки полного сценария регистрации пользователя", () => {
+  const mockUserResponse: UserResponse = {
+    id: "mock-uuid",
+    username: "test_user",
+  };
+
+  const mockTokenResponse: TokenResponse = {
+    tokenType: "Bearer",
+    accessToken: "mock-access-token",
+    refreshToken: "mock-refresh-token",
+    expiresIn: 900,
+    refreshExpiresIn: 60480,
+    userId: "mock-uuid",
+    sessionId: "mock-session",
+  };
+
+  const mockAxiosRegisterResponse: Partial<AxiosResponse<UserResponse>> = {
+    data: mockUserResponse,
+    status: 200,
+    statusText: "OK",
+    headers: {},
+    config: {} as any,
+  };
+
+  const mockAxiosLoginResponse: Partial<AxiosResponse<TokenResponse>> = {
+    data: mockTokenResponse,
+    status: 200,
+    statusText: "OK",
+    headers: {},
+    config: {} as any,
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test("После успешной регистрации возвращается id и username нового пользователя", async () => {
+    mockRegister.mockResolvedValueOnce(
+      mockAxiosRegisterResponse as AxiosResponse<UserResponse>,
+    );
+
+    const { result } = renderHook(() => useRegisterForm());
+
+    act(() => {
+      result.current.setUsername("test_user");
+      result.current.setPassword("password123");
+      result.current.setConfirmPassword("password123");
+    });
+
+    await act(async () => {
+      await result.current.onSubmit(mockEvent);
+    });
+
+    expect(mockRegister).toHaveBeenCalledWith({
+      username: "test_user",
+      password: "password123",
+    });
+
+    expect(mockRegister).toHaveBeenCalledTimes(1);
+    expect(mockRegister).toHaveReturnedWith(mockAxiosRegisterResponse);
+    expect(result.current.errorMessage).toBe("");
+  });
+
+  test("После успешной регистрации вызывается метод авторизации пользователя", async () => {
+    mockRegister.mockResolvedValueOnce(
+      mockAxiosRegisterResponse as AxiosResponse<UserResponse>,
+    );
+
+    mockedLogin.mockResolvedValueOnce(
+      mockAxiosLoginResponse as AxiosResponse<TokenResponse>,
+    );
+
+    const { result } = renderHook(() => useRegisterForm());
+
+    act(() => {
+      result.current.setUsername("test_user");
+      result.current.setPassword("password123");
+      result.current.setConfirmPassword("password123");
+    });
+
+    await act(async () => {
+      await result.current.onSubmit(mockEvent);
+    });
+
+    expect(mockRegister).toHaveBeenCalledTimes(1);
+    expect(mockRegister).toHaveBeenCalledWith({
+      username: "test_user",
+      password: "password123",
+    });
+
+    expect(mockedLogin).toHaveBeenCalledTimes(1);
+    expect(mockedLogin).toHaveBeenCalledWith({
+      username: "test_user",
+      password: "password123",
+    });
+  });
+
+  test("После успешной регистрации и авторизации должны сохраняться данные: accessToken, refreshToken, sessionId, userId в localStroage", async () => {
+    mockRegister.mockResolvedValueOnce(
+      mockAxiosRegisterResponse as AxiosResponse<UserResponse>,
+    );
+
+    mockedLogin.mockResolvedValueOnce(
+      mockAxiosLoginResponse as AxiosResponse<TokenResponse>,
+    );
+
+    const { result } = renderHook(() => useRegisterForm());
+
+    act(() => {
+      result.current.setUsername("test_user");
+      result.current.setPassword("password123");
+      result.current.setConfirmPassword("password123");
+    });
+
+    await act(async () => {
+      await result.current.onSubmit(mockEvent);
+    });
+
+    expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+      "accessToken",
+      mockTokenResponse.accessToken,
+    );
+    expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+      "refreshToken",
+      mockTokenResponse.refreshToken,
+    );
+    expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+      "userId",
+      mockTokenResponse.userId,
+    );
+    expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+      "sessionId",
+      mockTokenResponse.sessionId,
+    );
+  });
+
+  test("После успешной регистрации и авторизации должна произойти переадресация на главную страницу приложения", async () => {
+    mockRegister.mockResolvedValueOnce(
+      mockAxiosRegisterResponse as AxiosResponse<UserResponse>,
+    );
+
+    mockedLogin.mockResolvedValueOnce(
+      mockAxiosLoginResponse as AxiosResponse<TokenResponse>,
+    );
+
+    const { result } = renderHook(() => useRegisterForm());
+
+    act(() => {
+      result.current.setUsername("test_user");
+      result.current.setPassword("password123");
+      result.current.setConfirmPassword("password123");
+    });
+
+    await act(async () => {
+      await result.current.onSubmit(mockEvent);
+    });
+
+    expect(mockRegister).toHaveBeenCalledTimes(1);
+    expect(mockedLogin).toHaveBeenCalledTimes(1);
+    expect(mockLocalStorage).toHaveBeenCalledTimes(4);
+    expect(window.location.href).toBe(HOME_PAGE_URL);
+  });
+
+  test("Сценарий с 400 ошибкой: Должно сохраняться сообщение об ошибке", () => {});
+
+  test("Сценарий с 409 ошибкой: Должно сохраняться сообщение об ошибке", () => {});
 });
