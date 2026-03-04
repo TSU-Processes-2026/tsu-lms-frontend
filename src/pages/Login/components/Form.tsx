@@ -1,15 +1,22 @@
 import { AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { Input } from "./Input";
+import { useLoginForm } from "../hooks/useLoginForm";
 
 interface FormProps {
   onSubmit: any;
 }
 
-export const LoginForm = ({ onSubmit }: FormProps) => {
-  const [username, setUserName] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+export const LoginForm = () => {
+  const {
+    username,
+    password,
+    errorMessage,
+    setUsername,
+    setPassword,
+    setErrorMessage,
+    onSubmit,
+  } = useLoginForm();
   const handleRegister = () => {
     window.location.href = "/register";
   };
@@ -19,33 +26,33 @@ export const LoginForm = ({ onSubmit }: FormProps) => {
       onSubmit={onSubmit}
       className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100"
     >
-      {error && (
+      {errorMessage && (
         <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm font-medium flex items-center gap-2">
-          <AlertCircle size={16} /> {error}
+          <AlertCircle size={16} /> {errorMessage}
         </div>
       )}
       <div className="space-y-5">
         <Input
           onChange={(e) => {
-            setUserName(e.target.value);
-            setError("");
+            setUsername(e.target.value);
+            setErrorMessage("");
           }}
           value={username}
           label="Логин"
           type={"text"}
           placeholder={"ivanov_ivan"}
-          required={true}
+          required={false}
         />
         <Input
           onChange={(e) => {
             setPassword(e.target.value);
-            setError("");
+            setErrorMessage("");
           }}
           value={password}
           label="Пароль"
           type={"password"}
           placeholder={"********"}
-          required={true}
+          required={false}
         />
         <button
           type="submit"

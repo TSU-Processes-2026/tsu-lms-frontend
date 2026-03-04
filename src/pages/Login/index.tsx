@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { BookOpen, ChevronLeft, AlertCircle } from "lucide-react";
 import { LoginForm } from "./components/Form";
+import { useNavigate } from "react-router-dom";
 
 export const LoginPage = () => {
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
+  const navigate = useNavigate();
+  const handleGoBack = () => {
+    navigate(-1);
   };
-
-  const handleGoBack = () => {};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
@@ -32,7 +32,7 @@ export const LoginPage = () => {
           </h2>
           <p className="text-slate-500">Войдите в свой аккаунт</p>
         </div>
-        <LoginForm onSubmit={handleLogin} />
+        <LoginForm />
       </div>
     </div>
   );
