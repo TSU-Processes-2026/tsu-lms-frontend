@@ -7,6 +7,12 @@ import {
   PASSWORD_EMPTY_ERROR_MESSAGE,
   PASSWORD_LENGTH_ERROR_MESSAGE,
 } from "../../../constants/error/errorMessages";
+import { register } from "../../../api/register/register";
+import { AxiosResponse, isAxiosError } from "axios";
+import { login } from "../../../api/authorization/login";
+import { TokenResponse } from "../../../types/token/TokenResponse";
+import { HOME_PAGE_URL } from "../../../constants/paths/paths";
+import { useNavigate } from "react-router-dom";
 
 export const useRegisterForm = () => {
   const [username, setUsername] = useState<string>("");
@@ -14,11 +20,36 @@ export const useRegisterForm = () => {
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string>("");
 
+  const navigate = useNavigate();
+
   const onSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setErrorMessage("");
     validateForm();
     if (errorMessage !== "") {
+      return;
+    }
+    try {
+      await register({
+        username: username,
+        password: password,
+      });
+      const response: AxiosResponse<TokenResponse> = await login({
+        username: username,
+        password: password,
+      });
+      localStorage.setItem("accessToken", response.data.accessToken);
+      localStorage.setItem("refreshToken", response.data.refreshToken);
+      localStorage.setItem("userId", response.data.userId);
+      localStorage.setItem("sessionId", response.data.sessionId);
+      navigate(HOME_PAGE_URL);
+    } catch (error) {
+      if (isAxiosError(error)) {
+        setErrorMessage(error.response?.data.message);
+      } else {
+        setErrorMessage("Не удалось обработать запрос");
+      }
+    } finally {
       return;
     }
   };

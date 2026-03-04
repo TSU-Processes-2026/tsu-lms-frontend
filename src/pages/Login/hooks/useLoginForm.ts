@@ -2,14 +2,15 @@ import { useState } from "react";
 import { login } from "../../../api/authorization/login";
 import { TokenResponse } from "../../../types/token/TokenResponse";
 import { AxiosResponse, isAxiosError } from "axios";
-import { useNavigate } from "../../../hooks/useNavigate";
+import { useNavigate } from "react-router-dom";
+import { HOME_PAGE_URL } from "../../../constants/paths/paths";
 
 export const useLoginForm = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const { navigate } = useNavigate();
+  const navigate = useNavigate();
 
   const isFormValid = (): boolean => {
     return validateUsername() && validatePassword();
@@ -30,7 +31,7 @@ export const useLoginForm = () => {
       localStorage.setItem("refreshToken", response.data.refreshToken);
       localStorage.setItem("userId", response.data.userId);
       localStorage.setItem("sessionId", response.data.sessionId);
-      navigate();
+      navigate(HOME_PAGE_URL);
     } catch (error) {
       if (isAxiosError(error)) {
         setErrorMessage(error.response?.data.message);
