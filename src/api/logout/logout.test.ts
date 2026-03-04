@@ -16,7 +16,7 @@ describe("logout: Тесты для запросов на сервер", () => {
     });
 
     const response = await logout();
-    expect(mockAxios).toHaveBeenCalledTimes(1);
+    expect(mockAxios.post).toHaveBeenCalledTimes(1);
     expect(response.status).toBe(204);
   });
   //негативные сценарии
@@ -36,7 +36,7 @@ describe("logout: Тесты для запросов на сервер", () => {
       },
     });
 
-    expect(mockAxios).toHaveBeenCalledTimes(1);
+    expect(mockAxios.post).toHaveBeenCalledTimes(1);
   });
 
   test("После отправки просроченного или невалидного токена должен вернуться ответ со статусом 401", async () => {
@@ -55,6 +55,6 @@ describe("logout: Тесты для запросов на сервер", () => {
       },
     });
 
-    expect(mockAxios).toHaveBeenCalledTimes(1);
+    expect(mockAxios.post).toHaveBeenCalledTimes(1);
   });
 });
