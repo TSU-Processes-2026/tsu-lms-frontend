@@ -1,4 +1,18 @@
 import { useState } from "react";
+import {
+  CONFIRM_PASSWORD_EMPTY_ERROR_MESSAGE,
+  CONFIRM_PASSWORD_FAILED_ERROR_MESSAGE,
+  LOGIN_EMPTY_ERROR_MESSAGE,
+  LOGIN_LENGTH_ERROR_MESSAGE,
+  PASSWORD_EMPTY_ERROR_MESSAGE,
+  PASSWORD_LENGTH_ERROR_MESSAGE,
+} from "../../../constants/error/errorMessages";
+import { register } from "../../../api/register/register";
+import { AxiosResponse, isAxiosError } from "axios";
+import { login } from "../../../api/authorization/login";
+import { TokenResponse } from "../../../types/token/TokenResponse";
+import { HOME_PAGE_URL } from "../../../constants/paths/paths";
+import { useNavigate } from "react-router-dom";
 
 export const useRegisterForm = () => {
   const [username, setUsername] = useState<string>("");
@@ -6,9 +20,85 @@ export const useRegisterForm = () => {
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string>("");
 
-  const onSubmit = async (e: React.FormEvent): Promise<void> => {};
+  const navigate = useNavigate();
 
-  const validateForm = (): void => {};
+  const onSubmit = async (e: React.FormEvent): Promise<void> => {
+    e.preventDefault();
+    setErrorMessage("");
+    validateForm();
+    if (errorMessage !== "") {
+      return;
+    }
+    try {
+      await register({
+        username: username,
+        password: password,
+      });
+      const response: AxiosResponse<TokenResponse> = await login({
+        username: username,
+        password: password,
+      });
+      localStorage.setItem("accessToken", response.data.accessToken);
+      localStorage.setItem("refreshToken", response.data.refreshToken);
+      localStorage.setItem("userId", response.data.userId);
+      localStorage.setItem("sessionId", response.data.sessionId);
+      navigate(HOME_PAGE_URL);
+    } catch (error) {
+      if (isAxiosError(error)) {
+        setErrorMessage(error.response?.data.message);
+      } else {
+        setErrorMessage("Не удалось обработать запрос");
+      }
+    } finally {
+      return;
+    }
+  };
+
+  const validateForm = (): void => {
+    if (!validateLogin()) return;
+    if (!validatePassword()) return;
+    if (!validateConfirmPassword()) return;
+  };
+
+  const validateLogin = (): boolean => {
+    if (username === null || username === undefined || username.trim() === "") {
+      setErrorMessage(LOGIN_EMPTY_ERROR_MESSAGE);
+      return false;
+    }
+    if (username.trim().length < 3 || username.trim().length > 50) {
+      setErrorMessage(LOGIN_LENGTH_ERROR_MESSAGE);
+      return false;
+    }
+    return true;
+  };
+
+  const validatePassword = (): boolean => {
+    if (password === null || password === undefined || password.trim() === "") {
+      setErrorMessage(PASSWORD_EMPTY_ERROR_MESSAGE);
+      return false;
+    }
+    if (password.trim().length < 6 || password.trim().length > 20) {
+      setErrorMessage(PASSWORD_LENGTH_ERROR_MESSAGE);
+      return false;
+    }
+    return true;
+  };
+
+  const validateConfirmPassword = (): boolean => {
+    if (
+      confirmPassword === null ||
+      confirmPassword === undefined ||
+      confirmPassword.trim() === ""
+    ) {
+      setErrorMessage(CONFIRM_PASSWORD_EMPTY_ERROR_MESSAGE);
+      return false;
+    }
+    if (password.trim() !== confirmPassword.trim()) {
+      setErrorMessage(CONFIRM_PASSWORD_FAILED_ERROR_MESSAGE);
+      return false;
+    }
+    return true;
+  };
 
   return {
     username,

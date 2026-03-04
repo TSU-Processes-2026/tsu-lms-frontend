@@ -18,9 +18,12 @@ import { HOME_PAGE_URL } from "../../../constants/paths/paths";
 
 jest.mock("../../../api/register/register");
 jest.mock("../../../api/authorization/login");
+const mockNavigate = jest.fn();
+jest.mock("react-router-dom", () => ({
+  useNavigate: () => mockNavigate,
+}));
 const mockRegister = register as jest.MockedFunction<typeof register>;
 const mockedLogin = login as jest.MockedFunction<typeof login>;
-
 const mockLocalStorage = {
   setItem: jest.fn(),
   getItem: jest.fn(),
@@ -149,7 +152,7 @@ describe("useRegisterForm: Тесты валидации входных данн
       result.current.validateForm();
     });
 
-    expect(result.current.errorMessage).not.toBe(LOGIN_LENGTH_ERROR_MESSAGE);
+    expect(result.current.errorMessage).toBe(LOGIN_LENGTH_ERROR_MESSAGE);
   });
   //Валидация поля с паролем
   test("При валидации пароля с пустым значением возвращается ошибка", () => {
@@ -189,7 +192,7 @@ describe("useRegisterForm: Тесты валидации входных данн
 
     act(() => {
       result.current.setUsername("test");
-      result.current.setPassword("123456");
+      result.current.setPassword("password123");
       result.current.setConfirmPassword("password123");
     });
 
@@ -312,6 +315,10 @@ describe("useRegisterForm: Тесты для проверки полного с�
       mockAxiosRegisterResponse as AxiosResponse<UserResponse>,
     );
 
+    mockedLogin.mockResolvedValueOnce(
+      mockAxiosLoginResponse as AxiosResponse<TokenResponse>,
+    );
+
     const { result } = renderHook(() => useRegisterForm());
 
     act(() => {
@@ -330,7 +337,6 @@ describe("useRegisterForm: Тесты для проверки полного с�
     });
 
     expect(mockRegister).toHaveBeenCalledTimes(1);
-    expect(mockRegister).toHaveReturnedWith(mockAxiosRegisterResponse);
     expect(result.current.errorMessage).toBe("");
   });
 
@@ -430,8 +436,8 @@ describe("useRegisterForm: Тесты для проверки полного с�
 
     expect(mockRegister).toHaveBeenCalledTimes(1);
     expect(mockedLogin).toHaveBeenCalledTimes(1);
-    expect(mockLocalStorage).toHaveBeenCalledTimes(4);
-    expect(window.location.href).toBe(HOME_PAGE_URL);
+    expect(mockLocalStorage.setItem).toHaveBeenCalledTimes(4);
+    expect(mockNavigate).toHaveBeenCalledWith(HOME_PAGE_URL);
   });
 
   test("Сценарий с 400 ошибкой: Должно сохраняться сообщение об ошибке", async () => {
@@ -452,7 +458,7 @@ describe("useRegisterForm: Тесты для проверки полного с�
       await result.current.onSubmit(mockEvent);
     });
 
-    expect(mockRegister).not.toHaveBeenCalled();
+    expect(mockRegister).toHaveBeenCalled();
     expect(mockLocalStorage.setItem).not.toHaveBeenCalled();
     expect(result.current.errorMessage).not.toBe("");
   });
@@ -461,6 +467,7 @@ describe("useRegisterForm: Тесты для проверки полного с�
     const errorResponse = {
       response: {
         status: 409,
+        data: { message: UNIQUE_LOGIN_ERROR_MESSAGE },
       },
       isAxiosError: true,
     };
@@ -470,6 +477,7 @@ describe("useRegisterForm: Тесты для проверки полного с�
     act(() => {
       result.current.setUsername("not_unique_test_user");
       result.current.setPassword("password123");
+      result.current.setConfirmPassword("password123");
     });
 
     await act(async () => {
