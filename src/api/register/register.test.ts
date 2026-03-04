@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import { register } from "./register";
 import { UserResponse } from "../../types/user/UserResponse";
 import { RegisterRequest } from "../../types/auth/RegisterRequest";
@@ -7,22 +7,28 @@ jest.mock("axios");
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 describe("register: Тесты для запросов на сервер", () => {
+  const successResponse: UserResponse = {
+    id: "some-unique-uuid",
+    username: "test_user",
+  };
+  const mockAxiosSuccessResponse: Partial<AxiosResponse<UserResponse>> = {
+    data: successResponse,
+    status: 200,
+    statusText: "OK",
+    headers: {},
+    config: {} as any,
+  };
   beforeEach(() => {
     jest.clearAllMocks();
   });
   //успешные сценарии
   test("После успешной регистрации должен вернуться 200 статус и тело ответа", async () => {
-    const successResponse: UserResponse = {
-      id: "some-unique-uuid",
-      username: "test_user",
-    };
-
     const validRegisterData: RegisterRequest = {
       username: "test_user",
       password: "password123",
     };
 
-    mockedAxios.post.mockResolvedValueOnce(successResponse);
+    mockedAxios.post.mockResolvedValueOnce(mockAxiosSuccessResponse);
 
     const response = await register(validRegisterData);
 
