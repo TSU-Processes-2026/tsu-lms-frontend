@@ -1,16 +1,18 @@
 import { AlertCircle } from "lucide-react";
-import { useState } from "react";
+import { useRegisterForm } from "../hooks/useRegisterForm";
 
-interface FormProps {
-  onSubmit: any;
-}
-
-export const RegisterForm = ({ onSubmit }: FormProps) => {
-  const [username, setUserName] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [error, setError] = useState("");
-
+export const RegisterForm = () => {
+  const {
+    username,
+    password,
+    confirmPassword,
+    errorMessage,
+    setUsername,
+    setPassword,
+    setConfirmPassword,
+    setErrorMessage,
+    onSubmit,
+  } = useRegisterForm();
   const handleLoginPage = () => {
     window.location.href = "/login";
   };
@@ -20,9 +22,9 @@ export const RegisterForm = ({ onSubmit }: FormProps) => {
       onSubmit={onSubmit}
       className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100"
     >
-      {error && (
+      {errorMessage && (
         <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm font-medium flex items-center gap-2">
-          <AlertCircle size={16} /> {error}
+          <AlertCircle size={16} /> {errorMessage}
         </div>
       )}
       <div className="space-y-5">
@@ -34,12 +36,11 @@ export const RegisterForm = ({ onSubmit }: FormProps) => {
             type="text"
             value={username}
             onChange={(e) => {
-              setUserName(e.target.value);
-              setError("");
+              setUsername(e.target.value);
+              setErrorMessage("");
             }}
             placeholder="ivanov_ivan"
             className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
-            required
           />
         </div>
         <div>
@@ -51,11 +52,10 @@ export const RegisterForm = ({ onSubmit }: FormProps) => {
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
-              setError("");
+              setErrorMessage("");
             }}
             placeholder="••••••••"
             className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
-            required
           />
         </div>
         <div>
@@ -64,14 +64,13 @@ export const RegisterForm = ({ onSubmit }: FormProps) => {
           </label>
           <input
             type="password"
-            value={confirm}
+            value={confirmPassword}
             onChange={(e) => {
-              setConfirm(e.target.value);
-              setError("");
+              setConfirmPassword(e.target.value);
+              setErrorMessage("");
             }}
             placeholder="••••••••"
             className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
-            required
           />
         </div>
         <button

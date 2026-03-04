@@ -34,7 +34,9 @@ export const useLoginForm = () => {
       navigate(HOME_PAGE_URL);
     } catch (error) {
       if (isAxiosError(error)) {
-        setErrorMessage(error.response?.data.message);
+        setErrorMessage(
+          error.response?.data.message || "Неверный логин или пароль",
+        );
       } else {
         setErrorMessage("Не удалось обработать запрос");
       }

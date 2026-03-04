@@ -25,8 +25,8 @@ export const useRegisterForm = () => {
   const onSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setErrorMessage("");
-    validateForm();
-    if (errorMessage !== "") {
+
+    if (!validateForm()) {
       return;
     }
     try {
@@ -44,8 +44,9 @@ export const useRegisterForm = () => {
       localStorage.setItem("sessionId", response.data.sessionId);
       navigate(HOME_PAGE_URL);
     } catch (error) {
+      console.log(error);
       if (isAxiosError(error)) {
-        setErrorMessage(error.response?.data.message);
+        setErrorMessage(error.response?.data.message || "Неверные данные");
       } else {
         setErrorMessage("Не удалось обработать запрос");
       }
@@ -54,10 +55,10 @@ export const useRegisterForm = () => {
     }
   };
 
-  const validateForm = (): void => {
-    if (!validateLogin()) return;
-    if (!validatePassword()) return;
-    if (!validateConfirmPassword()) return;
+  const validateForm = (): boolean => {
+    if (validateLogin() && validatePassword() && validateConfirmPassword())
+      return true;
+    return false;
   };
 
   const validateLogin = (): boolean => {

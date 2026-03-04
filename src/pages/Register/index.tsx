@@ -1,12 +1,12 @@
 import { BookOpen, ChevronLeft } from "lucide-react";
 import { RegisterForm } from "./components/Form";
+import { useNavigate } from "react-router-dom";
 
 export const RegisterPage = () => {
-  const handleRegister = (e: React.FormEvent) => {
-    e.preventDefault();
+  const navigate = useNavigate();
+  const handleGoBack = () => {
+    navigate(-1);
   };
-
-  const handleGoBack = () => {};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center p-4">
@@ -31,7 +31,7 @@ export const RegisterPage = () => {
           </h2>
           <p className="text-slate-500">Создайте новый аккаунт</p>
         </div>
-        <RegisterForm onSubmit={handleRegister} />
+        <RegisterForm />
       </div>
     </div>
   );
