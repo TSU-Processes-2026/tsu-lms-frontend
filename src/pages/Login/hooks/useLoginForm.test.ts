@@ -5,6 +5,10 @@ import { TokenResponse } from "../../../types/token/TokenResponse";
 import { login } from "../../../api/authorization/login";
 
 jest.mock("../../../api/authorization/login");
+const mockNavigate = jest.fn();
+jest.mock("react-router-dom", () => ({
+  useNavigate: () => mockNavigate,
+}));
 const mockedLogin = login as jest.MockedFunction<typeof login>;
 
 const mockLocalStorage = {
