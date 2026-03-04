@@ -1,4 +1,4 @@
-import { act, render, renderHook } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { useRegisterForm } from "./useRegisterForm";
 import { register } from "../../../api/register/register";
 import { login } from "../../../api/authorization/login";
@@ -9,6 +9,7 @@ import {
   LOGIN_LENGTH_ERROR_MESSAGE,
   PASSWORD_EMPTY_ERROR_MESSAGE,
   PASSWORD_LENGTH_ERROR_MESSAGE,
+  UNIQUE_LOGIN_ERROR_MESSAGE,
 } from "../../../constants/error/errorMessages";
 import { AxiosResponse } from "axios";
 import { TokenResponse } from "../../../types/token/TokenResponse";
@@ -380,7 +381,53 @@ describe("useRegisterForm: Тесты для проверки полного с�
     expect(window.location.href).toBe(HOME_PAGE_URL);
   });
 
-  test("Сценарий с 400 ошибкой: Должно сохраняться сообщение об ошибке", () => {});
+  test("Сценарий с 400 ошибкой: Должно сохраняться сообщение об ошибке", async () => {
+    const errorResponse = {
+      response: {
+        status: 400,
+      },
+      isAxiosError: true,
+    };
+    mockRegister.mockRejectedValueOnce(errorResponse);
+    const { result } = renderHook(() => useRegisterForm());
 
-  test("Сценарий с 409 ошибкой: Должно сохраняться сообщение об ошибке", () => {});
+    act(() => {
+      result.current.setUsername("va");
+      result.current.setPassword("pass123");
+    });
+    await act(async () => {
+      await result.current.onSubmit(mockEvent);
+    });
+
+    expect(mockRegister).not.toHaveBeenCalled();
+    expect(mockLocalStorage.setItem).not.toHaveBeenCalled();
+    expect(result.current.errorMessage).not.toBe("");
+  });
+
+  test("Сценарий с 409 ошибкой: Должно сохраняться сообщение об ошибке", async () => {
+    const errorResponse = {
+      response: {
+        status: 409,
+      },
+      isAxiosError: true,
+    };
+    mockRegister.mockRejectedValueOnce(errorResponse);
+    const { result } = renderHook(() => useRegisterForm());
+
+    act(() => {
+      result.current.setUsername("not_unique_test_user");
+      result.current.setPassword("password123");
+    });
+
+    await act(async () => {
+      await result.current.onSubmit(mockEvent);
+    });
+
+    expect(mockRegister).toHaveBeenCalledTimes(1);
+    expect(mockRegister).toHaveBeenCalledWith({
+      username: "not_unique_test_user",
+      password: "password123",
+    });
+    expect(result.current.errorMessage).toBe(UNIQUE_LOGIN_ERROR_MESSAGE);
+  });
 });

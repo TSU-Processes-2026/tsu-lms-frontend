@@ -9,3 +9,4 @@ export const CONFIRM_PASSWORD_EMPTY_ERROR_MESSAGE =
   "Поле с подтверждением пароля не может быть пустым";
 export const CONFIRM_PASSWORD_FAILED_ERROR_MESSAGE =
   "Введенные пароли не совпадают";
+export const UNIQUE_LOGIN_ERROR_MESSAGE = "Логин занят";

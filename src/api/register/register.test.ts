@@ -83,7 +83,7 @@ describe("register: Тесты для запросов на сервер", () =>
 
   test("При попытке создать аккаунт с занятым логином должен вернуться ответ со статусом 409 и сообщением об ошибке", async () => {
     const badRequestData: RegisterRequest = {
-      username: "not_unique_user",
+      username: "not_unique_username",
       password: "password123",
     };
 
