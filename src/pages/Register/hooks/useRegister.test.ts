@@ -90,6 +90,8 @@ describe("useRegisterForm: Тесты валидации входных данн
 
     act(() => {
       result.current.setUsername("");
+      result.current.setPassword("password123");
+      result.current.setConfirmPassword("password123");
       result.current.validateForm();
     });
 
@@ -101,6 +103,8 @@ describe("useRegisterForm: Тесты валидации входных данн
 
     act(() => {
       result.current.setUsername("ло");
+      result.current.setPassword("password123");
+      result.current.setConfirmPassword("password123");
       result.current.validateForm();
     });
 
@@ -112,6 +116,8 @@ describe("useRegisterForm: Тесты валидации входных данн
 
     act(() => {
       result.current.setUsername("login");
+      result.current.setPassword("password123");
+      result.current.setConfirmPassword("password123");
       result.current.validateForm();
     });
 
@@ -126,6 +132,8 @@ describe("useRegisterForm: Тесты валидации входных данн
       result.current.setUsername(
         "loginloginloginloginloginloginloginloginloginloginloginloginloginloginloginloginloginloginloginloginloginloginloginloginloginloginloginlogin",
       );
+      result.current.setPassword("password123");
+      result.current.setConfirmPassword("password123");
       result.current.validateForm();
     });
 
@@ -136,7 +144,9 @@ describe("useRegisterForm: Тесты валидации входных данн
     const { result } = renderHook(() => useRegisterForm());
 
     act(() => {
+      result.current.setUsername("test");
       result.current.setPassword("");
+      result.current.setConfirmPassword("password123");
       result.current.validateForm();
     });
 
@@ -147,7 +157,9 @@ describe("useRegisterForm: Тесты валидации входных данн
     const { result } = renderHook(() => useRegisterForm());
 
     act(() => {
+      result.current.setUsername("test");
       result.current.setPassword("passw");
+      result.current.setConfirmPassword("password123");
       result.current.validateForm();
     });
 
@@ -158,7 +170,9 @@ describe("useRegisterForm: Тесты валидации входных данн
     const { result } = renderHook(() => useRegisterForm());
 
     act(() => {
+      result.current.setUsername("test");
       result.current.setPassword("123456");
+      result.current.setConfirmPassword("password123");
       result.current.validateForm();
     });
 
@@ -170,6 +184,8 @@ describe("useRegisterForm: Тесты валидации входных данн
 
     act(() => {
       result.current.setPassword("123456123456123456123456123456");
+      result.current.setUsername("test");
+      result.current.setConfirmPassword("password123");
       result.current.validateForm();
     });
 
@@ -181,6 +197,8 @@ describe("useRegisterForm: Тесты валидации входных данн
 
     act(() => {
       result.current.setConfirmPassword("");
+      result.current.setUsername("test");
+      result.current.setPassword("password123");
       result.current.validateForm();
     });
 
@@ -193,6 +211,7 @@ describe("useRegisterForm: Тесты валидации входных данн
     const { result } = renderHook(() => useRegisterForm());
 
     act(() => {
+      result.current.setUsername("test");
       result.current.setPassword("password123");
       result.current.setConfirmPassword("password12345");
       result.current.validateForm();
@@ -208,6 +227,7 @@ describe("useRegisterForm: Тесты валидации входных данн
     const { result } = renderHook(() => useRegisterForm());
 
     act(() => {
+      result.current.setUsername("test");
       result.current.setPassword("password123");
       result.current.setConfirmPassword("password123");
       result.current.validateForm();
