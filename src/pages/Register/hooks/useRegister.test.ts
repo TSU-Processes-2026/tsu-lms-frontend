@@ -149,7 +149,7 @@ describe("useRegisterForm: Тесты валидации входных данн
       result.current.validateForm();
     });
 
-    expect(result.current.errorMessage).not.toBe(LOGIN_LENGTH_ERROR_MESSAGE);
+    expect(result.current.errorMessage).toBe(LOGIN_LENGTH_ERROR_MESSAGE);
   });
   //Валидация поля с паролем
   test("При валидации пароля с пустым значением возвращается ошибка", () => {
@@ -189,7 +189,7 @@ describe("useRegisterForm: Тесты валидации входных данн
 
     act(() => {
       result.current.setUsername("test");
-      result.current.setPassword("123456");
+      result.current.setPassword("password123");
       result.current.setConfirmPassword("password123");
     });
 

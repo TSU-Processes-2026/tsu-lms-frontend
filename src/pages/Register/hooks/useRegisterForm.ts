@@ -29,7 +29,7 @@ export const useRegisterForm = () => {
     if (!validateConfirmPassword()) return;
   };
 
-  const validateLogin = () => {
+  const validateLogin = (): boolean => {
     if (username === null || username === undefined || username.trim() === "") {
       setErrorMessage(LOGIN_EMPTY_ERROR_MESSAGE);
       return false;
@@ -41,7 +41,7 @@ export const useRegisterForm = () => {
     return true;
   };
 
-  const validatePassword = () => {
+  const validatePassword = (): boolean => {
     if (password === null || password === undefined || password.trim() === "") {
       setErrorMessage(PASSWORD_EMPTY_ERROR_MESSAGE);
       return false;
@@ -54,7 +54,11 @@ export const useRegisterForm = () => {
   };
 
   const validateConfirmPassword = (): boolean => {
-    if (password === null || password === undefined || password.trim() === "") {
+    if (
+      confirmPassword === null ||
+      confirmPassword === undefined ||
+      confirmPassword.trim() === ""
+    ) {
       setErrorMessage(CONFIRM_PASSWORD_EMPTY_ERROR_MESSAGE);
       return false;
     }
