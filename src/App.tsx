@@ -1,20 +1,14 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { RouterProvider } from "react-router-dom";
+import { JSX } from "react";
+import { router } from "./router/router";
 
-import { LandingPage } from "./pages/Landing";
-import { LoginPage } from "./pages/Login";
-import { RegisterPage } from "./pages/Register";
-
-function App() {
+/**
+ * Main application component. Sets up the router using the router instance from './router/router'.
+ * @returns {JSX.Element} The root element of the application with routing enabled.
+ */
+function App(): JSX.Element {
   return (
-    <>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-        </Routes>
-      </BrowserRouter>
-    </>
+    <RouterProvider router={ router } />
   );
 }
 
