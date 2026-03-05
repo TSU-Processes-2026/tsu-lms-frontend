@@ -1,5 +1,5 @@
 import { AxiosResponse } from "axios";
-import { logout } from "../../api/logout/logout";
+import { logoutUser } from "../../api/logout/logout";
 import { useLogout } from "./useLogout";
 import {
   BAD_REQUEST,
@@ -15,7 +15,7 @@ jest.mock("react-router-dom", () => ({
   useNavigate: () => mockNavigate,
 }));
 
-const mockLogout = logout as jest.MockedFunction<typeof logout>;
+const mockLogout = logoutUser as jest.MockedFunction<typeof logoutUser>;
 
 const mockLocalStorage = {
   setItem: jest.fn(),
@@ -61,15 +61,15 @@ describe("useLogout: Тесты завершения активной сесси
     return result.current;
   };
 
-  test("При успешной обработке запроса к серверу, должны очищаться данные из localStorage", () => {
+  test("При успешной обработке запроса к серверу, должны очищаться данные из localStorage", async () => {
     mockLogout.mockResolvedValueOnce(mockAxiosLogoutResponse as AxiosResponse);
     mockLocalStorage.getItem
       .mockReturnValueOnce("mock-accessToken")
       .mockReturnValueOnce("mock-refreshToken");
     const mockLogoutHook = getMockedHook();
 
-    act(() => {
-      mockLogoutHook.logout();
+    await act(async () => {
+      await mockLogoutHook.logout();
     });
 
     expect(mockLocalStorage.removeItem).toHaveBeenCalledWith(ACCESS_TOKEN);
@@ -83,15 +83,15 @@ describe("useLogout: Тесты завершения активной сесси
     expect(refresh).toBeUndefined();
   });
 
-  test("При 400 ошибке, должны очищаться данные из localStorage", () => {
+  test("При 400 ошибке, должны очищаться данные из localStorage", async () => {
     mockLogout.mockRejectedValueOnce(mockError400);
     mockLocalStorage.getItem
       .mockReturnValueOnce("mock-accessToken")
       .mockReturnValueOnce("mock-refreshToken");
     const mockLogoutHook = getMockedHook();
 
-    act(() => {
-      mockLogoutHook.logout();
+    await act(async () => {
+      await mockLogoutHook.logout();
     });
 
     expect(mockLocalStorage.removeItem).toHaveBeenCalledWith(ACCESS_TOKEN);
@@ -104,15 +104,16 @@ describe("useLogout: Тесты завершения активной сесси
     expect(token).toBeUndefined();
     expect(refresh).toBeUndefined();
   });
-  test("При 401 ошибке, должны очищаться данные из localStorage", () => {
+
+  test("При 401 ошибке, должны очищаться данные из localStorage", async () => {
     mockLogout.mockRejectedValueOnce(mockError401);
     mockLocalStorage.getItem
       .mockReturnValueOnce("mock-accessToken")
       .mockReturnValueOnce("mock-refreshToken");
     const mockLogoutHook = getMockedHook();
 
-    act(() => {
-      mockLogoutHook.logout();
+    await act(async () => {
+      await mockLogoutHook.logout();
     });
 
     expect(mockLocalStorage.removeItem).toHaveBeenCalledWith(ACCESS_TOKEN);
@@ -126,23 +127,23 @@ describe("useLogout: Тесты завершения активной сесси
     expect(refresh).toBeUndefined();
   });
 
-  test("При успешном завершении сессии пользователь должен быть перенаправлен на главную страницу", () => {
+  test("При успешном завершении сессии пользователь должен быть перенаправлен на главную страницу", async () => {
     mockLogout.mockResolvedValueOnce(mockAxiosLogoutResponse as AxiosResponse);
     const mockLogoutHook = getMockedHook();
 
-    act(() => {
-      mockLogoutHook.logout();
+    await act(async () => {
+      await mockLogoutHook.logout();
     });
 
     expect(mockNavigate).toHaveBeenCalledWith(ROOT_URL);
   });
 
-  test("При завершении сессии с ошибкой от сервера пользователь должен быть перенаправлен на главную страницу", () => {
+  test("При завершении сессии с ошибкой от сервера пользователь должен быть перенаправлен на главную страницу", async () => {
     mockLogout.mockRejectedValueOnce(mockError400);
     const mockLogoutHook = getMockedHook();
 
-    act(() => {
-      mockLogoutHook.logout();
+    await act(async () => {
+      await mockLogoutHook.logout();
     });
 
     expect(mockNavigate).toHaveBeenCalledWith(ROOT_URL);

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { logout } from "./logout";
+import { logoutUser } from "./logout";
 
 jest.mock("axios");
 const mockAxios = axios as jest.Mocked<typeof axios>;
@@ -15,7 +15,7 @@ describe("logout: Тесты для запросов на сервер", () => {
       headers: {},
     });
 
-    const response = await logout();
+    const response = await logoutUser("refresh");
     expect(mockAxios.post).toHaveBeenCalledTimes(1);
     expect(response.status).toBe(204);
   });
@@ -29,7 +29,7 @@ describe("logout: Тесты для запросов на сервер", () => {
       isAxiosError: true,
     });
 
-    await expect(logout()).rejects.toMatchObject({
+    await expect(logoutUser("refresh")).rejects.toMatchObject({
       response: {
         status: 400,
         data: { message: "Неверные данные" },
@@ -48,7 +48,7 @@ describe("logout: Тесты для запросов на сервер", () => {
       isAxiosError: true,
     });
 
-    await expect(logout()).rejects.toMatchObject({
+    await expect(logoutUser("refresh")).rejects.toMatchObject({
       response: {
         status: 401,
         data: { message: "Невалидный токен" },
