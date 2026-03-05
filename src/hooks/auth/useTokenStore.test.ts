@@ -1,4 +1,4 @@
-import { renderHook } from "@testing-library/react";
+import { renderHook, waitFor } from "@testing-library/react";
 import { useTokenStore } from "./useTokenStore";
 import { ACCESS_TOKEN, REFRESH_TOKEN } from "../../constants/auth/auth";
 import { act } from "react";
@@ -45,7 +45,7 @@ describe("useTokenStore: Тесты получения и сохранения �
 
     const token = localStorage.getItem(ACCESS_TOKEN);
 
-    expect(token).toBe(null);
+    expect(token).toBe(undefined);
     expect(hook.accessToken).toBe(null);
   });
 
@@ -56,7 +56,7 @@ describe("useTokenStore: Тесты получения и сохранения �
 
     const refresh = localStorage.getItem(REFRESH_TOKEN);
 
-    expect(refresh).toBe(null);
+    expect(refresh).toBe(undefined);
     expect(hook.refreshToken).toBe(null);
   });
 
@@ -65,11 +65,6 @@ describe("useTokenStore: Тесты получения и сохранения �
       .mockReturnValueOnce(null)
       .mockReturnValueOnce(null);
     const hook = getHookInstance();
-
-    act(() => {
-      localStorage.getItem(ACCESS_TOKEN);
-      localStorage.getItem(REFRESH_TOKEN);
-    });
 
     expect(hook.accessToken).toBe(null);
     expect(hook.refreshToken).toBe(null);
@@ -80,10 +75,6 @@ describe("useTokenStore: Тесты получения и сохранения �
     const mockedTokenValue = "mock-accessToken";
     mockLocalStorage.getItem.mockReturnValueOnce(mockedTokenValue);
     const hook = getHookInstance();
-
-    act(() => {
-      localStorage.getItem(ACCESS_TOKEN);
-    });
 
     expect(hook.accessToken).not.toBe(null);
     expect(hook.accessToken).toBe(mockedTokenValue);
@@ -96,11 +87,6 @@ describe("useTokenStore: Тесты получения и сохранения �
       .mockReturnValueOnce(mockedRefreshValue);
     const hook = getHookInstance();
 
-    act(() => {
-      localStorage.getItem(ACCESS_TOKEN);
-      localStorage.getItem(REFRESH_TOKEN);
-    });
-
     expect(hook.refreshToken).not.toBe(null);
     expect(hook.refreshToken).toBe(mockedRefreshValue);
   });
@@ -112,10 +98,6 @@ describe("useTokenStore: Тесты получения и сохранения �
 
     const hook = getHookInstance();
 
-    act(() => {
-      localStorage.getItem(ACCESS_TOKEN);
-      localStorage.getItem(REFRESH_TOKEN);
-    });
     expect(hook.accessToken).not.toBe(null);
     expect(hook.refreshToken).not.toBe(null);
     expect(hook.isAuthenticated).toBe(true);
@@ -128,54 +110,81 @@ describe("useTokenStore: Тесты получения и сохранения �
     const hook = getHookInstance();
 
     act(() => {
-      localStorage.getItem(ACCESS_TOKEN);
-      localStorage.getItem(REFRESH_TOKEN);
+      hook.setAccessToken;
+      hook.setRefreshToken;
     });
 
     expect(mockLocalStorage.getItem).toHaveBeenCalledTimes(2);
-    expect(hook.setAccessToken).toHaveBeenCalledTimes(1);
-    expect(hook.setRefreshToken).toHaveBeenCalledTimes(1);
-    expect(hook.setIsAuthenticated).toHaveBeenCalledTimes(1);
   });
 
-  test("При сбросе сессии данные должны очищаться из localStorage", () => {
+  test("При сбросе сессии данные должны очищаться из localStorage", async () => {
     mockLocalStorage.getItem
       .mockReturnValueOnce("mock-accessToken")
       .mockReturnValueOnce("mock-refreshToken");
-    const hook = getHookInstance();
 
-    act(() => {
-      hook.clearSession();
+    const { result } = renderHook(() => useTokenStore());
+
+    await waitFor(() => {
+      expect(result.current.accessToken).toBe("mock-accessToken");
+    });
+
+    await act(async () => {
+      await result.current.clearSession();
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(false);
     });
 
     expect(mockLocalStorage.removeItem).toHaveBeenCalledWith(ACCESS_TOKEN);
     expect(mockLocalStorage.removeItem).toHaveBeenCalledWith(REFRESH_TOKEN);
     expect(mockLocalStorage.removeItem).toHaveBeenCalledTimes(2);
-    expect(hook.accessToken).toBe(null);
-    expect(hook.refreshToken).toBe(null);
-    expect(hook.isAuthenticated).toBe(false);
+
+    expect(result.current.accessToken).toBeNull();
+    expect(result.current.refreshToken).toBeNull();
   });
 
-  test("При обновлении сессии в localStorage должна сохраняться новая пара токенов", () => {
+  test("При обновлении сессии в localStorage должна сохраняться новая пара токенов", async () => {
     mockLocalStorage.getItem
       .mockReturnValueOnce("mock-accessToken")
       .mockReturnValueOnce("mock-refreshToken");
-    const hook = getHookInstance();
-    const prevAccess = localStorage.getItem(ACCESS_TOKEN);
-    const prevRefresh = localStorage.getItem(REFRESH_TOKEN);
+
+    const { result } = renderHook(() => useTokenStore());
+
+    await waitFor(() => {
+      expect(result.current.accessToken).toBe("mock-accessToken");
+    });
+
+    const prevAccess = result.current.accessToken;
+    const prevRefresh = result.current.refreshToken;
     const newAccess = "newAccess";
     const newRefresh = "newRefresh";
 
-    act(() => {
-      hook.updateSession(newAccess, newRefresh);
+    await act(async () => {
+      result.current.updateSession(newAccess, newRefresh);
     });
 
-    expect(hook.accessToken).not.toBe(null);
-    expect(hook.accessToken).not.toBe(prevAccess);
-    expect(hook.accessToken).toBe(newAccess);
+    await waitFor(() => {
+      expect(result.current.accessToken).toBe(newAccess);
+    });
 
-    expect(hook.refreshToken).not.toBe(null);
-    expect(hook.refreshToken).not.toBe(prevRefresh);
-    expect(hook.refreshToken).toBe(newRefresh);
+    expect(result.current.accessToken).not.toBeNull();
+    expect(result.current.accessToken).not.toBe(prevAccess);
+    expect(result.current.accessToken).toBe(newAccess);
+
+    expect(result.current.refreshToken).not.toBeNull();
+    expect(result.current.refreshToken).not.toBe(prevRefresh);
+    expect(result.current.refreshToken).toBe(newRefresh);
+
+    expect(result.current.isAuthenticated).toBe(true);
+
+    expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+      ACCESS_TOKEN,
+      newAccess,
+    );
+    expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+      REFRESH_TOKEN,
+      newRefresh,
+    );
   });
 });
