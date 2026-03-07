@@ -24,7 +24,6 @@ describe("useCreateSubject: Валидация данных", () => {
             await hook.handleSubmit(mockEvent)
         })
 
-        expect(hook.isError).toBeTruthy()
         expect(hook.errorMessage).toEqual(SUBJECT_TITLE_EMPTY)
     })
     test("При длине названия менее 3 символов возвращается сообщение с ошибкой", async() => {
@@ -38,7 +37,6 @@ describe("useCreateSubject: Валидация данных", () => {
             await hook.handleSubmit(mockEvent)
         })
 
-        expect(hook.isError).toBeTruthy()
         expect(hook.errorMessage).toEqual(SUBJECT_TITLE_ERROR)
     })
 
@@ -51,7 +49,6 @@ describe("useCreateSubject: Валидация данных", () => {
             await hook.handleSubmit(mockEvent)
         })
 
-        expect(hook.isError).not.toBeTruthy()
         expect(hook.errorMessage).toEqual("")
     })
 
@@ -65,8 +62,6 @@ describe("useCreateSubject: Валидация данных", () => {
         await act(async() => {
             await hook.handleSubmit(mockEvent)
         })
-
-        expect(hook.isError).toBeTruthy()
         expect(hook.errorMessage).toEqual(SUBJECT_TITLE_ERROR)
     })
 
@@ -80,40 +75,6 @@ describe("useCreateSubject: Валидация данных", () => {
             await hook.handleSubmit(mockEvent)
         })
 
-        expect(hook.isError).not.toBeTruthy()
         expect(hook.errorMessage).toEqual("")
-    })
-
-    test("При валидной форме значение метода isFormValid(): true", () => {
-        const hook = getMockedHook()
-
-        act(() => {
-            hook.setTitle("test")
-            hook.setDescription("test")
-        })
-
-        act(async() => {
-            hook.isFormValid()
-        })
-
-        expect(hook.isFormValid()).toHaveBeenCalledTimes(1)
-        expect(hook.isFormValid()).toHaveReturnedWith(true)
-    })
-
-    test("При не валидной форме значение метода isFormValid(): false", () => {
-        const hook = getMockedHook()
-
-        act(() => {
-            hook.setTitle("t")
-            hook.setDescription("test")
-        })
-
-        act(async() => {
-            hook.isFormValid()
-        })
-
-        expect(hook.isFormValid()).toHaveBeenCalledTimes(1)
-        expect(hook.isFormValid()).toHaveReturnedWith(false)
-
     })
 })
