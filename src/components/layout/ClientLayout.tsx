@@ -2,6 +2,7 @@ import { BookOpen, ClipboardCheck, Layout, LogOut, Plus, UserIcon } from 'lucide
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useLogout } from '@/hooks/logout/useLogout';
+import { CreateSubjectModal } from '../modals/SubjectModal';
 
 const navItems = [
     { id: 'dashboard', label: 'Панель', icon: <Layout size={20} /> },
@@ -16,6 +17,7 @@ const navItems = [
 export const ClientLayout = () => {
     const [currentView, setView] = useState<string | null>('/home');
     const [pageTitle, setPageTitle] = useState<string>('Главная');
+    const [showSubjectModal, setShowSubjectModal] = useState<boolean>(false);
     const { logout } = useLogout();
 
     return (
@@ -44,8 +46,10 @@ export const ClientLayout = () => {
 
                 <div className='p-4 border-t border-slate-100 space-y-3'>
                     <button
-                        onClick={() => {}}
-                        className='w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-4 py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-emerald-200/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2'
+                        onClick={() => {
+                            setShowSubjectModal(true);
+                        }}
+                        className='w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-200/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2'
                     >
                         <Plus size={18} /> Создать предмет
                     </button>
@@ -85,6 +89,14 @@ export const ClientLayout = () => {
                     <Outlet />
                 </div>
             </main>
+            {showSubjectModal && (
+                <CreateSubjectModal
+                    onClose={() => {
+                        setShowSubjectModal(false);
+                    }}
+                    onCreate={() => {}}
+                />
+            )}
         </div>
     );
 };
