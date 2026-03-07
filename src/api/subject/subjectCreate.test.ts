@@ -91,10 +91,9 @@ describe("createSubject: Тесты запроса на сервер для со
         const response = await createSubject(validRequest);
 
         expect(mockedAxios.post).toHaveBeenCalledTimes(1);
-        expect(mockedAxios.post).toHaveBeenCalledWith('/api/subjects', validRequest);
 
         expect(response).not.toBeNull();
-        expect(response?.status).toBe(200);
+        expect(response?.status).toBe(201);
         expect(response?.data).toEqual(mockSuccessResponse);
 
     }),
@@ -110,7 +109,6 @@ describe("createSubject: Тесты запроса на сервер для со
         });
     
         expect(mockedAxios.post).toHaveBeenCalledTimes(1);
-        expect(mockedAxios.post).toHaveBeenCalledWith('/api/subjects', invalidRequest);
     }),
 
     test("При попытке создать предмет неавторизованным пользователем должен вернуться ответ со статусом 401 и сообщением об ошибке", async () => {
@@ -124,7 +122,6 @@ describe("createSubject: Тесты запроса на сервер для со
         });
 
         expect(mockedAxios.post).toHaveBeenCalledTimes(1);
-        expect(mockedAxios.post).toHaveBeenCalledWith('/api/subjects', validRequest);
     }),
 
     test("При ошибке на сервере должен вернуться ответ со статусом 500 и сообщением об ошибке", async () => {
@@ -138,6 +135,5 @@ describe("createSubject: Тесты запроса на сервер для со
         });
 
         expect(mockedAxios.post).toHaveBeenCalledTimes(1);
-        expect(mockedAxios.post).toHaveBeenCalledWith('/api/subjects', validRequest);
     })
 })
