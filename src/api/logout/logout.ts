@@ -4,8 +4,9 @@ import { UserResponse } from "../../types/user/UserResponse";
 
 const BASE_URL = DEV_URL || PROD_URL || MOCK_URL;
 
-export const logout = async (): Promise<AxiosResponse> => {
-  const refreshToken = localStorage.getItem("refreshToken");
+export const logoutUser = async (
+  refreshToken: string,
+): Promise<AxiosResponse> => {
   try {
     const response = await axios.post<UserResponse>(
       `${BASE_URL}/auth/logout`,

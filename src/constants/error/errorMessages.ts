@@ -10,3 +10,6 @@ export const CONFIRM_PASSWORD_EMPTY_ERROR_MESSAGE =
 export const CONFIRM_PASSWORD_FAILED_ERROR_MESSAGE =
   "Введенные пароли не совпадают";
 export const UNIQUE_LOGIN_ERROR_MESSAGE = "Логин занят";
+export const SUBJECT_TITLE_ERROR = "Допустимая длина названия: от 3 до 50 символов"
+export const SUBJECT_DESCRIPTION_MAX_LENGTH_ERROR = "Максимальная длина описания 2000 символов"
+export const SUBJECT_TITLE_EMPTY = "Название не может быть пустым"
