@@ -23,5 +23,27 @@
       "username": "ivanov_ivan4",
       "password": "password123"
     }
+  ],
+  "subjects": [
+    {
+      "id": "1773129035372-dr012hhflxj",
+      "title": "Tets",
+      "description": "Teggs"
+    },
+    {
+      "id": "1773129101042-jiwhlih6mu",
+      "title": "Test",
+      "description": "YYYY"
+    },
+    {
+      "id": "1773129253099-w24oty76xcn",
+      "title": "eererre",
+      "description": "eerererer"
+    },
+    {
+      "id": "1773129401706-bij8kx1ev4d",
+      "title": "sdsdsd",
+      "description": "sddddsd"
+    }
   ]
 }
