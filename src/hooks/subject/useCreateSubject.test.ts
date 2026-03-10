@@ -43,135 +43,127 @@ describe('useCreateSubject: Тесты сценария создания пре�
         },
     };
 
-    const mockErrorResponse: ErrorDetails = {
-        type: 'error',
-        title: 'Bad Request',
-        status: 400,
-        detail: 'Title is required',
-    };
-
-    const mockUnauthorizedResponse: ErrorDetails = {
-        type: 'error',
-        title: 'Unauthorized',
-        status: 401,
-        detail: 'Authentication required',
-    };
-
-    const mockServerErrorResponse: ErrorDetails = {
-        type: 'error',
-        title: 'Internal Server Error',
-        status: 500,
-        detail: 'Something went wrong',
-    };
-
-    const error400Response = {
-        response: {
-            status: 400,
-            data: mockErrorResponse,
-            headers: { 'content-type': 'application/json' },
-        },
-        isAxiosError: true,
-    };
-
-    const error401Response = {
-        response: {
-            status: 401,
-            data: mockUnauthorizedResponse,
-            headers: { 'content-type': 'application/json' },
-        },
-        isAxiosError: true,
-    };
-
-    const error500Response = {
-        response: {
-            status: 500,
-            data: mockServerErrorResponse,
-            headers: { 'content-type': 'application/json' },
-        },
-        isAxiosError: true,
-    };
-
-    const getMockedHook = () => {
-        const { result } = renderHook(() => useCreateSubject());
-        return result.current;
-    };
-
     beforeEach(() => {
-        jest.clearAllMocks();
+        mockedCreateSubject.mockClear();
+        mockedCreateSubject.mockReset();
+        mockedCreateSubject.mockImplementation(() => Promise.reject(new Error('Not mocked')));
     });
 
     test('Успешный сценарий создания предмета', async () => {
         mockedCreateSubject.mockResolvedValueOnce(mockAxiosSuccessResponse as AxiosResponse);
-        const hook = getMockedHook();
+        const { result } = renderHook(() => useCreateSubject());
 
         act(() => {
-            hook.setTitle(validRequest.title);
-            hook.setDescription(validRequest.description);
+            result.current.setTitle(validRequest.title);
+            result.current.setDescription(validRequest.description);
         });
 
         await act(async () => {
-            await hook.handleSubmit(mockEvent);
+            await result.current.handleSubmit(mockEvent);
         });
 
         expect(mockedCreateSubject).toHaveBeenCalledTimes(1);
         expect(mockedCreateSubject).toHaveBeenCalledWith(validRequest);
-        expect(hook.setErrorMessage).not.toHaveBeenCalled();
-        expect(hook.errorMessage).toBe('');
+        expect(result.current.errorMessage).toBe('');
     });
 
     test('При ошибке со стороны клиента должно выводится сообщение об ошибке', async () => {
+        const mockErrorResponse: ErrorDetails = {
+            type: 'error',
+            title: 'Bad Request',
+            status: 400,
+            detail: 'Title is required',
+        };
+        const error400Response = {
+            response: {
+                status: 400,
+                data: mockErrorResponse,
+                headers: { 'content-type': 'application/json' },
+            },
+            isAxiosError: true,
+        };
+
         mockedCreateSubject.mockRejectedValueOnce(error400Response);
-        const hook = getMockedHook();
+        const { result } = renderHook(() => useCreateSubject());
 
         act(() => {
-            hook.setTitle(invalidRequest.title);
-            hook.setDescription(invalidRequest.description);
+            result.current.setTitle(invalidRequest.title);
+            result.current.setDescription(invalidRequest.description);
         });
 
         await act(async () => {
-            await hook.handleSubmit(mockEvent);
+            await result.current.handleSubmit(mockEvent);
         });
 
         expect(mockedCreateSubject).not.toHaveBeenCalled();
-        expect(hook.errorMessage).not.toBe('');
+        expect(result.current.errorMessage).not.toBe('');
     });
 
     test('При попытке создать предмет неавторизованному пользователю, он должен быть перенаправлен на страницу авторизации', async () => {
+        const mockUnauthorizedResponse: ErrorDetails = {
+            type: 'error',
+            title: 'Unauthorized',
+            status: 401,
+            detail: 'Authentication required',
+        };
+
+        const error401Response = {
+            response: {
+                status: 401,
+                data: mockUnauthorizedResponse,
+                headers: { 'content-type': 'application/json' },
+            },
+            isAxiosError: true,
+        };
         mockedCreateSubject.mockRejectedValueOnce(error401Response);
-        const hook = getMockedHook();
+        const { result } = renderHook(() => useCreateSubject());
 
         act(() => {
-            hook.setTitle(validRequest.title);
-            hook.setDescription(validRequest.description);
+            result.current.setTitle(validRequest.title);
+            result.current.setDescription(validRequest.description);
         });
 
         await act(async () => {
-            await hook.handleSubmit(mockEvent);
+            await result.current.handleSubmit(mockEvent);
         });
 
         expect(mockedCreateSubject).toHaveBeenCalledTimes(1);
         expect(mockedCreateSubject).toHaveBeenCalledWith(validRequest);
         expect(mockEvent.preventDefault).toHaveBeenCalled();
-        expect(hook.errorMessage).toBe(mockUnauthorizedResponse.detail);
+        expect(result.current.errorMessage).toBe(mockUnauthorizedResponse.detail);
         expect(mockNavigate).toHaveBeenCalledWith(LOGIN_PAGE_URL);
     });
 
     test('При ошибке со стороны сервера должно выводится сообщение об ошибке', async () => {
+        const mockServerErrorResponse: ErrorDetails = {
+            type: 'error',
+            title: 'Internal Server Error',
+            status: 500,
+            detail: 'Something went wrong',
+        };
+        const error500Response = {
+            response: {
+                status: 500,
+                data: mockServerErrorResponse,
+                headers: { 'content-type': 'application/json' },
+            },
+            isAxiosError: true,
+        };
         mockedCreateSubject.mockRejectedValueOnce(error500Response);
-        const hook = getMockedHook();
+        const { result } = renderHook(() => useCreateSubject());
 
         act(() => {
-            hook.setTitle(validRequest.title);
-            hook.setDescription(validRequest.description);
+            result.current.setTitle(validRequest.title);
+            result.current.setDescription(validRequest.description);
         });
 
         await act(async () => {
-            await hook.handleSubmit(mockEvent);
+            await result.current.handleSubmit(mockEvent);
         });
 
         expect(mockedCreateSubject).toHaveBeenCalled();
         expect(mockedCreateSubject).toHaveBeenCalledWith(validRequest);
         expect(mockEvent.preventDefault).toHaveBeenCalled();
-        expect(hook.errorMessage).toBe(mockServerErrorResponse.detail);
+        expect(result.current.errorMessage).toBe(mockServerErrorResponse.detail);
     });
 });
