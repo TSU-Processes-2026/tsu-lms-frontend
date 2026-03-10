@@ -11,8 +11,6 @@ import {
     ROOT_URL,
 } from '@/constants/paths/paths';
 import { SubjectsPage } from '@/pages/Subjects';
-import { INITIAL_DATA } from '../constants/mocks/data.ts';
-import { handleSelectSubject } from '../pages/Subjects/handlers';
 
 export const router = createBrowserRouter([
     {
@@ -39,7 +37,7 @@ export const router = createBrowserRouter([
                     },
                     {
                         path: '/subjects',
-                        element: <SubjectsPage subjects={ INITIAL_DATA.subjects } onSelectSubject={ handleSelectSubject }/>,
+                        element: <SubjectsPage />,
                     },
                     {
                         path: '/assignments',
