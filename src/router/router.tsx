@@ -10,9 +10,9 @@ import {
     REGISTER_PAGE_URL,
     ROOT_URL,
 } from '@/constants/paths/paths';
-import { SubjectsPage } from "../pages/Subjects";
-import { INITIAL_DATA } from "../constants/mocks/data.ts";
-import { handleSelectSubject } from "../pages/Subjects/handlers";
+import { SubjectsPage } from '../pages/Subjects';
+import { INITIAL_DATA } from '../constants/mocks/data.ts';
+import { handleSelectSubject } from '../pages/Subjects/handlers';
 
 export const router = createBrowserRouter([
     {
@@ -39,8 +39,13 @@ export const router = createBrowserRouter([
                         element: <div>Главная страница</div>,
                     },
                     {
-                        path: '/subjects',
-                        element: <SubjectsPage subjects={ INITIAL_DATA.subjects } onSelectSubject={ handleSelectSubject } />,
+                        path: 'subjects',
+                        element: (
+                            <SubjectsPage
+                                subjects={INITIAL_DATA.subjects}
+                                onSelectSubject={handleSelectSubject}
+                            />
+                        ),
                     },
                     {
                         path: 'assignments',
