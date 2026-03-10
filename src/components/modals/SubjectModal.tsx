@@ -1,5 +1,5 @@
+import { useCreateSubject } from '@/hooks/subject/useCreateSubject';
 import { Plus, X } from 'lucide-react';
-import { useState } from 'react';
 
 interface ModalProps {
     onClose: () => void;
@@ -7,13 +7,8 @@ interface ModalProps {
 }
 
 export const CreateSubjectModal = ({ onClose, onCreate }: ModalProps) => {
-    const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        onCreate({});
-    };
+    const { title, description, errorMessage, handleSubmit, setTitle, setDescription } =
+        useCreateSubject();
 
     return (
         <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm'>
@@ -39,11 +34,10 @@ export const CreateSubjectModal = ({ onClose, onCreate }: ModalProps) => {
                         </label>
                         <input
                             type='text'
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
                             placeholder='Математика'
                             className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all'
-                            required
                         />
                     </div>
                     <div>
@@ -58,6 +52,12 @@ export const CreateSubjectModal = ({ onClose, onCreate }: ModalProps) => {
                             rows={3}
                         />
                     </div>
+                    {errorMessage && (
+                        <div className='p-4 bg-red-50 border-b-red-50 rounded-xl border border-red-100'>
+                            <p className='text-xs text-red-700 font-semibold mb-1'>❌ Ошибка</p>
+                            <p className='text-xs text-red-600'>{errorMessage}</p>
+                        </div>
+                    )}
                     <div className='p-4 bg-blue-50 border-b-blue-50 rounded-xl border border-blue-100'>
                         <p className='text-xs text-blue-700 font-semibold mb-1'>
                             ℹ️ После создания

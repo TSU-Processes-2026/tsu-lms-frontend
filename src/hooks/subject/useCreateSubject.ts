@@ -1,9 +1,14 @@
 import { createSubject } from '@/api/subject/subject';
-import { SUBJECT_DESCRIPTION_MAX_LENGTH_ERROR } from '@/constants/error/errorMessages';
+import {
+    SUBJECT_DESCRIPTION_MAX_LENGTH_ERROR,
+    SUBJECT_TITLE_EMPTY,
+    SUBJECT_TITLE_ERROR,
+} from '@/constants/error/errorMessages';
 
-import { LOGIN_PAGE_URL } from '@/constants/paths/paths';
+import { LOGIN_PAGE_URL, SUBJECT_PAGE_PREFIX } from '@/constants/paths/paths';
 import { BAD_REQUEST, SERVER_ERROR, UNAUTHORIZED_TOKEN } from '@/constants/response/errorMessages';
-import { isAxiosError } from 'axios';
+import { CreateSubjectResponse } from '@/types/subject/CreateSubject';
+import { AxiosResponse, isAxiosError } from 'axios';
 import { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -18,6 +23,12 @@ export const useCreateSubject = () => {
         return validateTitle() && validateDescription();
     };
 
+    const resetForm = () => {
+        setTitle('');
+        setDescription('');
+        setErrorMessage('');
+    };
+
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setErrorMessage('');
@@ -25,10 +36,12 @@ export const useCreateSubject = () => {
         if (!isFormValid()) return;
 
         try {
-            await createSubject({
+            const response: AxiosResponse<CreateSubjectResponse> = await createSubject({
                 title: title,
                 description: description,
             });
+            resetForm();
+            navigate(SUBJECT_PAGE_PREFIX + response.data.id);
         } catch (error) {
             if (isAxiosError(error)) {
                 if (error.response?.status === 400) {
@@ -50,11 +63,11 @@ export const useCreateSubject = () => {
 
     const validateTitle = (): boolean => {
         if (title === null || title === undefined || title.trim() === '') {
-            setErrorMessage('Поле с логином не может быть пустым');
+            setErrorMessage(SUBJECT_TITLE_EMPTY);
             return false;
         }
         if (title.trim().length < 3 || title.trim().length > 50) {
-            setErrorMessage('Допустимая длина для логина: от 3 до 50 символов');
+            setErrorMessage(SUBJECT_TITLE_ERROR);
             return false;
         }
         return true;
