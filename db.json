@@ -45,5 +45,101 @@
       "title": "sdsdsd",
       "description": "sddddsd"
     }
+  ],
+  "participants": [
+    { "subjectId": "1773129035372-dr012hhflxj", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6", "role": "Student" },
+    { "subjectId": "1773129035372-dr012hhflxj", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2", "role": "Student" },
+    { "subjectId": "1773129035372-dr012hhflxj", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa3", "role": "Teacher" },
+    { "subjectId": "1773129101042-jiwhlih6mu", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa1", "role": "Student" },
+    { "subjectId": "1773129101042-jiwhlih6mu", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2", "role": "Teacher" }
+  ],
+  "assignments": [
+    {
+      "id": "assgn-1",
+      "subjectId": "1773129035372-dr012hhflxj",
+      "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa3",
+      "postType": "Assignment",
+      "content": "Задание 1: UML диаграммы",
+      "assignmentData": "Сделать диаграмму классов",
+      "questions": [
+        {
+          "id": "q-1",
+          "questionType": "Text",
+          "questionData": "Опишите паттерн Singleton"
+        },
+        {
+          "id": "q-2",
+          "questionType": "SingleChoice",
+          "questionData": "Выберите верный паттерн",
+          "options": [
+            { "id": "opt-1", "text": "Factory" },
+            { "id": "opt-2", "text": "Observer" }
+          ]
+        }
+      ],
+      "createdAt": "2024-01-01T10:00:00.000Z"
+    },
+    {
+      "id": "assgn-2",
+      "subjectId": "1773129035372-dr012hhflxj",
+      "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa3",
+      "postType": "Assignment",
+      "content": "Задание 2: паттерны проектирования",
+      "assignmentData": "Реализовать паттерн Observer",
+      "questions": [
+        {
+          "id": "q-3",
+          "questionType": "MultipleChoice",
+          "questionData": "Выберите порождающие паттерны",
+          "options": [
+            { "id": "opt-3", "text": "Singleton" },
+            { "id": "opt-4", "text": "Factory Method" },
+            { "id": "opt-5", "text": "Observer" }
+          ]
+        }
+      ],
+      "createdAt": "2024-01-02T10:00:00.000Z"
+    }
+  ],
+  "submissions": [
+    {
+      "id": "subm-1",
+      "assignmentId": "assgn-1",
+      "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "answers": [
+        { "questionId": "q-1", "answerType": "TextAnswer", "text": "Описание паттерна" },
+        { "questionId": "q-2", "answerType": "SingleChoiceAnswer", "selectedOptionId": "opt-1" }
+      ],
+      "status": "Graded",
+      "submittedAt": "2024-01-03T10:00:00.000Z"
+    },
+    {
+      "id": "subm-2",
+      "assignmentId": "assgn-1",
+      "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+      "answers": [
+        { "questionId": "q-1", "answerType": "TextAnswer", "text": "..." },
+        { "questionId": "q-2", "answerType": "SingleChoiceAnswer", "selectedOptionId": "opt-2" }
+      ],
+      "status": "RequiresReview",
+      "submittedAt": "2024-01-03T11:00:00.000Z"
+    },
+    {
+      "id": "subm-3",
+      "assignmentId": "assgn-1",
+      "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "answers": [],
+      "status": "Draft",
+      "submittedAt": null
+    }
+  ],
+  "grades": [
+    {
+      "id": "grade-1",
+      "submissionId": "subm-1",
+      "score": 90,
+      "verdictText": "Отлично",
+      "gradedAt": "2024-01-04T10:00:00.000Z"
+    }
   ]
 }

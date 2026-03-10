@@ -1,4 +1,4 @@
-﻿import {Subject} from "../../types/subjects/Subject.ts";
+﻿import {Subject} from "@/types/subjects/Subject.ts";
 import {Calculator, FlaskConical, Landmark, Languages} from "lucide-react";
 
 export const INITIAL_DATA = {

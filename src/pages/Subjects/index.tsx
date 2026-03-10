@@ -1,6 +1,6 @@
 ﻿import React from 'react';
 import { User as UserIcon } from 'lucide-react';
-import { Subject } from "../../types/subjects/Subject.ts";
+import { Subject } from "@/types/subjects/Subject.ts";
 
 export const SubjectsPage: React.FC<{ subjects: Subject[]; onSelectSubject: (s: Subject) => void }> = ({ subjects, onSelectSubject }) => (
     <div className="max-w-6xl mx-auto">
