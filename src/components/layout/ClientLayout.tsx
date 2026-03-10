@@ -1,9 +1,10 @@
-import { BookOpen, ClipboardCheck, Layout, LogOut, Plus, UserIcon } from 'lucide-react';
+import { BookOpen, ClipboardCheck, Key, Layout, LogOut, Plus, UserIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useLogout } from '@/hooks/logout/useLogout';
 import { CreateSubjectModal } from '../modals/SubjectModal';
 import { useProfile } from '@/hooks/profile/useProfile';
+import { JoinSubjectModal } from '../modals/JoinSubjectModal';
 
 const navItems = [
     { id: 'dashboard', label: 'Панель', icon: <Layout size={20} /> },
@@ -19,6 +20,7 @@ export const ClientLayout = () => {
     const [currentView, setView] = useState<string | null>('/home');
     const [pageTitle, setPageTitle] = useState<string>('Главная');
     const [showSubjectModal, setShowSubjectModal] = useState<boolean>(false);
+    const [showJoinSubject, setShowJoinSubject] = useState<boolean>();
     const { logout } = useLogout();
     const { profile, getCurrentUser } = useProfile();
 
@@ -51,6 +53,13 @@ export const ClientLayout = () => {
                 </nav>
 
                 <div className='p-4 border-t border-slate-100 space-y-3'>
+                    <button
+                        onClick={() => setShowJoinSubject(true)}
+                        className='w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-200/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2'
+                    >
+                        <Key size={18} /> Присоединиться
+                    </button>
+
                     <button
                         onClick={() => {
                             setShowSubjectModal(true);
@@ -97,6 +106,13 @@ export const ClientLayout = () => {
                         setShowSubjectModal(false);
                     }}
                     onCreate={() => {}}
+                />
+            )}
+            {showJoinSubject && (
+                <JoinSubjectModal
+                    onClose={() => {
+                        setShowJoinSubject(false);
+                    }}
                 />
             )}
         </div>
