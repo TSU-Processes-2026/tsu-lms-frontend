@@ -8,6 +8,7 @@ import {
     mockUnauthorizedResponse,
 } from '@/constants/mocks/response';
 
+jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 describe('useProfile: Тесты запроса на сервер для получения профиля текущего пользователя', () => {
@@ -32,7 +33,7 @@ describe('useProfile: Тесты запроса на сервер для пол�
         mockedAxios.get.mockResolvedValueOnce(mockAxiosSuccessResponse as AxiosResponse);
 
         const response: AxiosResponse<UserResponse> = await getProfile();
-
+        expect(mockedAxios.get).toHaveBeenCalledTimes(1);
         expect(response.data.id).toBe(mockSuccessResponse.id);
         expect(response.data.username).toBe(mockSuccessResponse.username);
     });
@@ -47,7 +48,7 @@ describe('useProfile: Тесты запроса на сервер для пол�
             },
         });
 
-        expect(mockedAxios.post).toHaveBeenCalledTimes(1);
+        expect(mockedAxios.get).toHaveBeenCalledTimes(1);
     });
 
     test('При ошибке на сервере должен вернуться ответ со статусом 500 и сообщением об ошибке', async () => {
@@ -60,6 +61,6 @@ describe('useProfile: Тесты запроса на сервер для пол�
             },
         });
 
-        expect(mockedAxios.post).toHaveBeenCalledTimes(1);
+        expect(mockedAxios.get).toHaveBeenCalledTimes(1);
     });
 });
