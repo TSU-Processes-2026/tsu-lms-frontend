@@ -11,3 +11,7 @@ export const SUBJECT_DESCRIPTION_MAX_LENGTH_ERROR = 'Максимальная д
 export const SUBJECT_TITLE_EMPTY = 'Название не может быть пустым';
 export const INTERNAL_SERVER_ERROR_MESSAGE =
     'На сервере произошла ошибка. Попробуйте повторить запрос через какое-то время';
+
+export const NOT_FOUND_PREFIX = 'По запросу ';
+export const NOT_FOUND_SUFFIX = ' ничего не найдено.';
+export const NOT_FOUND_PAGE = 'Убедитесь что вы ввели правильный URL';

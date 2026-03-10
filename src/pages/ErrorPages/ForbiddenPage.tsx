@@ -1,8 +1,8 @@
-import { INTERNAL_SERVER_ERROR_MESSAGE } from '@/constants/error/errorMessages';
+import { FORBIDDEN_ERROR } from '@/constants/response/errorMessages';
 import { ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-export const ServerErrorPage = () => {
+export const ForbiddenPage = () => {
     const navigate = useNavigate();
     return (
         <div className='max-w-6xl min-h-screen mx-auto space-y-8 box-border '>
@@ -16,11 +16,9 @@ export const ServerErrorPage = () => {
                     <ChevronLeft size={24} /> На предыдущую
                 </button>
                 <h1 className='text-5xl md:text-7xl font-extrabold text-slate-900 mb-6 leading-tight'>
-                    <span className=' text-slate-900 bg-clip-text'>Ошибка сервера</span>
+                    <span className=' text-slate-900 bg-clip-text'>Доступ запрещен</span>
                 </h1>
-                <h2 className='px-4 text-2xl font-bold text-slate-600 mb-2'>
-                    {INTERNAL_SERVER_ERROR_MESSAGE}
-                </h2>
+                <h2 className='px-4 text-2xl font-bold text-slate-600 mb-2'>{FORBIDDEN_ERROR}</h2>
             </section>
         </div>
     );
