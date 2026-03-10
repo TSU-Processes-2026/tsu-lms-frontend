@@ -6,6 +6,7 @@ import ProtectedRoute from './ProtectedRoute';
 import { ClientLayout } from '@/components/layout/ClientLayout';
 import {
     HOME_PAGE_URL,
+    INTERNAL_SERVER_ERROR_PAGE_URL,
     LOGIN_PAGE_URL,
     REGISTER_PAGE_URL,
     ROOT_URL,
@@ -13,6 +14,7 @@ import {
 import { SubjectsPage } from '../pages/Subjects';
 import { INITIAL_DATA } from '../constants/mocks/data.ts';
 import { handleSelectSubject } from '../pages/Subjects/handlers';
+import { ServerErrorPage } from '@/pages/ErrorPages/ServerErrorPage.tsx';
 
 export const router = createBrowserRouter([
     {
@@ -54,5 +56,9 @@ export const router = createBrowserRouter([
                 ],
             },
         ],
+    },
+    {
+        path: INTERNAL_SERVER_ERROR_PAGE_URL,
+        element: <ServerErrorPage />,
     },
 ]);
