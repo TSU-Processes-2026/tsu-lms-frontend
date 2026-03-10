@@ -1,8 +1,9 @@
 import { BookOpen, ClipboardCheck, Layout, LogOut, Plus, UserIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useLogout } from '@/hooks/logout/useLogout';
 import { CreateSubjectModal } from '../modals/SubjectModal';
+import { useProfile } from '@/hooks/profile/useProfile';
 
 const navItems = [
     { id: 'dashboard', label: 'Панель', icon: <Layout size={20} /> },
@@ -19,6 +20,11 @@ export const ClientLayout = () => {
     const [pageTitle, setPageTitle] = useState<string>('Главная');
     const [showSubjectModal, setShowSubjectModal] = useState<boolean>(false);
     const { logout } = useLogout();
+    const { profile, getCurrentUser } = useProfile();
+
+    useEffect(() => {
+        getCurrentUser();
+    }, []);
 
     return (
         <div className='min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 flex text-slate-800 font-sans'>
@@ -66,16 +72,12 @@ export const ClientLayout = () => {
                 <header className='h-20 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 px-6 flex items-center justify-between shadow-sm shrink-0'>
                     <div>
                         <h2 className='text-xl font-bold text-slate-800'>{pageTitle}</h2>
-                        <p className='text-sm text-slate-500 mt-0.5'>{'Test user'}</p>
                     </div>
                     <div className='flex items-center gap-4'>
                         <div className='flex items-center gap-3 pl-4 border-l border-slate-200'>
                             <div className='text-right hidden sm:block'>
                                 <p className='text-sm font-semibold leading-none text-slate-700'>
-                                    {'Test user'}
-                                </p>
-                                <p className='text-xs text-slate-400 mt-0.5'>
-                                    {'test@example.com'}
+                                    {profile.username}
                                 </p>
                             </div>
                             <div className='w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200/50'>

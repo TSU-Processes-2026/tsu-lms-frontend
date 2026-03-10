@@ -16,8 +16,13 @@ const findUserByUsername = (username) => {
     return database.get('users').find({ username }).value();
 };
 
-const getUserProfile = () => {
-    return database.get('users')[0];
+const getUserProfile = async () => {
+    return {
+        id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+        username: 'ivanov_ivan1',
+        password: 'password123',
+        accessToken: 'mock-token-1',
+    };
 };
 
 const save = (table, value) => {
@@ -85,12 +90,12 @@ server.post('/api/auth/login', (req, res) => {
     res.status(200).jsonp(response);
 });
 
-server.get('/api/users/me', (req, res) => {
+server.get('/api/users/me', async (req, res) => {
     const auth = req.headers.authorization;
     const accessToken = auth.split(' ')[1];
     if (!accessToken) return res.status(401).jsonp(getMocked401Response());
 
-    const profile = getUserProfile();
+    const profile = await getUserProfile();
 
     res.status(200).jsonp({
         id: profile.id,
