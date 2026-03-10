@@ -1,14 +1,14 @@
 import { BookOpen, ClipboardCheck, Key, Layout, LogOut, Plus, UserIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { useLogout } from '@/hooks/logout/useLogout';
 import { CreateSubjectModal } from '../modals/SubjectModal';
 import { useProfile } from '@/hooks/profile/useProfile';
 import { JoinSubjectModal } from '../modals/JoinSubjectModal';
 
 const navItems = [
-    { id: 'dashboard', label: 'Панель', icon: <Layout size={20} /> },
-    { id: 'subjects', label: 'Предметы', icon: <BookOpen size={20} /> },
+    { id: '/home/dashboard', label: 'Панель', icon: <Layout size={20} /> },
+    { id: '/home/subjects', label: 'Предметы', icon: <BookOpen size={20} /> },
     {
         id: 'assignments',
         label: 'Задания',
@@ -23,6 +23,7 @@ export const ClientLayout = () => {
     const [showJoinSubject, setShowJoinSubject] = useState<boolean>();
     const { logout } = useLogout();
     const { profile, getCurrentUser } = useProfile();
+    const navigate = useNavigate();
 
     useEffect(() => {
         getCurrentUser();
@@ -31,7 +32,13 @@ export const ClientLayout = () => {
     return (
         <div className='min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 flex text-slate-800 font-sans'>
             <aside className='w-64 bg-white/80 backdrop-blur-xl border-r border-slate-200/60 hidden md:flex flex-col shadow-sm'>
-                <div className='p-6 flex items-center gap-3 border-b border-slate-100'>
+                <div
+                    className='p-6 flex items-center gap-3 border-b border-slate-100 cursor-pointer'
+                    onClick={() => {
+                        setView('/home');
+                        navigate('/home');
+                    }}
+                >
                     <div className='w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200/50'>
                         <BookOpen className='text-white w-5 h-5' />
                     </div>
@@ -43,8 +50,11 @@ export const ClientLayout = () => {
                     {navItems.map((item) => (
                         <button
                             key={item.id}
-                            onClick={() => {}}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${currentView === item.id ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-200/50' : 'hover:bg-slate-50 text-slate-600'}`}
+                            onClick={() => {
+                                setView(item.id);
+                                navigate(item.id);
+                            }}
+                            className={`w-full flex items-center cursor-pointer gap-3 px-4 py-3 rounded-xl transition-all ${currentView === item.id ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-200/50' : 'hover:bg-slate-50 text-slate-600'}`}
                         >
                             {item.icon}
                             <span className='font-medium'>{item.label}</span>
