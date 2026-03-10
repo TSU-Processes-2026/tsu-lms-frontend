@@ -16,6 +16,15 @@ const findUserByUsername = (username) => {
     return database.get('users').find({ username }).value();
 };
 
+const getUserProfile = async () => {
+    return {
+        id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+        username: 'ivanov_ivan1',
+        password: 'password123',
+        accessToken: 'mock-token-1',
+    };
+};
+
 const save = (table, value) => {
     database.get(table).push(value).write();
 };
@@ -79,6 +88,19 @@ server.post('/api/auth/login', (req, res) => {
 
     const response = getMockedAuthResponse(user.id);
     res.status(200).jsonp(response);
+});
+
+server.get('/api/users/me', async (req, res) => {
+    const auth = req.headers.authorization;
+    const accessToken = auth.split(' ')[1];
+    if (!accessToken) return res.status(401).jsonp(getMocked401Response());
+
+    const profile = await getUserProfile();
+
+    res.status(200).jsonp({
+        id: profile.id,
+        username: profile.username,
+    });
 });
 
 server.post('/api/subjects', (req, res) => {
