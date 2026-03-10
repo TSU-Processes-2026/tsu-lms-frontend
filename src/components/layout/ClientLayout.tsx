@@ -37,6 +37,7 @@ export const ClientLayout = () => {
                     onClick={() => {
                         setView('/home');
                         navigate('/home');
+                        setPageTitle('Главная');
                     }}
                 >
                     <div className='w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200/50'>
@@ -53,6 +54,7 @@ export const ClientLayout = () => {
                             onClick={() => {
                                 setView(item.id);
                                 navigate(item.id);
+                                setPageTitle(item.label);
                             }}
                             className={`w-full flex items-center cursor-pointer gap-3 px-4 py-3 rounded-xl transition-all ${currentView === item.id ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-200/50' : 'hover:bg-slate-50 text-slate-600'}`}
                         >

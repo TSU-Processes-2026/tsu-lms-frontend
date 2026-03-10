@@ -18,6 +18,7 @@ import { handleSelectSubject } from '../pages/Subjects/handlers';
 import { ServerErrorPage } from '@/pages/ErrorPages/ServerErrorPage.tsx';
 import { NotFoundPage } from '@/pages/ErrorPages/NotFoundPage.tsx';
 import { ForbiddenPage } from '@/pages/ErrorPages/ForbiddenPage.tsx';
+import { HomePage } from '@/pages/HomePage/index.tsx';
 
 export const router = createBrowserRouter([
     {
@@ -41,7 +42,7 @@ export const router = createBrowserRouter([
                 children: [
                     {
                         index: true,
-                        element: <div>Главная страница</div>,
+                        element: <HomePage />,
                     },
                     {
                         path: 'subjects',
