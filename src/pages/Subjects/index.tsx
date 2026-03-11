@@ -22,7 +22,7 @@ export const SubjectsPage: React.FC = (): JSX.Element => {
                                 <Icon size={28} className="text-white" />
                             </div>
                             <h4 className="font-bold text-lg mb-1 text-slate-800">{s.name}</h4>
-                            <p className="text-xs text-slate-400 mb-1">Преподаватель: {s.teacher}</p>
+                            <p className="text-xs text-slate-400 mb-1">{s.description}</p>
                             <p className="text-xs font-mono text-slate-300 mb-4">Код: {s.code}</p>
                             <div className="mb-4">
                                 <div className="flex justify-between mb-1">
