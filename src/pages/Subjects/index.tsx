@@ -21,7 +21,7 @@ export const SubjectsPage: React.FC = (): JSX.Element => {
                             <div className={`w-14 h-14 rounded-2xl bg-linear-to-br ${s.color} flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform`}>
                                 <Icon size={28} className="text-white" />
                             </div>
-                            <h4 className="font-bold text-lg mb-1 text-slate-800">{s.name}</h4>
+                            <h4 className="font-bold text-lg mb-1 text-slate-800">{s.title}</h4>
                             <p className="text-xs text-slate-400 mb-1">{s.description}</p>
                             <p className="text-xs font-mono text-slate-300 mb-4">Код: {s.code}</p>
                             <div className="mb-4">
