@@ -1,6 +1,12 @@
 ﻿import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { SubjectsPage } from "@/pages/Subjects/index.tsx";
+import { useNavigate } from 'react-router-dom';
+
+jest.mock('react-router-dom', () => ({
+    ...jest.requireActual('react-router-dom'),
+    useNavigate: jest.fn(),
+}));
 
 beforeEach(() => {
     jest.spyOn(global, 'fetch').mockImplementation((url) => {
@@ -122,5 +128,13 @@ describe('SubjectsPage', () => {
         } as Response);
         render(<SubjectsPage />);
         expect(await screen.findByTestId('subject-progress-3fa85f64-5717-4562-b3fc-2c963f66afa6')).toHaveTextContent(/0%|100%/);
+    });
+    it('should navigate to subject detail page with correct UUID on card click', async () => {
+        const mockNavigate = jest.fn();
+        (useNavigate as jest.Mock).mockReturnValue(mockNavigate);
+        render(<SubjectsPage />);
+        const card = await screen.findByTestId('subject-card-3fa85f64-5717-4562-b3fc-2c963f66afa6');
+        card.click();
+        expect(mockNavigate).toHaveBeenCalledWith('/subjects/3fa85f64-5717-4562-b3fc-2c963f66afa6');
     });
 });
