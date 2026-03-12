@@ -12,13 +12,11 @@ import {
     REGISTER_PAGE_URL,
     ROOT_URL,
 } from '@/constants/paths/paths';
-import { SubjectsPage } from '../pages/Subjects';
-import { INITIAL_DATA } from '../constants/mocks/data.ts';
-import { handleSelectSubject } from '../pages/Subjects/handlers';
+import { SubjectsPage } from '@/pages/Subjects';
 import { ServerErrorPage } from '@/pages/ErrorPages/ServerErrorPage.tsx';
 import { NotFoundPage } from '@/pages/ErrorPages/NotFoundPage.tsx';
 import { ForbiddenPage } from '@/pages/ErrorPages/ForbiddenPage.tsx';
-import { HomePage } from '@/pages/HomePage/index.tsx';
+import { HomePage } from "@/pages/HomePage";
 
 export const router = createBrowserRouter([
     {
@@ -37,24 +35,18 @@ export const router = createBrowserRouter([
         element: <ProtectedRoute />,
         children: [
             {
-                path: HOME_PAGE_URL,
                 element: <ClientLayout />,
                 children: [
                     {
-                        index: true,
+                        path: HOME_PAGE_URL,
                         element: <HomePage />,
                     },
                     {
-                        path: 'subjects',
-                        element: (
-                            <SubjectsPage
-                                subjects={INITIAL_DATA.subjects}
-                                onSelectSubject={handleSelectSubject}
-                            />
-                        ),
+                        path: '/subjects',
+                        element: <SubjectsPage />,
                     },
                     {
-                        path: 'assignments',
+                        path: '/assignments',
                         element: <div>Страница с решениями</div>,
                     },
                 ],
