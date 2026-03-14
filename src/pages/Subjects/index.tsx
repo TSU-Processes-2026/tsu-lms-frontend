@@ -1,10 +1,18 @@
-﻿import React, {JSX} from 'react';
-import { User as UserIcon } from 'lucide-react';
-import { Subject } from "@/types/subject/Subject.ts";
+﻿import React, { JSX } from 'react';
+import { SubjectCard } from '@/components/ui/SubjectCard';
+import { Subject } from '@/types/subject/Subject';
 import { useSubjects } from '@/hooks/subject/useSubjects';
 
 export const SubjectsPage: React.FC = (): JSX.Element => {
     const { subjects, selectSubject } = useSubjects();
+    const mapSubjectToCard = (subject: Subject) => ({
+        ...subject,
+        icon: () => <span>📚</span>,
+        color: 'bg-blue-500',
+        code: subject.id,
+        progress: Math.floor(Math.random() * 100),
+        students: Math.floor(Math.random() * 20) + 3,
+    });
 
     return (
         <div className="max-w-6xl mx-auto">
@@ -13,39 +21,9 @@ export const SubjectsPage: React.FC = (): JSX.Element => {
                 <p className="text-slate-500 text-sm mt-1">Выберите предмет для просмотра материалов</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {subjects.map((s: Subject) => {
-                    const Icon = s.icon;
-                    return (
-                        <div key={s.id} onClick={() => selectSubject(s)}
-                             className="group bg-white/80 backdrop-blur-sm p-6 rounded-3xl border border-slate-100 hover:border-blue-200 shadow-sm hover:shadow-2xl hover:shadow-blue-100/50 transition-all cursor-pointer">
-                            <div className={`w-14 h-14 rounded-2xl bg-linear-to-br ${s.color} flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform`}>
-                                <Icon size={28} className="text-white" />
-                            </div>
-                            <h4 className="font-bold text-lg mb-1 text-slate-800">{s.title}</h4>
-                            <p className="text-xs text-slate-400 mb-1">{s.description}</p>
-                            <p className="text-xs font-mono text-slate-300 mb-4">Код: {s.code}</p>
-                            <div className="mb-4">
-                                <div className="flex justify-between mb-1">
-                                    <span className="text-[10px] font-semibold text-slate-500">Прогресс</span>
-                                    <span className="text-xs font-bold text-blue-600">{s.progress}%</span>
-                                </div>
-                                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                                    <div className={`h-full bg-linear-to-r ${s.color}`} style={{ width: `${s.progress}%` }} />
-                                </div>
-                            </div>
-                            <div className="flex -space-x-2">
-                                {[1, 2, 3].map(i => (
-                                    <div key={i} className="w-7 h-7 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center">
-                                        <UserIcon size={12} className="text-slate-500" />
-                                    </div>
-                                ))}
-                                <div className="w-7 h-7 rounded-full border-2 border-white bg-white flex items-center justify-center text-[10px] font-bold text-slate-600 shadow-sm">
-                                    +{s.students - 3}
-                                </div>
-                            </div>
-                        </div>
-                    );
-                })}
+                {subjects.map((subject) => (
+                    <SubjectCard key={subject.id} subject={mapSubjectToCard(subject)} onSelect={selectSubject} />
+                ))}
             </div>
         </div>
     );
