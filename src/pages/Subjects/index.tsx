@@ -1,9 +1,16 @@
-﻿import React, { JSX } from 'react';
-import { SubjectCard } from '@/components/ui/SubjectCard';
+﻿import { SubjectCard } from '@/components/ui/SubjectCard';
 import { useSubjects } from '@/hooks/subject/useSubjects';
+import { useNavigate } from 'react-router-dom';
+import { ExtendedSubject } from '@/hooks/subject/useSubjects';
 
-export const SubjectsPage: React.FC = (): JSX.Element => {
+const SubjectsPage = () => {
     const { subjects, selectSubject, participants, isLoading, isError, error, errorsParticipants } = useSubjects();
+    const navigate = useNavigate();
+
+    const onSelectSubject = (subject: ExtendedSubject) => {
+        selectSubject(subject);
+        navigate(`/subjects/${subject.id}`);
+    };
 
     return (
         <div className="max-w-6xl mx-auto">
@@ -23,7 +30,7 @@ export const SubjectsPage: React.FC = (): JSX.Element => {
                         <SubjectCard
                             key={subject.id}
                             subject={subject}
-                            onSelect={selectSubject}
+                            onSelect={onSelectSubject}
                             participants={participants[subject.id] || []}
                             participantsError={errorsParticipants[subject.id]}
                         />
@@ -33,3 +40,5 @@ export const SubjectsPage: React.FC = (): JSX.Element => {
         </div>
     );
 };
+
+export { SubjectsPage };

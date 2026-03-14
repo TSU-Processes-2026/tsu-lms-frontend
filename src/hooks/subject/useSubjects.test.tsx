@@ -3,6 +3,7 @@ import { act, renderHook } from '@testing-library/react';
 import { Subject } from '@/types/subject/Subject';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as React from "react";
+import { User as UserIcon } from 'lucide-react';
 
 const queryClient = new QueryClient();
 const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -115,9 +116,27 @@ describe('useSubjects — subject selection', () => {
     it('должен корректно выбирать предмет', () => {
         const { result } = renderHook(() => useSubjects(), { wrapper });
         act(() => {
-            result.current.selectSubject({ id: '3fa85f64-5717-4562-b3fc-2c963f66afa6', title: 'Тест', description: 'Описание' });
+            result.current.selectSubject({
+                id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+                title: 'Тест',
+                description: 'Описание',
+                code: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+                progress: 0,
+                students: 0,
+                icon: UserIcon,
+                color: 'bg-blue-500',
+            });
         });
-        expect(result.current.selectedSubject).toEqual({ id: '3fa85f64-5717-4562-b3fc-2c963f66afa6', title: 'Тест', description: 'Описание' });
+        expect(result.current.selectedSubject).toEqual({
+            id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+            title: 'Тест',
+            description: 'Описание',
+            code: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+            progress: 0,
+            students: 0,
+            icon: UserIcon,
+            color: 'bg-blue-500',
+        });
     });
 });
 

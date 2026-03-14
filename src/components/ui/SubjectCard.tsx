@@ -1,5 +1,5 @@
 ﻿import React, { JSX } from "react";
-import { Subject } from "@/types/subject/Subject";
+import { ExtendedSubject } from '@/hooks/subject/useSubjects';
 
 /**
  * @interface Participant
@@ -29,13 +29,8 @@ export interface Participant {
  * @property {Participant[]} participants - Array of participants to display avatars and badge.
  */
 export interface SubjectCardProps {
-    subject: Subject & {
-        icon: React.ComponentType<{ size: number; className?: string }>;
-        color: string;
-        code: string;
-        progress: number;
-    };
-    onSelect: (subject: SubjectCardProps["subject"]) => void;
+    subject: ExtendedSubject;
+    onSelect: (subject: ExtendedSubject) => void;
     participants: Participant[];
 }
 

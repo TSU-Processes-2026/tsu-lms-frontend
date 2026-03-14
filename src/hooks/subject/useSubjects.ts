@@ -76,7 +76,7 @@ export interface UseSubjectsResult {
      * Type is unknown, handle with type guards.
      */
     error: unknown;
-    selectSubject: (subject: Subject) => void;
+    selectSubject: (subject: ExtendedSubject) => void;
     /**
      * Participants loaded for each subjectId.
      * @type {Record<string, Participant[]>}
@@ -189,7 +189,7 @@ export function useSubjects(autoLoadParticipants: boolean = true): UseSubjectsRe
      * @param {Subject} subject - Subject to select.
      * @returns {void}
      */
-    const selectSubject = (subject: Subject): void => {
+    const selectSubject = (subject: ExtendedSubject): void => {
         setSelectedSubject(subject);
     };
 

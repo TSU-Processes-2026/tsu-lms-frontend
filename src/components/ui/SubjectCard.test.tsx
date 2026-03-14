@@ -11,6 +11,7 @@ const mockSubject = {
     color: 'bg-blue-500',
     code: 'MATH123',
     progress: 50,
+    students: 0,
 };
 const mockOnSelect = () => {};
 
