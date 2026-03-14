@@ -1,7 +1,7 @@
 ﻿import React from 'react';
-import {Subject} from '@/types/subject/Subject.ts';
-import {User as UserIcon} from 'lucide-react';
-import {useQuery} from '@tanstack/react-query';
+import { Subject } from '@/types/subject/Subject.ts';
+import { GraduationCap } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 
 /**
  * Participant interface for subject participants.
@@ -177,7 +177,7 @@ export function useSubjects(autoLoadParticipants: boolean = true): UseSubjectsRe
                 code: subject.id,
                 progress,
                 students: participantsArr.length,
-                icon: UserIcon,
+                icon: GraduationCap,
                 color: 'bg-blue-500',
             };
         }))

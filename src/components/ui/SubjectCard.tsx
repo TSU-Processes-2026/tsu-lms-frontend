@@ -1,5 +1,6 @@
 ﻿import React, { JSX } from "react";
 import { ExtendedSubject } from '@/hooks/subject/useSubjects';
+import { User as UserIcon } from 'lucide-react';
 
 /**
  * @interface Participant
@@ -47,7 +48,6 @@ export interface SubjectCardProps {
 export const SubjectCard: React.FC<SubjectCardProps & { participantsError?: Error }> = ({ subject, onSelect, participants, participantsError }: SubjectCardProps & { participantsError?: Error }): JSX.Element => {
     const Icon = subject.icon;
     const avatarLimit = 3;
-    const avatarsToShow: Participant[] = participants.slice(0, avatarLimit);
     const badgeCount = participants.length > avatarLimit ? participants.length - avatarLimit : 0;
 
     return (
@@ -68,15 +68,24 @@ export const SubjectCard: React.FC<SubjectCardProps & { participantsError?: Erro
                 </div>
             </div>
             <div className="flex -space-x-2">
-                  {avatarsToShow.map((participant: Participant) => (
-                      <img key={participant.userId} src={participant.avatarUrl} alt={participant.username} 
-                           className="w-7 h-7 rounded-full border-2 border-white bg-slate-200 object-cover" 
-                           data-testid={`participant-avatar-${participant.userId}`}
-                      />
-                  ))}
+                {participants.slice(0, avatarLimit).map((participant) => (
+                    participant.avatarUrl ? (
+                        <img key={participant.userId} src={participant.avatarUrl} alt={participant.username} 
+                             className="w-7 h-7 rounded-full border-2 border-white bg-slate-200 object-cover" 
+                             data-testid={`participant-avatar-${participant.userId}`}
+                        />
+                    ) : (
+                        <div key={participant.userId} 
+                             className="w-7 h-7 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center" 
+                             data-testid={`participant-icon-${participant.userId}`}
+                        >
+                            <UserIcon size={12} className="text-slate-500" />
+                        </div>
+                    )
+                ))}
                 {badgeCount > 0 && (
-                    <div
-                        className="w-7 h-7 rounded-full border-2 border-white bg-white flex items-center justify-center text-[10px] font-bold text-slate-600 shadow-sm"
+                    <div 
+                        className="w-7 h-7 rounded-full border-2 border-white bg-white flex items-center justify-center text-[10px] font-bold text-slate-600 shadow-sm" 
                         data-testid="badge"
                     >
                         +{badgeCount}
