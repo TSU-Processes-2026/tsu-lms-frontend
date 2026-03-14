@@ -44,6 +44,16 @@
       "id": "1773129401706-bij8kx1ev4d",
       "title": "sdsdsd",
       "description": "sddddsd"
+    },
+    {
+      "id": "1773129500000-newsubj1",
+      "title": "Programming Basics",
+      "description": "Introduction to programming concepts"
+    },
+    {
+      "id": "1773129600000-advprog",
+      "title": "Advanced Programming",
+      "description": "Deep dive into programming techniques"
     }
   ],
   "participants": [
@@ -51,7 +61,17 @@
     { "subjectId": "1773129035372-dr012hhflxj", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2", "role": "Student" },
     { "subjectId": "1773129035372-dr012hhflxj", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa3", "role": "Teacher" },
     { "subjectId": "1773129101042-jiwhlih6mu", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa1", "role": "Student" },
-    { "subjectId": "1773129101042-jiwhlih6mu", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2", "role": "Teacher" }
+    { "subjectId": "1773129101042-jiwhlih6mu", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2", "role": "Teacher" },
+    { "subjectId": "1773129500000-newsubj1", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6", "role": "Student" },
+    { "subjectId": "1773129500000-newsubj1", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2", "role": "Student" },
+    { "subjectId": "1773129500000-newsubj1", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa1", "role": "Student" },
+    { "subjectId": "1773129500000-newsubj1", "userId": "1772748407938-rqnwuv6zbrh", "role": "Student" },
+    { "subjectId": "1773129500000-newsubj1", "userId": "extra-user-1", "role": "Student" },
+    { "subjectId": "1773129500000-newsubj1", "userId": "extra-user-2", "role": "Student" },
+    { "subjectId": "1773129500000-newsubj1", "userId": "extra-user-3", "role": "Student" }
+    ,{ "subjectId": "1773129600000-advprog", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6", "role": "Student" }
+    ,{ "subjectId": "1773129600000-advprog", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2", "role": "Student" }
+    ,{ "subjectId": "1773129600000-advprog", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa3", "role": "Teacher" }
   ],
   "assignments": [
     {
@@ -99,6 +119,80 @@
         }
       ],
       "createdAt": "2024-01-02T10:00:00.000Z"
+    },
+    {
+      "id": "assgn-3",
+      "subjectId": "1773129500000-newsubj1",
+      "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "postType": "Assignment",
+      "content": "Задание по основам программирования",
+      "assignmentData": "Решить простую задачу на Python",
+      "questions": [
+        {
+          "id": "q-4",
+          "questionType": "Text",
+          "questionData": "Напишите функцию, которая возвращает сумму двух чисел"
+        }
+      ],
+      "createdAt": "2026-03-15T10:00:00.000Z"
+    }
+    ,{
+      "id": "assgn-4",
+      "subjectId": "1773129600000-advprog",
+      "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa3",
+      "postType": "Assignment",
+      "content": "Задание без отправок",
+      "assignmentData": "Просто прочитать материал",
+      "questions": [],
+      "createdAt": "2026-03-15T13:00:00.000Z"
+    }
+    ,{
+      "id": "assgn-5",
+      "subjectId": "1773129600000-advprog",
+      "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa3",
+      "postType": "Assignment",
+      "content": "Задание с черновиком",
+      "assignmentData": "Написать функцию сортировки",
+      "questions": [
+        {
+          "id": "q-5",
+          "questionType": "Text",
+          "questionData": "Реализуйте быструю сортировку"
+        }
+      ],
+      "createdAt": "2026-03-15T14:00:00.000Z"
+    }
+    ,{
+      "id": "assgn-6",
+      "subjectId": "1773129600000-advprog",
+      "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa3",
+      "postType": "Assignment",
+      "content": "Задание с отправкой без оценки",
+      "assignmentData": "Реализовать паттерн Singleton",
+      "questions": [
+        {
+          "id": "q-6",
+          "questionType": "Text",
+          "questionData": "Опишите паттерн Singleton"
+        }
+      ],
+      "createdAt": "2026-03-15T15:00:00.000Z"
+    }
+    ,{
+      "id": "assgn-7",
+      "subjectId": "1773129600000-advprog",
+      "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa3",
+      "postType": "Assignment",
+      "content": "Задание с отправкой и оценкой",
+      "assignmentData": "Реализовать паттерн Observer",
+      "questions": [
+        {
+          "id": "q-7",
+          "questionType": "Text",
+          "questionData": "Опишите паттерн Observer"
+        }
+      ],
+      "createdAt": "2026-03-15T16:00:00.000Z"
     }
   ],
   "submissions": [
@@ -131,6 +225,44 @@
       "answers": [],
       "status": "Draft",
       "submittedAt": null
+    },
+    {
+      "id": "subm-4",
+      "assignmentId": "assgn-3",
+      "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "answers": [
+        { "questionId": "q-4", "answerType": "TextAnswer", "text": "def add(a, b): return a + b" }
+      ],
+      "status": "Graded",
+      "submittedAt": "2026-03-15T12:00:00.000Z"
+    }
+    ,{
+      "id": "subm-5",
+      "assignmentId": "assgn-5",
+      "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "answers": [],
+      "status": "Draft",
+      "submittedAt": null
+    }
+    ,{
+      "id": "subm-6",
+      "assignmentId": "assgn-6",
+      "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "answers": [
+        { "questionId": "q-6", "answerType": "TextAnswer", "text": "Singleton — это паттерн, который гарантирует единственный экземпляр класса." }
+      ],
+      "status": "RequiresReview",
+      "submittedAt": "2026-03-15T17:00:00.000Z"
+    }
+    ,{
+      "id": "subm-7",
+      "assignmentId": "assgn-7",
+      "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "answers": [
+        { "questionId": "q-7", "answerType": "TextAnswer", "text": "Observer — это паттерн, который позволяет подписчикам реагировать на изменения объекта." }
+      ],
+      "status": "Graded",
+      "submittedAt": "2026-03-15T18:00:00.000Z"
     }
   ],
   "grades": [
@@ -140,6 +272,20 @@
       "score": 90,
       "verdictText": "Отлично",
       "gradedAt": "2024-01-04T10:00:00.000Z"
+    },
+    {
+      "id": "grade-2",
+      "submissionId": "subm-4",
+      "score": 100,
+      "verdictText": "Выполнено отлично",
+      "gradedAt": "2026-03-15T13:00:00.000Z"
+    }
+    ,{
+      "id": "grade-3",
+      "submissionId": "subm-7",
+      "score": 95,
+      "verdictText": "Хорошо",
+      "gradedAt": "2026-03-15T19:00:00.000Z"
     }
   ]
 }
