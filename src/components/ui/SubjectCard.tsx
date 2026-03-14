@@ -49,10 +49,10 @@ export interface SubjectCardProps {
  * @example
  * <SubjectCard subject={subject} onSelect={handleSelect} participants={participants} />
  */
-export const SubjectCard: React.FC<SubjectCardProps> = ({ subject, onSelect, participants }: SubjectCardProps): JSX.Element => {
+export const SubjectCard: React.FC<SubjectCardProps & { participantsError?: Error }> = ({ subject, onSelect, participants, participantsError }: any): JSX.Element => {
     const Icon = subject.icon;
     const avatarLimit = 3;
-    const avatarsToShow = participants.slice(0, avatarLimit);
+    const avatarsToShow: Participant[] = participants.slice(0, avatarLimit);
     const badgeCount = participants.length > avatarLimit ? participants.length - avatarLimit : 0;
 
     return (
@@ -67,20 +67,20 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({ subject, onSelect, par
             <div className="mb-4">
                 <div className="flex justify-between mb-1">
                     <span className="text-[10px] font-semibold text-slate-500">Прогресс</span>
-                    <span className="text-xs font-bold text-blue-600">{subject.progress}%</span>
+                    <span className="text-xs font-bold text-blue-600" data-testid={`subject-progress-${subject.id}`}>{subject.progress}%</span>
                 </div>
                 <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
                     <div className={`h-full bg-linear-to-r ${subject.color}`} style={{ width: `${subject.progress}%` }} />
                 </div>
             </div>
             <div className="flex -space-x-2">
-                {avatarsToShow.map(participant => (
+                {avatarsToShow.map((participant: Participant) => (
                     <img
                         key={participant.userId}
                         src={participant.avatarUrl}
                         alt={participant.username}
                         className="w-7 h-7 rounded-full border-2 border-white bg-slate-200 object-cover"
-                        data-testid="avatar"
+                        data-testid={`participant-avatar-${participant.userId}`}
                     />
                 ))}
                 {badgeCount > 0 && (
@@ -92,6 +92,9 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({ subject, onSelect, par
                     </div>
                 )}
             </div>
+            {participantsError && (
+                <div data-testid={`participants-error-${subject.id}`}>Ошибка загрузки участников</div>
+            )}
         </div>
     );
 };

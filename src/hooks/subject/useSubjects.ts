@@ -118,7 +118,7 @@ export function useSubjects(): UseSubjectsResult {
     } = useQuery({
         queryKey: ['subjects'],
         queryFn: async () => {
-            const res = await fetch('/api/subjects');
+            const res = await fetch('/api/subjects', {});
             if (!res.ok) throw new Error('Ошибка загрузки предметов');
             return await res.json();
         },
@@ -180,7 +180,7 @@ export function useSubjects(): UseSubjectsResult {
             if (typeof offset === 'number') params.push(`offset=${offset}`);
             url += '?' + params.join('&');
         }
-        const res = await fetch(url);
+        const res = await fetch(url, {});
         if (!res.ok) {
             if (res.status === 404) throw new Error('Not found');
             if (res.status === 401) throw new Error('Unauthorized');
