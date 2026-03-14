@@ -37,6 +37,26 @@ interface Participant {
 }
 
 /**
+ * Calculates the progress percentage for a list of assignments.
+ * Progress is determined by the number of completed assignments (with graded or reviewed submissions with a grade).
+ * @param assignments Array of Assignment objects to calculate progress for.
+ * @returns {number} Progress percentage (0-100).
+ * @throws {Error} If assignments is not an array.
+ */
+function calculateProgress(assignments: Assignment[]): number {
+    if (!Array.isArray(assignments)) {
+        throw new Error('assignments must be an array');
+    }
+    if (assignments.length === 0) return 0;
+    const completed = assignments.filter(a =>
+        a.submissions.some(s =>
+            ((s.status === 'Graded' || s.status === 'RequiresReview') && s.grade !== undefined)
+        )
+    ).length;
+    return Math.round((completed / assignments.length) * 100);
+}
+
+/**
  * Тесты расчёта прогресса для предмета.
  * Проверяется корректность вычисления процента выполнения заданий.
  */
@@ -48,7 +68,7 @@ describe('useSubjects — progress', () => {
             description: 'Описание',
             assignments: [],
         };
-        const progress = subject.assignments.length === 0 ? 0 : 100;
+        const progress = calculateProgress(subject.assignments);
         expect(progress).toBe(0);
     });
 
@@ -65,13 +85,7 @@ describe('useSubjects — progress', () => {
                 { id: 'a5', submissions: [{ status: 'Graded' }] },
             ],
         };
-        const completed = subject.assignments.filter(a =>
-            a.submissions.some(s =>
-                (s.status === 'Graded' && s.grade) ||
-                (s.status === 'RequiresReview' && s.grade)
-            )
-        ).length;
-        const progress = Math.round((completed / subject.assignments.length) * 100);
+        const progress = calculateProgress(subject.assignments);
         expect(progress).toBe(40);
     });
 
@@ -85,9 +99,7 @@ describe('useSubjects — progress', () => {
                 { id: 'a2', submissions: [{ status: 'Graded', grade: { score: 4 } }] },
             ],
         };
-
-        const completed = subject.assignments.filter(a => a.submissions.some(s => s.status === 'Graded' && s.grade)).length;
-        const progress = Math.round((completed / subject.assignments.length) * 100);
+        const progress = calculateProgress(subject.assignments);
         expect(progress).toBe(100);
     });
 });
@@ -399,5 +411,200 @@ describe('useSubjects — loading submissions', () => {
         await act(async () => {
             await expect(result.current.loadSubmissions('assignment1')).rejects.toThrow('Forbidden');
         });
+    });
+});
+
+/**
+ * Тесты бизнес-логики пустого списка предметов и ошибок загрузки.
+ * Проверяется корректное поведение хука useSubjects при отсутствии предметов и ошибках API.
+ */
+describe('useSubjects — empty and error states', () => {
+    it('должен возвращать пустой список предметов, если API возвращает пустой массив', async () => {
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            json: async () => [],
+        });
+        const { result } = renderHook(() => useSubjects(false), { wrapper });
+        await act(async () => {
+            await Promise.resolve(); // ожидание асинхронного эффекта
+        });
+        expect(result.current.subjects).toEqual([]);
+        expect(result.current.isLoading).toBe(false);
+        expect(result.current.isError).toBe(false);
+    });
+
+    it('должен корректно обрабатывать ошибку 401 при загрузке предметов', async () => {
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: false,
+            status: 401,
+        });
+        const { result } = renderHook(() => useSubjects(false), { wrapper });
+        await act(async () => {
+            await Promise.resolve();
+        });
+        expect(result.current.isError).toBe(true);
+        expect(result.current.error).toEqual(new Error('Unauthorized'));
+    });
+
+    it('должен корректно обрабатывать ошибку 403 при загрузке предметов', async () => {
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: false,
+            status: 403,
+        });
+        const { result } = renderHook(() => useSubjects(false), { wrapper });
+        await act(async () => {
+            await Promise.resolve();
+        });
+        expect(result.current.isError).toBe(true);
+        expect(result.current.error).toEqual(new Error('Ошибка загрузки предметов'));
+    });
+
+    it('должен корректно обрабатывать ошибку 500 при загрузке предметов', async () => {
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: false,
+            status: 500,
+        });
+        const { result } = renderHook(() => useSubjects(false), { wrapper });
+        await act(async () => {
+            await Promise.resolve();
+        });
+        expect(result.current.isError).toBe(true);
+        expect(result.current.error).toEqual(new Error('Ошибка загрузки предметов'));
+    });
+});
+
+/**
+ * Тесты сложных кейсов расчёта прогресса.
+ * Проверяется корректность расчёта при статусах RequiresReview без оценки и Draft с оценкой.
+ */
+describe('useSubjects — progress edge cases', () => {
+    it('должен не учитывать RequiresReview без оценки в прогрессе', () => {
+        const assignments: Assignment[] = [
+            { id: 'a1', submissions: [{ status: 'RequiresReview', grade: undefined }] },
+            { id: 'a2', submissions: [{ status: 'Graded', grade: { score: 5 } }] },
+        ];
+        const progress = calculateProgress(assignments);
+        expect(progress).toBe(50);
+    });
+
+    it('должен не учитывать Draft с оценкой в прогрессе', () => {
+        const assignments: Assignment[] = [
+            { id: 'a1', submissions: [{ status: 'Draft', grade: { score: 5 } }] },
+            { id: 'a2', submissions: [{ status: 'Graded', grade: { score: 5 } }] },
+        ];
+        const progress = calculateProgress(assignments);
+        expect(progress).toBe(50);
+    });
+});
+
+/**
+ * Тесты сброса ошибок после успешной повторной загрузки.
+ * Проверяется, что ошибка удаляется после успешного запроса.
+ */
+describe('useSubjects — error reset', () => {
+    it('должен сбрасывать ошибку после успешной повторной загрузки участников', async () => {
+        let fail = true;
+        global.fetch = jest.fn().mockImplementation(() => {
+            if (fail) {
+                fail = false;
+                return Promise.resolve({ ok: false, status: 404 });
+            }
+            return Promise.resolve({ ok: true, json: async () => [{ userId: '1', username: 'User1', avatarUrl: '' }] });
+        });
+        const { result } = renderHook(() => useSubjects(false), { wrapper });
+        await act(async () => {
+            await result.current.loadParticipants('subject1').catch(() => {});
+            await result.current.loadParticipants('subject1');
+        });
+        expect(result.current.errorsParticipants['subject1']).toBeUndefined();
+        expect(result.current.participants['subject1']).toEqual([{ userId: '1', username: 'User1', avatarUrl: '' }]);
+    });
+});
+
+/**
+ * Тесты повторного выбора и сброса выбранного предмета.
+ * Проверяется корректность выбора и сброса.
+ */
+describe('useSubjects — subject re-selection', () => {
+    it('должен корректно выбирать и сбрасывать выбранный предмет', () => {
+        const { result } = renderHook(() => useSubjects(false), { wrapper });
+        act(() => {
+            result.current.selectSubject({
+                id: 'subject1',
+                title: 'Тест',
+                description: 'Описание',
+                code: 'subject1',
+                progress: 0,
+                students: 0,
+                icon: UserIcon,
+                color: 'bg-blue-500',
+            });
+        });
+        expect(result.current.selectedSubject).toEqual(expect.objectContaining({ id: 'subject1' }));
+        act(() => {
+            result.current.selectSubject({
+                id: '',
+                title: '',
+                description: '',
+                code: '',
+                progress: 0,
+                students: 0,
+                icon: UserIcon,
+                color: '',
+            });
+        });
+        expect(result.current.selectedSubject).toEqual(expect.objectContaining({ id: '' }));
+    });
+});
+
+/**
+ * Тесты пагинации для участников, заданий и решений.
+ * Проверяется корректная работа limit/offset.
+ */
+describe('useSubjects — pagination', () => {
+    it('должен корректно передавать limit и offset при загрузке участников', async () => {
+        global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => [] });
+        const { result } = renderHook(() => useSubjects(false), { wrapper });
+        await act(async () => {
+            await result.current.loadParticipants('subject1', 5, 2);
+        });
+        expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('limit=5'), expect.anything());
+        expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('offset=2'), expect.anything());
+    });
+    it('должен корректно передавать limit и offset при загрузке заданий', async () => {
+        global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => [] });
+        const { result } = renderHook(() => useSubjects(false), { wrapper });
+        await act(async () => {
+            await result.current.loadAssignments('subject1', 3, 1);
+        });
+        expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('limit=3'), expect.anything());
+        expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('offset=1'), expect.anything());
+    });
+    it('должен корректно передавать limit, offset и isTeacher при загрузке решений', async () => {
+        global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => [] });
+        const { result } = renderHook(() => useSubjects(false), { wrapper });
+        await act(async () => {
+            await result.current.loadSubmissions('assignment1', 2, 0, true);
+        });
+        expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('limit=2'), expect.anything());
+        expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('offset=0'), expect.anything());
+        expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('isTeacher=true'), expect.anything());
+    });
+});
+
+/**
+ * Тесты автоматической загрузки участников, заданий и решений при autoLoadParticipants=true.
+ * Проверяется, что данные загружаются автоматически при монтировании.
+ */
+describe('useSubjects — auto loading', () => {
+    it('должен автоматически загружать участников, задания и решения при autoLoadParticipants=true', async () => {
+        global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => [] });
+        renderHook(() => useSubjects(true), { wrapper });
+        await act(async () => {
+            await Promise.resolve();
+        });
+        expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/participants'), expect.anything());
+        expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/assignments'), expect.anything());
+        expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/submissions'), expect.anything());
     });
 });

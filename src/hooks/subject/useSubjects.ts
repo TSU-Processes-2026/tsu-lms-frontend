@@ -138,6 +138,20 @@ export interface UseSubjectsResult {
 }
 
 /**
+ * Builds query string for pagination parameters (limit, offset).
+ *
+ * @param {number | undefined} limit - Limit of items to fetch.
+ * @param {number | undefined} offset - Offset for pagination.
+ * @returns {string} Query string starting with '?' or empty string if no params.
+ */
+function buildPaginationParams(limit?: number, offset?: number): string {
+    const params = [];
+    if (typeof limit === 'number') params.push(`limit=${limit}`);
+    if (typeof offset === 'number') params.push(`offset=${offset}`);
+    return params.length > 0 ? '?' + params.join('&') : '';
+}
+
+/**
  * useSubjects hook for managing subjects, participants, assignments, and progress calculation.
  *
  * @param {boolean} [autoLoadParticipants=true] - If true, participants are loaded automatically for each subject on mount. If false, participants are loaded only by manual call.
@@ -282,13 +296,7 @@ export function useSubjects(autoLoadParticipants: boolean = true): UseSubjectsRe
      * @throws {Error} Throws error for 404, 401, 403 statuses.
      */
     const loadParticipants = async (subjectId: string, limit?: number, offset?: number): Promise<void> => {
-        let url = `/api/subjects/${subjectId}/participants`;
-        if (typeof limit === 'number' || typeof offset === 'number') {
-            const params = [];
-            if (typeof limit === 'number') params.push(`limit=${limit}`);
-            if (typeof offset === 'number') params.push(`offset=${offset}`);
-            url += '?' + params.join('&');
-        }
+        const url = `/api/subjects/${subjectId}/participants` + buildPaginationParams(limit, offset);
         try {
             const res = await fetch(url, {});
             if (!res.ok) {
@@ -323,13 +331,7 @@ export function useSubjects(autoLoadParticipants: boolean = true): UseSubjectsRe
      * @throws {Error} Throws error for 404, 401, 403 statuses.
      */
     const loadAssignments = async (subjectId: string, limit?: number, offset?: number): Promise<void> => {
-        let url = `/api/subjects/${subjectId}/assignments`;
-        if (typeof limit === 'number' || typeof offset === 'number') {
-            const params = [];
-            if (typeof limit === 'number') params.push(`limit=${limit}`);
-            if (typeof offset === 'number') params.push(`offset=${offset}`);
-            url += '?' + params.join('&');
-        }
+        const url = `/api/subjects/${subjectId}/assignments` + buildPaginationParams(limit, offset);
         try {
             const res = await fetch(url, {});
             if (!res.ok) {
