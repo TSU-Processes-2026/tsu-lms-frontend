@@ -74,9 +74,9 @@ export const SubjectCard: React.FC<SubjectCardProps & { participantsError?: Erro
             </div>
             <div className="flex -space-x-2">
                   {avatarsToShow.map((participant: Participant) => (
-                      <img key={participant.userId} src={participant.avatarUrl} alt={participant.username}
-                          className="w-7 h-7 rounded-full border-2 border-white bg-slate-200 object-cover"
-                          data-testid="avatar"
+                      <img key={participant.userId} src={participant.avatarUrl} alt={participant.username} 
+                           className="w-7 h-7 rounded-full border-2 border-white bg-slate-200 object-cover" 
+                           data-testid={`participant-avatar-${participant.userId}`}
                       />
                   ))}
                 {badgeCount > 0 && (

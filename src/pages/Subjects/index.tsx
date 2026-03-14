@@ -3,7 +3,7 @@ import { SubjectCard } from '@/components/ui/SubjectCard';
 import { useSubjects } from '@/hooks/subject/useSubjects';
 
 export const SubjectsPage: React.FC = (): JSX.Element => {
-    const { subjects, selectSubject, participants, isLoading, isError, error } = useSubjects();
+    const { subjects, selectSubject, participants, isLoading, isError, error, errorsParticipants } = useSubjects();
 
     return (
         <div className="max-w-6xl mx-auto">
@@ -28,7 +28,7 @@ export const SubjectsPage: React.FC = (): JSX.Element => {
                             subject={subject}
                             onSelect={selectSubject}
                             participants={participants[subject.id] || []}
-                            participantsError={participants[subject.id] === undefined && error instanceof Error ? error : undefined}
+                            participantsError={errorsParticipants[subject.id]}
                         />
                     ))}
                 </div>

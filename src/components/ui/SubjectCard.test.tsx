@@ -27,7 +27,10 @@ describe('SubjectCard — avatars', () => {
             { userId: '4', username: 'Пользователь 4', avatarUrl: 'url4' },
         ];
         render(<SubjectCard subject={mockSubject} onSelect={mockOnSelect} participants={participants} />);
-        expect(screen.getAllByTestId('avatar')).toHaveLength(3);
+        expect(screen.getByTestId('participant-avatar-1')).toBeInTheDocument();
+        expect(screen.getByTestId('participant-avatar-2')).toBeInTheDocument();
+        expect(screen.getByTestId('participant-avatar-3')).toBeInTheDocument();
+        expect(screen.queryByTestId('participant-avatar-4')).not.toBeInTheDocument();
     });
 });
 

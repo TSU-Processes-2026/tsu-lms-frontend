@@ -47,8 +47,8 @@ beforeEach(() => {
                 return Promise.resolve({
                     ok: true,
                     json: () => Promise.resolve([
-                        { userId: 'u1', role: 'Student' },
-                        { userId: 'u2', role: 'Teacher' },
+                        { userId: 'u1', role: 'Student', username: 'Иван', avatarUrl: 'https://example.com/avatar1.png' },
+                        { userId: 'u2', role: 'Teacher', username: 'Петр', avatarUrl: 'https://example.com/avatar2.png' },
                     ]),
                 } as Response);
             }

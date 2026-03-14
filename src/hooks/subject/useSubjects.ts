@@ -91,6 +91,11 @@ export interface UseSubjectsResult {
      * @throws {Error} Throws error for 404, 401, 403 statuses.
      */
     loadParticipants: (subjectId: string, limit?: number, offset?: number) => Promise<void>;
+    /**
+     * Errors occurred during loading participants for each subjectId.
+     * @type {Record<string, Error>}
+     */
+    errorsParticipants: Record<string, Error>;
 }
 
 /**
@@ -109,6 +114,7 @@ export interface UseSubjectsResult {
 export function useSubjects(): UseSubjectsResult {
     const [selectedSubject, setSelectedSubject] = React.useState<Subject | ExtendedSubject | null>(null);
     const [participants, setParticipants] = React.useState<Record<string, Participant[]>>({});
+    const [errorsParticipants, setErrorsParticipants] = React.useState<Record<string, Error>>({});
 
     const {
         data: subjects = [],
@@ -123,6 +129,16 @@ export function useSubjects(): UseSubjectsResult {
             return await res.json();
         },
     });
+
+    React.useEffect(() => {
+        if (Array.isArray(subjects)) {
+            subjects.forEach((subject: Subject) => {
+                if (subject.id && participants[subject.id] === undefined) {
+                    loadParticipants(subject.id).catch(() => {});
+                }
+            });
+        }
+    }, [participants, subjects]);
 
     const cards = Array.isArray(subjects)
         ? subjects.map((subject: Subject) => {
@@ -180,15 +196,28 @@ export function useSubjects(): UseSubjectsResult {
             if (typeof offset === 'number') params.push(`offset=${offset}`);
             url += '?' + params.join('&');
         }
-        const res = await fetch(url, {});
-        if (!res.ok) {
-            if (res.status === 404) throw new Error('Not found');
-            if (res.status === 401) throw new Error('Unauthorized');
-            if (res.status === 403) throw new Error('Forbidden');
-            throw new Error('Failed to load participants');
+        try {
+            const res = await fetch(url, {});
+            if (!res.ok) {
+                let err: Error;
+                if (res.status === 404) err = new Error('Not found');
+                else if (res.status === 401) err = new Error('Unauthorized');
+                else if (res.status === 403) err = new Error('Forbidden');
+                else err = new Error('Failed to load participants');
+                setErrorsParticipants(prev => ({ ...prev, [subjectId]: err }));
+                throw err;
+            }
+            const data = await res.json();
+            setParticipants(prev => ({ ...prev, [subjectId]: data }));
+            setErrorsParticipants(prev => {
+                const copy = { ...prev };
+                delete copy[subjectId];
+                return copy;
+            });
+        } catch (err) {
+            setErrorsParticipants(prev => ({ ...prev, [subjectId]: err instanceof Error ? err : new Error('Unknown error') }));
+            throw err instanceof Error ? err : new Error('Unknown error');
         }
-        const data = await res.json();
-        setParticipants(prev => ({ ...prev, [subjectId]: data }));
     };
 
     return {
@@ -200,5 +229,6 @@ export function useSubjects(): UseSubjectsResult {
         selectSubject,
         participants,
         loadParticipants,
+        errorsParticipants,
     };
 }
