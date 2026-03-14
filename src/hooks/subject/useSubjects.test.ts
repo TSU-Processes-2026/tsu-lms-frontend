@@ -1,4 +1,5 @@
 ﻿import { useSubjects } from './useSubjects';
+import { act, renderHook } from '@testing-library/react';
 import { Subject } from '@/types/subject/Subject';
 
 /**
@@ -105,9 +106,11 @@ describe('useSubjects — participant filtering', () => {
  */
 describe('useSubjects — subject selection', () => {
     it('должен корректно выбирать предмет', () => {
-        const hook = useSubjects();
-        hook.selectSubject({ id: '3fa85f64-5717-4562-b3fc-2c963f66afa6', title: 'Тест', description: 'Описание' });
-        expect(hook.selectedSubject).toEqual({ id: '3fa85f64-5717-4562-b3fc-2c963f66afa6', title: 'Тест', description: 'Описание' });
+        const { result } = renderHook(() => useSubjects());
+        act(() => {
+            result.current.selectSubject({ id: '3fa85f64-5717-4562-b3fc-2c963f66afa6', title: 'Тест', description: 'Описание' });
+        });
+        expect(result.current.selectedSubject).toEqual({ id: '3fa85f64-5717-4562-b3fc-2c963f66afa6', title: 'Тест', description: 'Описание' });
     });
 });
 
@@ -121,9 +124,11 @@ describe('useSubjects — loading participants', () => {
             ok: true,
             json: async () => [{ userId: '1', username: 'User1', avatarUrl: '' }],
         });
-        const hook = useSubjects();
-        await hook.loadParticipants('subject1');
-        await hook.loadParticipants('subject2');
+        const { result } = renderHook(() => useSubjects());
+        await act(async () => {
+            await result.current.loadParticipants('subject1');
+            await result.current.loadParticipants('subject2');
+        });
         expect(global.fetch).toHaveBeenCalledTimes(2);
         expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/subjects/subject1/participants'), expect.anything());
         expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/subjects/subject2/participants'), expect.anything());
@@ -134,8 +139,10 @@ describe('useSubjects — loading participants', () => {
             ok: true,
             json: async () => [],
         });
-        const hook = useSubjects();
-        await hook.loadParticipants('subject1', 3, 0);
+        const { result } = renderHook(() => useSubjects());
+        await act(async () => {
+            await result.current.loadParticipants('subject1', 3, 0);
+        });
         expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('limit=3'), expect.anything());
         expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('offset=0'), expect.anything());
     });
@@ -145,9 +152,11 @@ describe('useSubjects — loading participants', () => {
             ok: true,
             json: async () => [{ userId: '1', username: 'User1', avatarUrl: '' }],
         });
-        const hook = useSubjects();
-        await hook.loadParticipants('subject1');
-        expect(hook.participants['subject1']).toEqual([{ userId: '1', username: 'User1', avatarUrl: '' }]);
+        const { result } = renderHook(() => useSubjects());
+        await act(async () => {
+            await result.current.loadParticipants('subject1');
+        });
+        expect(result.current.participants['subject1']).toEqual([{ userId: '1', username: 'User1', avatarUrl: '' }]);
     });
 
     it('должен не добавлять участников при пустом ответе', async () => {
@@ -155,9 +164,11 @@ describe('useSubjects — loading participants', () => {
             ok: true,
             json: async () => [],
         });
-        const hook = useSubjects();
-        await hook.loadParticipants('subject1');
-        expect(hook.participants['subject1']).toEqual([]);
+        const { result } = renderHook(() => useSubjects());
+        await act(async () => {
+            await result.current.loadParticipants('subject1');
+        });
+        expect(result.current.participants['subject1']).toEqual([]);
     });
 
     it('должен корректно обрабатывать ошибку 404', async () => {
@@ -165,8 +176,10 @@ describe('useSubjects — loading participants', () => {
             ok: false,
             status: 404,
         });
-        const hook = useSubjects();
-        await expect(hook.loadParticipants('subject1')).rejects.toThrow('Not found');
+        const { result } = renderHook(() => useSubjects());
+        await act(async () => {
+            await expect(result.current.loadParticipants('subject1')).rejects.toThrow('Not found');
+        });
     });
 
     it('должен корректно обрабатывать ошибку 401', async () => {
@@ -174,8 +187,10 @@ describe('useSubjects — loading participants', () => {
             ok: false,
             status: 401,
         });
-        const hook = useSubjects();
-        await expect(hook.loadParticipants('subject1')).rejects.toThrow('Unauthorized');
+        const { result } = renderHook(() => useSubjects());
+        await act(async () => {
+            await expect(result.current.loadParticipants('subject1')).rejects.toThrow('Unauthorized');
+        });
     });
 
     it('должен корректно обрабатывать ошибку 403', async () => {
@@ -183,7 +198,9 @@ describe('useSubjects — loading participants', () => {
             ok: false,
             status: 403,
         });
-        const hook = useSubjects();
-        await expect(hook.loadParticipants('subject1')).rejects.toThrow('Forbidden');
+        const { result } = renderHook(() => useSubjects());
+        await act(async () => {
+            await expect(result.current.loadParticipants('subject1')).rejects.toThrow('Forbidden');
+        });
     });
 });

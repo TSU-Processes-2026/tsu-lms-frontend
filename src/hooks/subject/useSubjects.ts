@@ -1,8 +1,7 @@
 ﻿import React from 'react';
 import {Subject} from '@/types/subject/Subject.ts';
 import {User as UserIcon} from 'lucide-react';
-import {useQueries, useQuery} from '@tanstack/react-query';
-import {useNavigate} from 'react-router-dom';
+import {useQuery} from '@tanstack/react-query';
 
 /**
  * Participant interface for subject participants.
@@ -15,30 +14,6 @@ export interface Participant {
     userId: string;
     username: string;
     avatarUrl: string;
-}
-
-/**
- * Assignment interface for subject assignments.
- *
- * @property {string} id - Unique identifier of the assignment.
- * @property {string} title - Title of the assignment.
- */
-export interface Assignment {
-    id: string;
-    title: string;
-}
-
-/**
- * Submission interface for assignment submissions.
- *
- * @property {string} assignmentId - Assignment identifier.
- * @property {string} status - Submission status.
- * @property {number} [grade] - Grade for the submission (optional).
- */
-export interface Submission {
-    assignmentId: string;
-    status: string;
-    grade?: number;
 }
 
 /**
@@ -59,6 +34,32 @@ export interface ExtendedSubject extends Subject {
 }
 
 /**
+ * Assignment interface for subject assignments.
+ *
+ * @property {string} id - Unique identifier of the assignment.
+ * @property {string} title - Title of the assignment.
+ * @property {Submission[]} [submissions] - Submissions for the assignment (optional).
+ */
+export interface Assignment {
+    id: string;
+    title: string;
+    submissions?: Submission[];
+}
+
+/**
+ * Submission interface for assignment submissions.
+ *
+ * @property {string} assignmentId - Assignment identifier.
+ * @property {string} status - Submission status.
+ * @property {number} [grade] - Grade for the submission (optional).
+ */
+export interface Submission {
+    assignmentId: string;
+    status: string;
+    grade?: number | { score: number };
+}
+
+/**
  * Result of useSubjects hook.
  *
  * @property {ExtendedSubject[]} subjects - Array of subjects with additional fields.
@@ -67,7 +68,7 @@ export interface ExtendedSubject extends Subject {
  */
 export interface UseSubjectsResult {
     subjects: ExtendedSubject[];
-    selectedSubject: ExtendedSubject | null;
+    selectedSubject: Subject | ExtendedSubject | null;
     isLoading: boolean;
     isError: boolean;
     /**
@@ -75,7 +76,21 @@ export interface UseSubjectsResult {
      * Type is unknown, handle with type guards.
      */
     error: unknown;
-    selectSubject: (subject: ExtendedSubject) => void;
+    selectSubject: (subject: Subject) => void;
+    /**
+     * Participants loaded for each subjectId.
+     * @type {Record<string, Participant[]>}
+     */
+    participants: Record<string, Participant[]>;
+    /**
+     * Loads participants for a subject by subjectId.
+     * @param {string} subjectId - Subject identifier.
+     * @param {number} [limit] - Limit of participants to fetch.
+     * @param {number} [offset] - Offset for pagination.
+     * @returns {Promise<void>} Resolves when participants are loaded.
+     * @throws {Error} Throws error for 404, 401, 403 statuses.
+     */
+    loadParticipants: (subjectId: string, limit?: number, offset?: number) => Promise<void>;
 }
 
 /**
@@ -92,8 +107,8 @@ export interface UseSubjectsResult {
  * @throws {Error} If fetching subjects or details fails.
  */
 export function useSubjects(): UseSubjectsResult {
-    const navigate = useNavigate();
-    const [selectedSubject, setSelectedSubject] = React.useState<ExtendedSubject | null>(null);
+    const [selectedSubject, setSelectedSubject] = React.useState<Subject | ExtendedSubject | null>(null);
+    const [participants, setParticipants] = React.useState<Record<string, Participant[]>>({});
 
     const {
         data: subjects = [],
@@ -109,58 +124,31 @@ export function useSubjects(): UseSubjectsResult {
         },
     });
 
-    const subjectQueries = useQueries({
-        queries: (subjects || []).map((subject: Subject) => ({
-            queryKey: ['subject-details', subject.id],
-            queryFn: async () => {
-                const participantsRes = await fetch(`/api/subjects/${subject.id}/participants`);
-                let participants: Participant[] = [];
-                if (participantsRes.ok) participants = await participantsRes.json();
-
-                const assignmentsRes = await fetch(`/api/subjects/${subject.id}/assignments`);
-                let assignments: Assignment[] = [];
-                if (assignmentsRes.ok) assignments = await assignmentsRes.json();
-
-                const submissionsRes = await fetch(`/api/subjects/${subject.id}/submissions`);
-                let submissions: Submission[] = [];
-                if (submissionsRes.ok) submissions = await submissionsRes.json();
-                return { participants, assignments, submissions };
-            },
-        })),
-    });
-
     const cards = Array.isArray(subjects)
-        ? subjects.map((subject: Subject, idx: number) => {
-            const d = subjectQueries[idx]?.data as {
-                participants: Participant[];
-                assignments: Assignment[];
-                submissions: Submission[];
-            } || {participants: [], assignments: [], submissions: []};
-            const participants = Array.isArray(d.participants) ? d.participants : [];
-            const assignments = Array.isArray(d.assignments) ? d.assignments : [];
-            const submissions = Array.isArray(d.submissions) ? d.submissions : [];
-
-            const preview = participants.slice(0, 3);
-            const previewAvatars = preview.map((p: Participant) => ({ ...p }));
-            const previewCount = participants.length - preview.length;
-
-            const totalAssignments = assignments.length;
-            const solvedAssignments = assignments.filter((a: Assignment) => {
-                const submission = submissions.find((s: Submission) => s.assignmentId === a.id);
-                return submission && ['Graded', 'RequiresReview'].includes(submission.status);
+        ? subjects.map((subject: Subject) => {
+            const assignments: Assignment[] = Array.isArray((subject as unknown as { assignments?: Assignment[] }).assignments)
+                ? (subject as unknown as { assignments?: Assignment[] }).assignments!
+                : [];
+            const participantsArr: Participant[] = Array.isArray((subject as unknown as { participants?: Participant[] }).participants)
+                ? (subject as unknown as { participants?: Participant[] }).participants!
+                : [];
+            const completed = assignments.filter((a: Assignment) => {
+                const submissions: Submission[] = Array.isArray((a as unknown as { submissions?: Submission[] }).submissions)
+                    ? (a as unknown as { submissions?: Submission[] }).submissions!
+                    : [];
+                return submissions.some((s: Submission) => {
+                    const hasGrade = s.grade !== undefined && (typeof s.grade === 'number' || (typeof s.grade === 'object' && s.grade.score !== undefined));
+                    return ((s.status === 'Graded' || s.status === 'RequiresReview') && hasGrade);
+                });
             }).length;
-            const progress = totalAssignments === 0 ? 0 : Math.round((solvedAssignments / totalAssignments) * 100);
+            const progress = assignments.length === 0 ? 0 : Math.round((completed / assignments.length) * 100);
             return {
                 ...subject,
                 code: subject.id,
                 progress,
-                students: participants.length,
-                previewAvatars,
-                previewCount,
+                students: participantsArr.length,
                 icon: UserIcon,
                 color: 'bg-blue-500',
-                isLoading: subjectQueries[idx]?.isLoading,
-                isError: subjectQueries[idx]?.isError,
             };
         })
         : [];
@@ -168,12 +156,39 @@ export function useSubjects(): UseSubjectsResult {
     /**
      * Handler for subject selection.
      *
-     * @param {ExtendedSubject} subject - Subject to select.
+     * @param {Subject} subject - Subject to select.
      * @returns {void}
      */
-    const selectSubject = (subject: ExtendedSubject): void => {
+    const selectSubject = (subject: Subject): void => {
         setSelectedSubject(subject);
-        navigate(`/subjects/${subject.id}`);
+    };
+
+    /**
+     * Loads participants for a subject by subjectId.
+     *
+     * @param {string} subjectId - Subject identifier.
+     * @param {number} [limit] - Limit of participants to fetch.
+     * @param {number} [offset] - Offset for pagination.
+     * @returns {Promise<void>} Resolves when participants are loaded.
+     * @throws {Error} Throws error for 404, 401, 403 statuses.
+     */
+    const loadParticipants = async (subjectId: string, limit?: number, offset?: number): Promise<void> => {
+        let url = `/api/subjects/${subjectId}/participants`;
+        if (typeof limit === 'number' || typeof offset === 'number') {
+            const params = [];
+            if (typeof limit === 'number') params.push(`limit=${limit}`);
+            if (typeof offset === 'number') params.push(`offset=${offset}`);
+            url += '?' + params.join('&');
+        }
+        const res = await fetch(url);
+        if (!res.ok) {
+            if (res.status === 404) throw new Error('Not found');
+            if (res.status === 401) throw new Error('Unauthorized');
+            if (res.status === 403) throw new Error('Forbidden');
+            throw new Error('Failed to load participants');
+        }
+        const data = await res.json();
+        setParticipants(prev => ({ ...prev, [subjectId]: data }));
     };
 
     return {
@@ -183,5 +198,7 @@ export function useSubjects(): UseSubjectsResult {
         isError,
         error,
         selectSubject,
+        participants,
+        loadParticipants,
     };
 }
