@@ -213,7 +213,7 @@ describe('SubjectsPage — navigation', () => {
         (useNavigate as jest.Mock).mockReturnValue(mockNavigate);
         renderWithProvider(<SubjectsPage />);
         const card = await screen.findByTestId('subject-card-3fa85f64-5717-4562-b3fc-2c963f66afa6');
-        card.click();
+        await import('react').then(({ act }) => act(() => { card.click(); }));
         await waitFor(() => {
             expect(mockNavigate).toHaveBeenCalledWith('/subjects/3fa85f64-5717-4562-b3fc-2c963f66afa6');
         });
