@@ -236,3 +236,168 @@ describe('useSubjects — loading participants', () => {
         });
     });
 });
+
+/**
+ * Тесты бизнес-логики загрузки заданий и решений для каждого предмета.
+ * Проверяется корректность отправки запросов, обработки ответов и ошибок для assignments и submissions.
+ */
+describe('useSubjects — loading assignments', () => {
+    it('должен отправлять отдельный запрос к API заданий для каждого subjectId', async () => {
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            json: async () => [{ id: 'assignment1' }, { id: 'assignment2' }],
+        });
+        const { result } = renderHook(() => useSubjects(false), { wrapper });
+        await act(async () => {
+            await result.current.loadAssignments('subject1', 10, 0);
+            await result.current.loadAssignments('subject2', 10, 0);
+        });
+        const assignmentCalls = (global.fetch as jest.Mock).mock.calls.filter(
+            ([url]) => url.includes('/assignments')
+        );
+        expect(assignmentCalls).toHaveLength(2);
+        expect(assignmentCalls[0][0]).toContain('/api/subjects/subject1/assignments');
+        expect(assignmentCalls[1][0]).toContain('/api/subjects/subject2/assignments');
+    });
+
+    it('должен отправлять запрос с правильными параметрами limit и offset', async () => {
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            json: async () => [],
+        });
+        const { result } = renderHook(() => useSubjects(false), { wrapper });
+        await act(async () => {
+            await result.current.loadAssignments('subject1', 5, 2);
+        });
+        expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('limit=5'), expect.anything());
+        expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('offset=2'), expect.anything());
+    });
+
+    it('должен сохранять задания при успешном ответе', async () => {
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            json: async () => [{ id: 'assignment1' }],
+        });
+        const { result } = renderHook(() => useSubjects(false), { wrapper });
+        await act(async () => {
+            await result.current.loadAssignments('subject1');
+        });
+        expect(result.current.assignments['subject1']).toEqual([{ id: 'assignment1' }]);
+    });
+
+    it('должен корректно обрабатывать ошибку 404', async () => {
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: false,
+            status: 404,
+        });
+        const { result } = renderHook(() => useSubjects(false), { wrapper });
+        await act(async () => {
+            await expect(result.current.loadAssignments('subject1')).rejects.toThrow('Not found');
+        });
+    });
+
+    it('должен корректно обрабатывать ошибку 401', async () => {
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: false,
+            status: 401,
+        });
+        const { result } = renderHook(() => useSubjects(false), { wrapper });
+        await act(async () => {
+            await expect(result.current.loadAssignments('subject1')).rejects.toThrow('Unauthorized');
+        });
+    });
+
+    it('должен корректно обрабатывать ошибку 403', async () => {
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: false,
+            status: 403,
+        });
+        const { result } = renderHook(() => useSubjects(false), { wrapper });
+        await act(async () => {
+            await expect(result.current.loadAssignments('subject1')).rejects.toThrow('Forbidden');
+        });
+    });
+});
+
+/**
+ * Тесты бизнес-логики загрузки решений для каждого задания.
+ * Проверяется корректность отправки запросов, обработки ответов и ошибок для submissions.
+ */
+describe('useSubjects — loading submissions', () => {
+    it('должен отправлять отдельный запрос к API решений для каждого assignmentId', async () => {
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            json: async () => [{ id: 'submission1' }, { id: 'submission2' }],
+        });
+        const { result } = renderHook(() => useSubjects(false), { wrapper });
+        await act(async () => {
+            await result.current.loadSubmissions('assignment1', 10, 0, true);
+            await result.current.loadSubmissions('assignment2', 10, 0, true);
+        });
+        const submissionCalls = (global.fetch as jest.Mock).mock.calls.filter(
+            ([url]) => url.includes('/submissions')
+        );
+        expect(submissionCalls).toHaveLength(2);
+        expect(submissionCalls[0][0]).toContain('/api/assignments/assignment1/submissions');
+        expect(submissionCalls[1][0]).toContain('/api/assignments/assignment2/submissions');
+    });
+
+    it('должен отправлять запрос с правильными параметрами limit, offset и isTeacher', async () => {
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            json: async () => [],
+        });
+        const { result } = renderHook(() => useSubjects(false), { wrapper });
+        await act(async () => {
+            await result.current.loadSubmissions('assignment1', 5, 2, true);
+        });
+        expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('limit=5'), expect.anything());
+        expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('offset=2'), expect.anything());
+        expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('isTeacher=true'), expect.anything());
+    });
+
+    it('должен сохранять решения при успешном ответе', async () => {
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            json: async () => [{ id: 'submission1' }],
+        });
+        const { result } = renderHook(() => useSubjects(false), { wrapper });
+        await act(async () => {
+            await result.current.loadSubmissions('assignment1');
+        });
+        expect(result.current.submissions['assignment1']).toEqual([{ id: 'submission1' }]);
+    });
+
+    it('должен корректно обрабатывать ошибку 404', async () => {
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: false,
+            status: 404,
+        });
+        const { result } = renderHook(() => useSubjects(false), { wrapper });
+        await act(async () => {
+            await expect(result.current.loadSubmissions('assignment1')).rejects.toThrow('Not found');
+        });
+    });
+
+    it('должен корректно обрабатывать ошибку 401', async () => {
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: false,
+            status: 401,
+        });
+        const { result } = renderHook(() => useSubjects(false), { wrapper });
+        await act(async () => {
+            await expect(result.current.loadSubmissions('assignment1')).rejects.toThrow('Unauthorized');
+        });
+    });
+
+    it('должен корректно обрабатывать ошибку 403', async () => {
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: false,
+            status: 403,
+        });
+        const { result } = renderHook(() => useSubjects(false), { wrapper });
+        await act(async () => {
+            await expect(result.current.loadSubmissions('assignment1')).rejects.toThrow('Forbidden');
+        });
+    });
+});

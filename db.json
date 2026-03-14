@@ -45,13 +45,25 @@
       "title": "sdsdsd",
       "description": "sddddsd"
     }
+    ,{
+      "id": "1773129500000-newsubj1",
+      "title": "Programming Basics",
+      "description": "Introduction to programming concepts"
+    }
   ],
   "participants": [
     { "subjectId": "1773129035372-dr012hhflxj", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6", "role": "Student" },
     { "subjectId": "1773129035372-dr012hhflxj", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2", "role": "Student" },
     { "subjectId": "1773129035372-dr012hhflxj", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa3", "role": "Teacher" },
     { "subjectId": "1773129101042-jiwhlih6mu", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa1", "role": "Student" },
-    { "subjectId": "1773129101042-jiwhlih6mu", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2", "role": "Teacher" }
+    { "subjectId": "1773129101042-jiwhlih6mu", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2", "role": "Teacher" },
+    { "subjectId": "1773129500000-newsubj1", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6", "role": "Student" },
+    { "subjectId": "1773129500000-newsubj1", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2", "role": "Student" },
+    { "subjectId": "1773129500000-newsubj1", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa1", "role": "Student" },
+    { "subjectId": "1773129500000-newsubj1", "userId": "1772748407938-rqnwuv6zbrh", "role": "Student" },
+    { "subjectId": "1773129500000-newsubj1", "userId": "extra-user-1", "role": "Student" },
+    { "subjectId": "1773129500000-newsubj1", "userId": "extra-user-2", "role": "Student" },
+    { "subjectId": "1773129500000-newsubj1", "userId": "extra-user-3", "role": "Student" }
   ],
   "assignments": [
     {
@@ -99,6 +111,22 @@
         }
       ],
       "createdAt": "2024-01-02T10:00:00.000Z"
+    },
+    {
+      "id": "assgn-3",
+      "subjectId": "1773129500000-newsubj1",
+      "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "postType": "Assignment",
+      "content": "Задание по основам программирования",
+      "assignmentData": "Решить простую задачу на Python",
+      "questions": [
+        {
+          "id": "q-4",
+          "questionType": "Text",
+          "questionData": "Напишите функцию, которая возвращает сумму двух чисел"
+        }
+      ],
+      "createdAt": "2026-03-15T10:00:00.000Z"
     }
   ],
   "submissions": [
@@ -131,6 +159,16 @@
       "answers": [],
       "status": "Draft",
       "submittedAt": null
+    },
+    {
+      "id": "subm-4",
+      "assignmentId": "assgn-3",
+      "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "answers": [
+        { "questionId": "q-4", "answerType": "TextAnswer", "text": "def add(a, b): return a + b" }
+      ],
+      "status": "Graded",
+      "submittedAt": "2026-03-15T12:00:00.000Z"
     }
   ],
   "grades": [
@@ -140,6 +178,13 @@
       "score": 90,
       "verdictText": "Отлично",
       "gradedAt": "2024-01-04T10:00:00.000Z"
+    },
+    {
+      "id": "grade-2",
+      "submissionId": "subm-4",
+      "score": 100,
+      "verdictText": "Выполнено отлично",
+      "gradedAt": "2026-03-15T13:00:00.000Z"
     }
   ]
 }
