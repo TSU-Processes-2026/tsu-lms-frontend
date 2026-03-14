@@ -1,5 +1,5 @@
 import { useSubjects } from './useSubjects';
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { Subject } from '@/types/subject/Subject';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as React from "react";
@@ -419,15 +419,21 @@ describe('useSubjects — loading submissions', () => {
  * Проверяется корректное поведение хука useSubjects при отсутствии предметов и ошибках API.
  */
 describe('useSubjects — empty and error states', () => {
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+    
     it('должен возвращать пустой список предметов, если API возвращает пустой массив', async () => {
         global.fetch = jest.fn().mockResolvedValue({
             ok: true,
             json: async () => [],
         });
+        const queryClient = new QueryClient();
+        const wrapper = ({ children }: { children: React.ReactNode }) => (
+            <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        );
         const { result } = renderHook(() => useSubjects(false), { wrapper });
-        await act(async () => {
-            await Promise.resolve(); // ожидание асинхронного эффекта
-        });
+        await waitFor(() => expect(result.current.isLoading).toBe(false));
         expect(result.current.subjects).toEqual([]);
         expect(result.current.isLoading).toBe(false);
         expect(result.current.isError).toBe(false);
@@ -442,8 +448,10 @@ describe('useSubjects — empty and error states', () => {
         await act(async () => {
             await Promise.resolve();
         });
-        expect(result.current.isError).toBe(true);
-        expect(result.current.error).toEqual(new Error('Unauthorized'));
+        await waitFor(() => {
+            expect(result.current.isError).toBe(true);
+            expect(result.current.error).toEqual(new Error('Unauthorized'));
+        });
     });
 
     it('должен корректно обрабатывать ошибку 403 при загрузке предметов', async () => {

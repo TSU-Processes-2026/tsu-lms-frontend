@@ -186,11 +186,20 @@ export function useSubjects(autoLoadParticipants: boolean = true): UseSubjectsRe
             const res = await fetch('/api/subjects', {});
             if (!res.ok) {
                 let err;
-                if (res.status === 401) err = new Error('Unauthorized');
-                else err = new Error('Ошибка загрузки предметов');
+                if (res.status === 401) {
+                    err = new Error('Unauthorized');
+                } else if (res.status === 403) {
+                    err = new Error('Ошибка загрузки предметов');
+                } else {
+                    err = new Error('Ошибка загрузки предметов');
+                }
                 throw err;
             }
-            return await res.json();
+            const data = await res.json();
+            if (Array.isArray(data) && data.length === 0) {
+                return [];
+            }
+            return data;
         },
         retry: false,
     });
@@ -398,10 +407,10 @@ export function useSubjects(autoLoadParticipants: boolean = true): UseSubjectsRe
     };
 
     return {
-        subjects: isLoading || isError ? [] : cards,
+        subjects: isLoading || !!error ? [] : cards,
         selectedSubject,
         isLoading,
-        isError,
+        isError: !!error && !(Array.isArray(subjects) && subjects.length === 0),
         error,
         selectSubject,
         participants,
