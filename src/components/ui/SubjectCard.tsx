@@ -1,12 +1,32 @@
-﻿import React, {JSX} from "react";
-import { User as UserIcon } from "lucide-react";
+﻿import React, { JSX } from "react";
 import { Subject } from "@/types/subject/Subject";
 
 /**
- * Props for SubjectCard component.
- *
+ * @interface Participant
+ * @property {string} userId - Unique identifier of the participant.
+ * @property {string} username - Name of the participant.
+ * @property {string} avatarUrl - URL of the participant's avatar.
+ */
+export interface Participant {
+    /**
+     * Unique identifier of the participant.
+     */
+    userId: string;
+    /**
+     * Name of the participant.
+     */
+    username: string;
+    /**
+     * URL of the participant's avatar.
+     */
+    avatarUrl: string;
+}
+
+/**
+ * @interface SubjectCardProps
  * @property {Subject} subject - Subject entity to display.
  * @property {(subject: Subject) => void} onSelect - Handler for subject selection.
+ * @property {Participant[]} participants - Array of participants to display avatars and badge.
  */
 export interface SubjectCardProps {
     subject: Subject & {
@@ -14,23 +34,27 @@ export interface SubjectCardProps {
         color: string;
         code: string;
         progress: number;
-        students: number;
     };
     onSelect: (subject: SubjectCardProps["subject"]) => void;
+    participants: Participant[];
 }
 
 /**
- * SubjectCard component for displaying subject information.
+ * SubjectCard component for displaying subject information, participants avatars and badge.
  *
  * @param {SubjectCardProps} props - Component props.
  * @returns {JSX.Element} Rendered subject card.
  * @throws {Error} Throws if required props are missing or invalid.
  *
  * @example
- * <SubjectCard subject={subject} onSelect={handleSelect} />
+ * <SubjectCard subject={subject} onSelect={handleSelect} participants={participants} />
  */
-export const SubjectCard: React.FC<SubjectCardProps> = ({ subject, onSelect }: SubjectCardProps): JSX.Element => {
+export const SubjectCard: React.FC<SubjectCardProps> = ({ subject, onSelect, participants }: SubjectCardProps): JSX.Element => {
     const Icon = subject.icon;
+    const avatarLimit = 3;
+    const avatarsToShow = participants.slice(0, avatarLimit);
+    const badgeCount = participants.length > avatarLimit ? participants.length - avatarLimit : 0;
+
     return (
         <div onClick={() => onSelect(subject)}
              className="group bg-white/80 backdrop-blur-sm p-6 rounded-3xl border border-slate-100 hover:border-blue-200 shadow-sm hover:shadow-2xl hover:shadow-blue-100/50 transition-all cursor-pointer">
@@ -50,14 +74,23 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({ subject, onSelect }: S
                 </div>
             </div>
             <div className="flex -space-x-2">
-                {[1, 2, 3].map(i => (
-                    <div key={i} className="w-7 h-7 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center">
-                        <UserIcon size={12} className="text-slate-500" />
-                    </div>
+                {avatarsToShow.map(participant => (
+                    <img
+                        key={participant.userId}
+                        src={participant.avatarUrl}
+                        alt={participant.username}
+                        className="w-7 h-7 rounded-full border-2 border-white bg-slate-200 object-cover"
+                        data-testid="avatar"
+                    />
                 ))}
-                <div className="w-7 h-7 rounded-full border-2 border-white bg-white flex items-center justify-center text-[10px] font-bold text-slate-600 shadow-sm">
-                    +{subject.students - 3}
-                </div>
+                {badgeCount > 0 && (
+                    <div
+                        className="w-7 h-7 rounded-full border-2 border-white bg-white flex items-center justify-center text-[10px] font-bold text-slate-600 shadow-sm"
+                        data-testid="badge"
+                    >
+                        +{badgeCount}
+                    </div>
+                )}
             </div>
         </div>
     );
