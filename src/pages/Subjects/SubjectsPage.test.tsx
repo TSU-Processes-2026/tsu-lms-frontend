@@ -57,20 +57,11 @@ afterEach(() => {
 });
 
 /**
- * Tests for SubjectsPage component.
- *
- * These tests verify that:
- * 1. The API request for the subjects list is made on mount.
- * 2. The successful API response is handled correctly.
- * 3. The subject cards are rendered with the correct name and description.
- * 4. Loading skeletons are shown while waiting for server response.
- * 5. Empty state is shown if there are no subjects.
- * 6. Error state is shown for network errors (e.g., 401 Unauthorized).
- * 7. Partial data unavailability (e.g., failed to load participants for one card) is handled gracefully.
- * 8. Progress is safely calculated for subjects with no assignments (no division by zero, shows 0% or 100% as required).
+ * Тесты запросов к API и обработки ответов.
+ * Проверяется корректность отправки запросов и обработки успешных/ошибочных ответов.
  */
-describe('SubjectsPage', () => {
-    it('should send API request to fetch subjects list on mount', async () => {
+describe('SubjectsPage — API', () => {
+    it('должен отправлять запрос к API для получения списка предметов при монтировании', async () => {
         render(<SubjectsPage />);
         await waitFor(() => {
             expect(global.fetch).toHaveBeenCalledWith(
@@ -79,22 +70,48 @@ describe('SubjectsPage', () => {
             );
         });
     });
+    it('должен корректно обрабатывать частичную недоступность данных (ошибка загрузки участников для одной карточки)', async () => {
+        render(<SubjectsPage />);
+        expect(await screen.findByTestId('participant-avatar-u1')).toBeInTheDocument();
+        expect(await screen.findByTestId('participants-error-4fa85f64-5717-4562-b3fc-2c963f66afa7')).toBeInTheDocument();
+    });
+});
 
-    it('should render subject cards with correct title and description', async () => {
+/**
+ * Тесты отображения карточек, описаний, скелетов и состояния "пусто".
+ * Проверяется корректность визуального отображения элементов страницы.
+ */
+describe('SubjectsPage — rendering', () => {
+    it('должен корректно отображать сетку карточек предметов после успешного ответа', async () => {
         render(<SubjectsPage />);
         expect(await screen.findByText('Mathematics')).toBeInTheDocument();
-        expect(screen.getByText('Algebra and Geometry')).toBeInTheDocument();
         expect(screen.getByText('Physics')).toBeInTheDocument();
+    });
+    it('должен отображать описание предмета под названием в карточке', async () => {
+        render(<SubjectsPage />);
+        expect(await screen.findByText('Algebra and Geometry')).toBeInTheDocument();
         expect(screen.getByText('Mechanics and Optics')).toBeInTheDocument();
     });
+});
 
-    it('should show loading skeletons while waiting for server response', async () => {
+/**
+ * Тесты отображения состояния загрузки (скелетонов).
+ * Проверяется корректность отображения скелетонов во время ожидания ответа от сервера.
+ */
+describe('SubjectsPage — loading state', () => {
+    it('должен отображать скелеты загрузки во время ожидания ответа от сервера', async () => {
         jest.spyOn(global, 'fetch').mockImplementationOnce(() => new Promise(() => {}));
         render(<SubjectsPage />);
         expect(screen.getByTestId('subjects-skeleton')).toBeInTheDocument();
     });
+});
 
-    it('should show empty state if there are no subjects', async () => {
+/**
+ * Тесты отображения состояния пустого списка.
+ * Проверяется корректность отображения заглушки при отсутствии предметов.
+ */
+describe('SubjectsPage — empty state', () => {
+    it('должен показывать состояние "пусто", если предметы отсутствуют', async () => {
         jest.spyOn(global, 'fetch').mockResolvedValueOnce({
             ok: true,
             json: () => Promise.resolve([]),
@@ -102,8 +119,14 @@ describe('SubjectsPage', () => {
         render(<SubjectsPage />);
         expect(await screen.findByTestId('subjects-empty')).toBeInTheDocument();
     });
+});
 
-    it('should show error state if network error occurs (e.g., 401 Unauthorized)', async () => {
+/**
+ * Тесты обработки ошибок сети и частичной недоступности данных.
+ * Проверяется корректность отображения ошибок и поведения интерфейса.
+ */
+describe('SubjectsPage — error handling', () => {
+    it('должен показывать состояние ошибки при сетевых ошибках (например, 401 Unauthorized)', async () => {
         jest.spyOn(global, 'fetch').mockResolvedValueOnce({
             ok: false,
             status: 401,
@@ -113,13 +136,19 @@ describe('SubjectsPage', () => {
         expect(await screen.findByTestId('subjects-error')).toBeInTheDocument();
         expect(screen.getByText(/unauthorized/i)).toBeInTheDocument();
     });
-
-    it('should handle partial data unavailability (failed to load participants for one card)', async () => {
+    it('должен корректно обрабатывать частичную недоступность данных (ошибка загрузки участников для одной карточки)', async () => {
         render(<SubjectsPage />);
         expect(await screen.findByTestId('participant-avatar-u1')).toBeInTheDocument();
         expect(await screen.findByTestId('participants-error-4fa85f64-5717-4562-b3fc-2c963f66afa7')).toBeInTheDocument();
     });
-    it('should safely calculate progress for subjects with no assignments (shows 0% or 100%)', async () => {
+});
+
+/**
+ * Тесты безопасного вычисления прогресса.
+ * Проверяется отсутствие ошибки деления на ноль и корректное отображение процента.
+ */
+describe('SubjectsPage — progress calculation', () => {
+    it('должен безопасно рассчитывать прогресс для предметов без заданий (отображение 0% или 100%)', async () => {
         jest.spyOn(global, 'fetch').mockResolvedValueOnce({
             ok: true,
             json: () => Promise.resolve([
@@ -129,7 +158,14 @@ describe('SubjectsPage', () => {
         render(<SubjectsPage />);
         expect(await screen.findByTestId('subject-progress-3fa85f64-5717-4562-b3fc-2c963f66afa6')).toHaveTextContent(/0%|100%/);
     });
-    it('should navigate to subject detail page with correct UUID on card click', async () => {
+});
+
+/**
+ * Тесты перехода на страницу деталей предмета.
+ * Проверяется корректность навигации по UUID.
+ */
+describe('SubjectsPage — navigation', () => {
+    it('должен переходить на страницу деталей предмета с правильным UUID при клике на карточку', async () => {
         const mockNavigate = jest.fn();
         (useNavigate as jest.Mock).mockReturnValue(mockNavigate);
         render(<SubjectsPage />);
