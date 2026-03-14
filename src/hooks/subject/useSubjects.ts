@@ -5,6 +5,43 @@ import {useQueries, useQuery} from '@tanstack/react-query';
 import {useNavigate} from 'react-router-dom';
 
 /**
+ * Participant interface for subject participants.
+ *
+ * @property {string} userId - Unique identifier of the participant.
+ * @property {string} username - Name of the participant.
+ * @property {string} avatarUrl - URL of the participant's avatar.
+ */
+export interface Participant {
+    userId: string;
+    username: string;
+    avatarUrl: string;
+}
+
+/**
+ * Assignment interface for subject assignments.
+ *
+ * @property {string} id - Unique identifier of the assignment.
+ * @property {string} title - Title of the assignment.
+ */
+export interface Assignment {
+    id: string;
+    title: string;
+}
+
+/**
+ * Submission interface for assignment submissions.
+ *
+ * @property {string} assignmentId - Assignment identifier.
+ * @property {string} status - Submission status.
+ * @property {number} [grade] - Grade for the submission (optional).
+ */
+export interface Submission {
+    assignmentId: string;
+    status: string;
+    grade?: number;
+}
+
+/**
  * ExtendedSubject interface for SubjectCard.
  *
  * @property {string} code - Subject code (UUID).
@@ -33,7 +70,11 @@ export interface UseSubjectsResult {
     selectedSubject: ExtendedSubject | null;
     isLoading: boolean;
     isError: boolean;
-    error: any;
+    /**
+     * Error object returned from API or query.
+     * Type is unknown, handle with type guards.
+     */
+    error: unknown;
     selectSubject: (subject: ExtendedSubject) => void;
 }
 
@@ -72,17 +113,16 @@ export function useSubjects(): UseSubjectsResult {
         queries: (subjects || []).map((subject: Subject) => ({
             queryKey: ['subject-details', subject.id],
             queryFn: async () => {
-
                 const participantsRes = await fetch(`/api/subjects/${subject.id}/participants`);
-                let participants = [];
+                let participants: Participant[] = [];
                 if (participantsRes.ok) participants = await participantsRes.json();
 
                 const assignmentsRes = await fetch(`/api/subjects/${subject.id}/assignments`);
-                let assignments = [];
+                let assignments: Assignment[] = [];
                 if (assignmentsRes.ok) assignments = await assignmentsRes.json();
 
                 const submissionsRes = await fetch(`/api/subjects/${subject.id}/submissions`);
-                let submissions = [];
+                let submissions: Submission[] = [];
                 if (submissionsRes.ok) submissions = await submissionsRes.json();
                 return { participants, assignments, submissions };
             },
@@ -91,18 +131,22 @@ export function useSubjects(): UseSubjectsResult {
 
     const cards = Array.isArray(subjects)
         ? subjects.map((subject: Subject, idx: number) => {
-            const d: any = subjectQueries[idx]?.data || {participants: [], assignments: [], submissions: []};
+            const d = subjectQueries[idx]?.data as {
+                participants: Participant[];
+                assignments: Assignment[];
+                submissions: Submission[];
+            } || {participants: [], assignments: [], submissions: []};
             const participants = Array.isArray(d.participants) ? d.participants : [];
             const assignments = Array.isArray(d.assignments) ? d.assignments : [];
             const submissions = Array.isArray(d.submissions) ? d.submissions : [];
 
             const preview = participants.slice(0, 3);
-            const previewAvatars = preview.map((p: any) => ({ ...p }));
+            const previewAvatars = preview.map((p: Participant) => ({ ...p }));
             const previewCount = participants.length - preview.length;
 
             const totalAssignments = assignments.length;
-            const solvedAssignments = assignments.filter((a: any) => {
-                const submission = submissions.find((s: any) => s.assignmentId === a.id);
+            const solvedAssignments = assignments.filter((a: Assignment) => {
+                const submission = submissions.find((s: Submission) => s.assignmentId === a.id);
                 return submission && ['Graded', 'RequiresReview'].includes(submission.status);
             }).length;
             const progress = totalAssignments === 0 ? 0 : Math.round((solvedAssignments / totalAssignments) * 100);
