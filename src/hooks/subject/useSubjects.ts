@@ -101,6 +101,8 @@ export interface UseSubjectsResult {
 /**
  * useSubjects hook for managing subjects, participants, assignments, and progress calculation.
  *
+ * @param {boolean} [autoLoadParticipants=true] - If true, participants are loaded automatically for each subject on mount. If false, participants are loaded only by manual call.
+ *
  * Fetches subjects from API with pagination support, retrieves participants, assignments, and submissions for each subject in parallel.
  * Calculates progress according to business rules (safe division, zero assignments handling).
  * Generates participant preview (up to 3 avatars and badge for remaining count).
@@ -111,7 +113,7 @@ export interface UseSubjectsResult {
  * @returns {UseSubjectsResult} Object containing subjects, selectedSubject, loading and error states, and subject selection handler.
  * @throws {Error} If fetching subjects or details fails.
  */
-export function useSubjects(): UseSubjectsResult {
+export function useSubjects(autoLoadParticipants: boolean = true): UseSubjectsResult {
     const [selectedSubject, setSelectedSubject] = React.useState<Subject | ExtendedSubject | null>(null);
     const [participants, setParticipants] = React.useState<Record<string, Participant[]>>({});
     const [errorsParticipants, setErrorsParticipants] = React.useState<Record<string, Error>>({});
@@ -138,11 +140,11 @@ export function useSubjects(): UseSubjectsResult {
 
     const loadedSubjectsRef = React.useRef<Set<string>>(new Set());
     React.useEffect(() => {
+        if (!autoLoadParticipants) return;
         if (Array.isArray(subjects)) {
             subjects.forEach((subject: Subject) => {
                 if (
                     subject.id &&
-                    participants[subject.id] === undefined &&
                     !loadedSubjectsRef.current.has(subject.id)
                 ) {
                     loadedSubjectsRef.current.add(subject.id);
@@ -150,7 +152,7 @@ export function useSubjects(): UseSubjectsResult {
                 }
             });
         }
-    }, [participants, subjects]);
+    }, [subjects, autoLoadParticipants]);
 
     const cards = Array.isArray(subjects)
         ? (isLoading || isError ? [] : subjects.map((subject: Subject) => {

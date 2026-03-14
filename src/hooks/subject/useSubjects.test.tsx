@@ -127,18 +127,24 @@ describe('useSubjects — subject selection', () => {
  */
 describe('useSubjects — loading participants', () => {
     it('должен отправлять отдельный запрос к API участников для каждого subjectId', async () => {
-        global.fetch = jest.fn().mockResolvedValue({
-            ok: true,
-            json: async () => [{ userId: '1', username: 'User1', avatarUrl: '' }],
+        global.fetch = jest.fn().mockImplementation((...args) => {
+            console.log('fetch called:', args[0]);
+            return Promise.resolve({
+                ok: true,
+                json: async () => [{ userId: '1', username: 'User1', avatarUrl: '' }],
+            });
         });
-        const { result } = renderHook(() => useSubjects(), { wrapper });
+        const { result } = renderHook(() => useSubjects(false), { wrapper });
         await act(async () => {
             await result.current.loadParticipants('subject1');
             await result.current.loadParticipants('subject2');
         });
-        expect(global.fetch).toHaveBeenCalledTimes(2);
-        expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/subjects/subject1/participants'), expect.anything());
-        expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/subjects/subject2/participants'), expect.anything());
+        const participantCalls = (global.fetch as jest.Mock).mock.calls.filter(
+            ([url]) => url.includes('/participants')
+        );
+        expect(participantCalls).toHaveLength(2);
+        expect(participantCalls[0][0]).toContain('/api/subjects/subject1/participants');
+        expect(participantCalls[1][0]).toContain('/api/subjects/subject2/participants');
     });
 
     it('должен отправлять запрос с правильными параметрами limit и offset', async () => {
@@ -146,7 +152,7 @@ describe('useSubjects — loading participants', () => {
             ok: true,
             json: async () => [],
         });
-        const { result } = renderHook(() => useSubjects(), { wrapper });
+        const { result } = renderHook(() => useSubjects(false), { wrapper });
         await act(async () => {
             await result.current.loadParticipants('subject1', 3, 0);
         });
@@ -159,7 +165,7 @@ describe('useSubjects — loading participants', () => {
             ok: true,
             json: async () => [{ userId: '1', username: 'User1', avatarUrl: '' }],
         });
-        const { result } = renderHook(() => useSubjects(), { wrapper });
+        const { result } = renderHook(() => useSubjects(false), { wrapper });
         await act(async () => {
             await result.current.loadParticipants('subject1');
         });
@@ -171,7 +177,7 @@ describe('useSubjects — loading participants', () => {
             ok: true,
             json: async () => [],
         });
-        const { result } = renderHook(() => useSubjects(), { wrapper });
+        const { result } = renderHook(() => useSubjects(false), { wrapper });
         await act(async () => {
             await result.current.loadParticipants('subject1');
         });
@@ -183,7 +189,7 @@ describe('useSubjects — loading participants', () => {
             ok: false,
             status: 404,
         });
-        const { result } = renderHook(() => useSubjects(), { wrapper });
+        const { result } = renderHook(() => useSubjects(false), { wrapper });
         await act(async () => {
             await expect(result.current.loadParticipants('subject1')).rejects.toThrow('Not found');
         });
@@ -194,7 +200,7 @@ describe('useSubjects — loading participants', () => {
             ok: false,
             status: 401,
         });
-        const { result } = renderHook(() => useSubjects(), { wrapper });
+        const { result } = renderHook(() => useSubjects(false), { wrapper });
         await act(async () => {
             await expect(result.current.loadParticipants('subject1')).rejects.toThrow('Unauthorized');
         });
@@ -205,7 +211,7 @@ describe('useSubjects — loading participants', () => {
             ok: false,
             status: 403,
         });
-        const { result } = renderHook(() => useSubjects(), { wrapper });
+        const { result } = renderHook(() => useSubjects(false), { wrapper });
         await act(async () => {
             await expect(result.current.loadParticipants('subject1')).rejects.toThrow('Forbidden');
         });
