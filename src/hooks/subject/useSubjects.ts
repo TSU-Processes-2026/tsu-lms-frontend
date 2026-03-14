@@ -126,17 +126,26 @@ export function useSubjects(): UseSubjectsResult {
         queryFn: async () => {
             const res = await fetch('/api/subjects', {});
             if (!res.ok) {
-                if (res.status === 401) throw new Error('Unauthorized');
-                throw new Error('Ошибка загрузки предметов');
+                let err;
+                if (res.status === 401) err = new Error('Unauthorized');
+                else err = new Error('Ошибка загрузки предметов');
+                throw err;
             }
             return await res.json();
         },
+        retry: false,
     });
 
+    const loadedSubjectsRef = React.useRef<Set<string>>(new Set());
     React.useEffect(() => {
         if (Array.isArray(subjects)) {
             subjects.forEach((subject: Subject) => {
-                if (subject.id && participants[subject.id] === undefined) {
+                if (
+                    subject.id &&
+                    participants[subject.id] === undefined &&
+                    !loadedSubjectsRef.current.has(subject.id)
+                ) {
+                    loadedSubjectsRef.current.add(subject.id);
                     loadParticipants(subject.id).catch(() => {});
                 }
             });
