@@ -20,9 +20,9 @@ const SubjectsPage = () => {
             </div>
             {isLoading ? (
                 <div data-testid="subjects-skeleton">Загрузка...</div>
-            ) : isError ? (
+            ) : (isError || error) ? (
                 <div data-testid="subjects-error">Ошибка: {error instanceof Error ? error.message : 'Не удалось загрузить предметы'}</div>
-            ) : subjects.length === 0 ? (
+            ) : (subjects && subjects.length === 0) ? (
                 <div data-testid="subjects-empty">Нет предметов</div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

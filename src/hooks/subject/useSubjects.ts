@@ -208,51 +208,6 @@ export function useSubjects(autoLoadParticipants: boolean = true): UseSubjectsRe
     const loadedAssignmentsRef = React.useRef<Set<string>>(new Set());
     const loadedSubmissionsRef = React.useRef<Set<string>>(new Set());
 
-    React.useEffect(() => {
-        if (!autoLoadParticipants) return;
-        if (Array.isArray(subjects)) {
-            subjects.forEach((subject: Subject) => {
-                if (
-                    subject.id &&
-                    !loadedSubjectsRef.current.has(subject.id)
-                ) {
-                    loadedSubjectsRef.current.add(subject.id);
-                    loadParticipants(subject.id).catch(() => {});
-                }
-            });
-        }
-    }, [subjects, autoLoadParticipants]);
-
-    React.useEffect(() => {
-        if (!autoLoadParticipants) return;
-        if (Array.isArray(subjects)) {
-            subjects.forEach((subject: Subject) => {
-                if (
-                    subject.id &&
-                    !loadedAssignmentsRef.current.has(subject.id)
-                ) {
-                    loadedAssignmentsRef.current.add(subject.id);
-                    loadAssignments(subject.id).catch(() => {});
-                }
-            });
-        }
-    }, [subjects, autoLoadParticipants]);
-
-    React.useEffect(() => {
-        if (!autoLoadParticipants) return;
-        Object.values(assignments).forEach((assignmentArr: Assignment[]) => {
-            assignmentArr.forEach((assignment: Assignment) => {
-                if (
-                    assignment.id &&
-                    !loadedSubmissionsRef.current.has(assignment.id)
-                ) {
-                    loadedSubmissionsRef.current.add(assignment.id);
-                    loadSubmissions(assignment.id).catch(() => {});
-                }
-            });
-        });
-    }, [assignments, autoLoadParticipants]);
-
     const cards = React.useMemo(() => {
         if (!Array.isArray(subjects) || isLoading || isError) return [];
         return subjects.map((subject: Subject) => {
@@ -304,7 +259,7 @@ export function useSubjects(autoLoadParticipants: boolean = true): UseSubjectsRe
      * @returns {Promise<void>} Resolves when participants are loaded.
      * @throws {Error} Throws error for 404, 401, 403 statuses.
      */
-    const loadParticipants = async (subjectId: string, limit?: number, offset?: number): Promise<void> => {
+    const loadParticipants = React.useCallback(async (subjectId: string, limit?: number, offset?: number): Promise<void> => {
         const url = `/api/subjects/${subjectId}/participants` + buildPaginationParams(limit, offset);
         try {
             const res = await fetch(url, {});
@@ -328,7 +283,7 @@ export function useSubjects(autoLoadParticipants: boolean = true): UseSubjectsRe
             setErrorsParticipants(prev => ({ ...prev, [subjectId]: err instanceof Error ? err : new Error('Unknown error') }));
             throw err instanceof Error ? err : new Error('Unknown error');
         }
-    };
+    }, []);
 
     /**
      * Loads assignments for a subject by subjectId.
@@ -339,7 +294,7 @@ export function useSubjects(autoLoadParticipants: boolean = true): UseSubjectsRe
      * @returns {Promise<void>} Resolves when assignments are loaded.
      * @throws {Error} Throws error for 404, 401, 403 statuses.
      */
-    const loadAssignments = async (subjectId: string, limit?: number, offset?: number): Promise<void> => {
+    const loadAssignments = React.useCallback(async (subjectId: string, limit?: number, offset?: number): Promise<void> => {
         const url = `/api/subjects/${subjectId}/assignments` + buildPaginationParams(limit, offset);
         try {
             const res = await fetch(url, {});
@@ -363,7 +318,7 @@ export function useSubjects(autoLoadParticipants: boolean = true): UseSubjectsRe
             setErrorsAssignments(prev => ({ ...prev, [subjectId]: err instanceof Error ? err : new Error('Unknown error') }));
             throw err instanceof Error ? err : new Error('Unknown error');
         }
-    };
+    }, []);
 
     /**
      * Loads submissions for an assignment by assignmentId.
@@ -375,7 +330,7 @@ export function useSubjects(autoLoadParticipants: boolean = true): UseSubjectsRe
      * @returns {Promise<void>} Resolves when submissions are loaded.
      * @throws {Error} Throws error for 404, 401, 403 statuses.
      */
-    const loadSubmissions = async (assignmentId: string, limit?: number, offset?: number, isTeacher?: boolean): Promise<void> => {
+    const loadSubmissions = React.useCallback(async (assignmentId: string, limit?: number, offset?: number, isTeacher?: boolean): Promise<void> => {
         let url = `/api/assignments/${assignmentId}/submissions`;
         const params = [];
         if (typeof limit === 'number') params.push(`limit=${limit}`);
@@ -404,7 +359,52 @@ export function useSubjects(autoLoadParticipants: boolean = true): UseSubjectsRe
             setErrorsSubmissions(prev => ({ ...prev, [assignmentId]: err instanceof Error ? err : new Error('Unknown error') }));
             throw err instanceof Error ? err : new Error('Unknown error');
         }
-    };
+    }, []);
+
+    React.useEffect(() => {
+        if (!autoLoadParticipants || isLoading) return;
+        if (Array.isArray(subjects) && subjects.length > 0) {
+            subjects.forEach((subject: Subject) => {
+                if (
+                    subject.id &&
+                    !loadedSubjectsRef.current.has(subject.id)
+                ) {
+                    loadedSubjectsRef.current.add(subject.id);
+                    loadParticipants(subject.id).catch(() => {});
+                }
+            });
+        }
+    }, [subjects, autoLoadParticipants, isLoading, loadParticipants]);
+
+    React.useEffect(() => {
+        if (!autoLoadParticipants || isLoading) return;
+        if (Array.isArray(subjects) && subjects.length > 0) {
+            subjects.forEach((subject: Subject) => {
+                if (
+                    subject.id &&
+                    !loadedAssignmentsRef.current.has(subject.id)
+                ) {
+                    loadedAssignmentsRef.current.add(subject.id);
+                    loadAssignments(subject.id).catch(() => {});
+                }
+            });
+        }
+    }, [subjects, autoLoadParticipants, isLoading, loadAssignments]);
+
+    React.useEffect(() => {
+        if (!autoLoadParticipants) return;
+        Object.values(assignments).forEach((assignmentArr: Assignment[]) => {
+            assignmentArr.forEach((assignment: Assignment) => {
+                if (
+                    assignment.id &&
+                    !loadedSubmissionsRef.current.has(assignment.id)
+                ) {
+                    loadedSubmissionsRef.current.add(assignment.id);
+                    loadSubmissions(assignment.id).catch(() => {});
+                }
+            });
+        });
+    }, [assignments, autoLoadParticipants, loadSubmissions]);
 
     return {
         subjects: isLoading || !!error ? [] : cards,

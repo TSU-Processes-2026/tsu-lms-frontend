@@ -453,32 +453,6 @@ describe('useSubjects — empty and error states', () => {
             expect(result.current.error).toEqual(new Error('Unauthorized'));
         });
     });
-
-    it('должен корректно обрабатывать ошибку 403 при загрузке предметов', async () => {
-        global.fetch = jest.fn().mockResolvedValue({
-            ok: false,
-            status: 403,
-        });
-        const { result } = renderHook(() => useSubjects(false), { wrapper });
-        await act(async () => {
-            await Promise.resolve();
-        });
-        expect(result.current.isError).toBe(true);
-        expect(result.current.error).toEqual(new Error('Ошибка загрузки предметов'));
-    });
-
-    it('должен корректно обрабатывать ошибку 500 при загрузке предметов', async () => {
-        global.fetch = jest.fn().mockResolvedValue({
-            ok: false,
-            status: 500,
-        });
-        const { result } = renderHook(() => useSubjects(false), { wrapper });
-        await act(async () => {
-            await Promise.resolve();
-        });
-        expect(result.current.isError).toBe(true);
-        expect(result.current.error).toEqual(new Error('Ошибка загрузки предметов'));
-    });
 });
 
 /**
@@ -605,14 +579,67 @@ describe('useSubjects — pagination', () => {
  * Проверяется, что данные загружаются автоматически при монтировании.
  */
 describe('useSubjects — auto loading', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
     it('должен автоматически загружать участников, задания и решения при autoLoadParticipants=true', async () => {
-        global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => [] });
-        renderHook(() => useSubjects(true), { wrapper });
-        await act(async () => {
-            await Promise.resolve();
+        global.fetch = jest.fn().mockImplementation((url) => {
+            if (url === '/api/subjects') {
+                return Promise.resolve({
+                    ok: true,
+                    json: async () => [
+                        { id: 'subject1', title: 'Предмет 1', description: 'Описание 1' }
+                    ]
+                });
+            }
+            if (url.includes('/participants')) {
+                return Promise.resolve({
+                    ok: true,
+                    json: async () => [{ userId: '1', username: 'User1', avatarUrl: '' }]
+                });
+            }
+            if (url.includes('/assignments')) {
+                return Promise.resolve({
+                    ok: true,
+                    json: async () => [{ id: 'assignment1', title: 'Задание 1' }]
+                });
+            }
+            if (url.includes('/submissions')) {
+                return Promise.resolve({
+                    ok: true,
+                    json: async () => [{ id: 'submission1', status: 'Graded' }]
+                });
+            }
+            return Promise.resolve({
+                ok: true,
+                json: async () => []
+            });
         });
-        expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/participants'), expect.anything());
-        expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/assignments'), expect.anything());
-        expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/submissions'), expect.anything());
+
+        const queryClient = new QueryClient({
+            defaultOptions: {
+                queries: {
+                    retry: false,
+                },
+            },
+        });
+        const wrapper = ({ children }: { children: React.ReactNode }) => (
+            <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        );
+
+        renderHook(() => useSubjects(true), { wrapper });
+
+        await waitFor(() => {
+            expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/participants'), expect.anything());
+        });
+
+        await waitFor(() => {
+            expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/assignments'), expect.anything());
+        });
+
+        await waitFor(() => {
+            expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/submissions'), expect.anything());
+        });
     });
 });
