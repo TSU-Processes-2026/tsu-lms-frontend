@@ -49,15 +49,14 @@ export interface SubjectCardProps {
  * @example
  * <SubjectCard subject={subject} onSelect={handleSelect} participants={participants} />
  */
-export const SubjectCard: React.FC<SubjectCardProps & { participantsError?: Error }> = ({ subject, onSelect, participants, participantsError }: any): JSX.Element => {
+export const SubjectCard: React.FC<SubjectCardProps & { participantsError?: Error }> = ({ subject, onSelect, participants, participantsError }: SubjectCardProps & { participantsError?: Error }): JSX.Element => {
     const Icon = subject.icon;
     const avatarLimit = 3;
     const avatarsToShow: Participant[] = participants.slice(0, avatarLimit);
     const badgeCount = participants.length > avatarLimit ? participants.length - avatarLimit : 0;
 
     return (
-        <div onClick={() => onSelect(subject)}
-             className="group bg-white/80 backdrop-blur-sm p-6 rounded-3xl border border-slate-100 hover:border-blue-200 shadow-sm hover:shadow-2xl hover:shadow-blue-100/50 transition-all cursor-pointer">
+        <div onClick={() => onSelect(subject)} className="group bg-white/80 backdrop-blur-sm p-6 rounded-3xl border border-slate-100 hover:border-blue-200 shadow-sm hover:shadow-2xl hover:shadow-blue-100/50 transition-all cursor-pointer" data-testid={`subject-card-${subject.id}`}>
             <div className={`w-14 h-14 rounded-2xl bg-linear-to-br ${subject.color} flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform`}>
                 <Icon size={28} className="text-white" />
             </div>
@@ -74,15 +73,12 @@ export const SubjectCard: React.FC<SubjectCardProps & { participantsError?: Erro
                 </div>
             </div>
             <div className="flex -space-x-2">
-                {avatarsToShow.map((participant: Participant) => (
-                    <img
-                        key={participant.userId}
-                        src={participant.avatarUrl}
-                        alt={participant.username}
-                        className="w-7 h-7 rounded-full border-2 border-white bg-slate-200 object-cover"
-                        data-testid={`participant-avatar-${participant.userId}`}
-                    />
-                ))}
+                  {avatarsToShow.map((participant: Participant) => (
+                      <img key={participant.userId} src={participant.avatarUrl} alt={participant.username}
+                          className="w-7 h-7 rounded-full border-2 border-white bg-slate-200 object-cover"
+                          data-testid="avatar"
+                      />
+                  ))}
                 {badgeCount > 0 && (
                     <div
                         className="w-7 h-7 rounded-full border-2 border-white bg-white flex items-center justify-center text-[10px] font-bold text-slate-600 shadow-sm"
