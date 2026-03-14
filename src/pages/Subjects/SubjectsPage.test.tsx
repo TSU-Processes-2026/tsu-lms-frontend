@@ -2,6 +2,18 @@
 import '@testing-library/jest-dom';
 import { SubjectsPage } from "@/pages/Subjects/index.tsx";
 import { useNavigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import React from "react";
+
+const queryClient = new QueryClient();
+
+function renderWithProvider(ui: React.ReactElement) {
+    return render(
+        <QueryClientProvider client={queryClient}>
+            {ui}
+        </QueryClientProvider>
+    );
+}
 
 jest.mock('react-router-dom', () => ({
     ...jest.requireActual('react-router-dom'),
@@ -62,7 +74,7 @@ afterEach(() => {
  */
 describe('SubjectsPage — API', () => {
     it('должен отправлять запрос к API для получения списка предметов при монтировании', async () => {
-        render(<SubjectsPage />);
+        renderWithProvider(<SubjectsPage />);
         await waitFor(() => {
             expect(global.fetch).toHaveBeenCalledWith(
                 expect.stringContaining('/api/subjects'),
@@ -71,7 +83,7 @@ describe('SubjectsPage — API', () => {
         });
     });
     it('должен корректно обрабатывать частичную недоступность данных (ошибка загрузки участников для одной карточки)', async () => {
-        render(<SubjectsPage />);
+        renderWithProvider(<SubjectsPage />);
         expect(await screen.findByTestId('participant-avatar-u1')).toBeInTheDocument();
         expect(await screen.findByTestId('participants-error-4fa85f64-5717-4562-b3fc-2c963f66afa7')).toBeInTheDocument();
     });
@@ -83,12 +95,12 @@ describe('SubjectsPage — API', () => {
  */
 describe('SubjectsPage — rendering', () => {
     it('должен корректно отображать сетку карточек предметов после успешного ответа', async () => {
-        render(<SubjectsPage />);
+        renderWithProvider(<SubjectsPage />);
         expect(await screen.findByText('Mathematics')).toBeInTheDocument();
         expect(screen.getByText('Physics')).toBeInTheDocument();
     });
     it('должен отображать описание предмета под названием в карточке', async () => {
-        render(<SubjectsPage />);
+        renderWithProvider(<SubjectsPage />);
         expect(await screen.findByText('Algebra and Geometry')).toBeInTheDocument();
         expect(screen.getByText('Mechanics and Optics')).toBeInTheDocument();
     });
@@ -101,7 +113,7 @@ describe('SubjectsPage — rendering', () => {
 describe('SubjectsPage — loading state', () => {
     it('должен отображать скелеты загрузки во время ожидания ответа от сервера', async () => {
         jest.spyOn(global, 'fetch').mockImplementationOnce(() => new Promise(() => {}));
-        render(<SubjectsPage />);
+        renderWithProvider(<SubjectsPage />);
         expect(screen.getByTestId('subjects-skeleton')).toBeInTheDocument();
     });
 });
@@ -116,7 +128,7 @@ describe('SubjectsPage — empty state', () => {
             ok: true,
             json: () => Promise.resolve([]),
         } as Response);
-        render(<SubjectsPage />);
+        renderWithProvider(<SubjectsPage />);
         expect(await screen.findByTestId('subjects-empty')).toBeInTheDocument();
     });
 });
@@ -132,12 +144,12 @@ describe('SubjectsPage — error handling', () => {
             status: 401,
             json: () => Promise.resolve({ title: 'Unauthorized' }),
         } as Response);
-        render(<SubjectsPage />);
+        renderWithProvider(<SubjectsPage />);
         expect(await screen.findByTestId('subjects-error')).toBeInTheDocument();
         expect(screen.getByText(/unauthorized/i)).toBeInTheDocument();
     });
     it('должен корректно обрабатывать частичную недоступность данных (ошибка загрузки участников для одной карточки)', async () => {
-        render(<SubjectsPage />);
+        renderWithProvider(<SubjectsPage />);
         expect(await screen.findByTestId('participant-avatar-u1')).toBeInTheDocument();
         expect(await screen.findByTestId('participants-error-4fa85f64-5717-4562-b3fc-2c963f66afa7')).toBeInTheDocument();
     });
@@ -155,7 +167,7 @@ describe('SubjectsPage — progress calculation', () => {
                 { id: '3fa85f64-5717-4562-b3fc-2c963f66afa6', title: 'Math', description: 'Algebra', assignments: [] },
             ]),
         } as Response);
-        render(<SubjectsPage />);
+        renderWithProvider(<SubjectsPage />);
         expect(await screen.findByTestId('subject-progress-3fa85f64-5717-4562-b3fc-2c963f66afa6')).toHaveTextContent(/0%|100%/);
     });
 });
@@ -168,7 +180,7 @@ describe('SubjectsPage — navigation', () => {
     it('должен переходить на страницу деталей предмета с правильным UUID при клике на карточку', async () => {
         const mockNavigate = jest.fn();
         (useNavigate as jest.Mock).mockReturnValue(mockNavigate);
-        render(<SubjectsPage />);
+        renderWithProvider(<SubjectsPage />);
         const card = await screen.findByTestId('subject-card-3fa85f64-5717-4562-b3fc-2c963f66afa6');
         card.click();
         expect(mockNavigate).toHaveBeenCalledWith('/subjects/3fa85f64-5717-4562-b3fc-2c963f66afa6');

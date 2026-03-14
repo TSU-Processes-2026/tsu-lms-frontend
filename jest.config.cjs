@@ -17,13 +17,14 @@ const config = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
-  
+
   collectCoverageFrom: [
     "src/**/*.{ts,tsx}",
     "!src/**/*.d.ts",
     "!src/**/*.test.{ts,tsx}",
     "!src/**/index.{ts,tsx}",
   ],
+  setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts"],
 };
 
 module.exports = config;
