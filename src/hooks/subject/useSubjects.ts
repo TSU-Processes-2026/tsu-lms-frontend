@@ -125,7 +125,10 @@ export function useSubjects(): UseSubjectsResult {
         queryKey: ['subjects'],
         queryFn: async () => {
             const res = await fetch('/api/subjects', {});
-            if (!res.ok) throw new Error('Ошибка загрузки предметов');
+            if (!res.ok) {
+                if (res.status === 401) throw new Error('Unauthorized');
+                throw new Error('Ошибка загрузки предметов');
+            }
             return await res.json();
         },
     });
@@ -141,7 +144,7 @@ export function useSubjects(): UseSubjectsResult {
     }, [participants, subjects]);
 
     const cards = Array.isArray(subjects)
-        ? subjects.map((subject: Subject) => {
+        ? (isLoading || isError ? [] : subjects.map((subject: Subject) => {
             const assignments: Assignment[] = Array.isArray((subject as unknown as { assignments?: Assignment[] }).assignments)
                 ? (subject as unknown as { assignments?: Assignment[] }).assignments!
                 : [];
@@ -166,7 +169,7 @@ export function useSubjects(): UseSubjectsResult {
                 icon: UserIcon,
                 color: 'bg-blue-500',
             };
-        })
+        }))
         : [];
 
     /**
@@ -221,7 +224,7 @@ export function useSubjects(): UseSubjectsResult {
     };
 
     return {
-        subjects: cards,
+        subjects: isLoading || isError ? [] : cards,
         selectedSubject,
         isLoading,
         isError,

@@ -21,6 +21,7 @@ jest.mock('react-router-dom', () => ({
 }));
 
 beforeEach(() => {
+    queryClient.clear();
     jest.spyOn(global, 'fetch').mockImplementation((url) => {
         const urlString = String(url);
         if (urlString.match(/\/api\/subjects(\?.*)?$/)) {
@@ -114,7 +115,9 @@ describe('SubjectsPage — loading state', () => {
     it('должен отображать скелеты загрузки во время ожидания ответа от сервера', async () => {
         jest.spyOn(global, 'fetch').mockImplementationOnce(() => new Promise(() => {}));
         renderWithProvider(<SubjectsPage />);
-        expect(screen.getByTestId('subjects-skeleton')).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByTestId('subjects-skeleton')).toBeInTheDocument();
+        });
     });
 });
 
@@ -129,7 +132,9 @@ describe('SubjectsPage — empty state', () => {
             json: () => Promise.resolve([]),
         } as Response);
         renderWithProvider(<SubjectsPage />);
-        expect(await screen.findByTestId('subjects-empty')).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByTestId('subjects-empty')).toBeInTheDocument();
+        });
     });
 });
 
@@ -145,7 +150,9 @@ describe('SubjectsPage — error handling', () => {
             json: () => Promise.resolve({ title: 'Unauthorized' }),
         } as Response);
         renderWithProvider(<SubjectsPage />);
-        expect(await screen.findByTestId('subjects-error')).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByTestId('subjects-error')).toBeInTheDocument();
+        });
         expect(screen.getByText(/unauthorized/i)).toBeInTheDocument();
     });
     it('должен корректно обрабатывать частичную недоступность данных (ошибка загрузки участников для одной карточки)', async () => {
@@ -178,11 +185,37 @@ describe('SubjectsPage — progress calculation', () => {
  */
 describe('SubjectsPage — navigation', () => {
     it('должен переходить на страницу деталей предмета с правильным UUID при клике на карточку', async () => {
+        jest.spyOn(global, 'fetch').mockImplementation((url) => {
+            const urlString = String(url);
+            if (urlString.match(/\/api\/subjects(\?.*)?$/)) {
+                return Promise.resolve({
+                    ok: true,
+                    json: () => Promise.resolve([
+                        {
+                            id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+                            title: 'Mathematics',
+                            description: 'Algebra and Geometry',
+                        },
+                    ]),
+                } as Response);
+            }
+            if (urlString.match(/\/api\/subjects\/.{36}\/participants/)) {
+                return Promise.resolve({
+                    ok: true,
+                    json: () => Promise.resolve([
+                        { userId: 'u1', role: 'Student', username: 'Иван', avatarUrl: 'https://example.com/avatar1.png' },
+                    ]),
+                } as Response);
+            }
+            return Promise.reject(new Error('Unknown endpoint'));
+        });
         const mockNavigate = jest.fn();
         (useNavigate as jest.Mock).mockReturnValue(mockNavigate);
         renderWithProvider(<SubjectsPage />);
         const card = await screen.findByTestId('subject-card-3fa85f64-5717-4562-b3fc-2c963f66afa6');
         card.click();
-        expect(mockNavigate).toHaveBeenCalledWith('/subjects/3fa85f64-5717-4562-b3fc-2c963f66afa6');
+        await waitFor(() => {
+            expect(mockNavigate).toHaveBeenCalledWith('/subjects/3fa85f64-5717-4562-b3fc-2c963f66afa6');
+        });
     });
 });
