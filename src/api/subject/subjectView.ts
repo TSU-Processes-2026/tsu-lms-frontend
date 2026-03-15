@@ -83,7 +83,7 @@ export async function fetchPostComments(
 ): Promise<CommentResponse[]> {
   const params = new URLSearchParams();
   params.append('targetId', postId);
-  params.append('targetType', options?.targetType || 'post');
+  params.append('targetType', options?.targetType || 'Post');
   if (options?.limit) params.append('limit', String(options.limit));
   if (options?.offset) params.append('offset', String(options.offset));
   const url = `${BASE_URL}/comments?${params.toString()}`;
