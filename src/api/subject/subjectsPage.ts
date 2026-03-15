@@ -1,6 +1,7 @@
 import { DEV_URL, PROD_URL, MOCK_URL } from '@/constants/config/config';
 import { ACCESS_TOKEN } from '@/constants/auth/auth';
 import { Participant, Assignment, Submission } from '@/hooks/subject/useSubjects';
+import { Subject } from '@/types/subject/Subject';
 
 const BASE_URL = DEV_URL || PROD_URL || MOCK_URL;
 
@@ -13,6 +14,41 @@ const getAuthHeaders = (): Record<string, string> => ({
   'Authorization': `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
   'Content-Type': 'application/json',
 });
+
+/**
+ * Fetches subjects from the API with optional pagination.
+ *
+ * @param {Object} [options] - Optional query parameters.
+ * @param {number} [options.limit] - Limit of subjects to fetch.
+ * @param {number} [options.offset] - Offset for pagination.
+ * @returns {Promise<Subject[]>} Array of subjects.
+ * @throws {Error} Throws error for 401, 403, or other failed requests.
+ */
+export async function fetchSubjects(options?: { limit?: number; offset?: number }): Promise<Subject[]> {
+  const params = new URLSearchParams();
+  if (options?.limit) params.append('limit', String(options.limit));
+  if (options?.offset) params.append('offset', String(options.offset));
+  const url = `${BASE_URL}/subjects${params.toString() ? '?' + params.toString() : ''}`;
+  const res = await fetch(url, {
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) {
+    let err;
+    if (res.status === 401) {
+      err = new Error('Unauthorized');
+    } else if (res.status === 403) {
+      err = new Error('Forbidden');
+    } else {
+      err = new Error('Failed to load subjects');
+    }
+    throw err;
+  }
+  const data = await res.json();
+  if (Array.isArray(data) && data.length === 0) {
+    return [];
+  }
+  return data as Subject[];
+}
 
 /**
  * Fetches participants for a subject by subjectId.

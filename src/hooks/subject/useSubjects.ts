@@ -1,8 +1,13 @@
 ﻿import React from 'react';
-import { fetchSubjectParticipants, fetchSubjectAssignments, fetchAssignmentSubmissions } from '@/api/subject/subjectFeed';
-import { Subject } from '@/types/subject/Subject.ts';
-import { GraduationCap } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import {
+    fetchAssignmentSubmissions,
+    fetchSubjectAssignments,
+    fetchSubjectParticipants,
+    fetchSubjects
+} from '@/api/subject/subjectsPage.ts';
+import {Subject} from '@/types/subject/Subject.ts';
+import {GraduationCap} from 'lucide-react';
+import {useQuery} from '@tanstack/react-query';
 
 /**
  * Participant interface for subject participants.
@@ -170,23 +175,11 @@ export function useSubjects(autoLoadParticipants: boolean = true): UseSubjectsRe
     } = useQuery({
         queryKey: ['subjects'],
         queryFn: async () => {
-            const res = await fetch('/api/subjects', {});
-            if (!res.ok) {
-                let err;
-                if (res.status === 401) {
-                    err = new Error('Unauthorized');
-                } else if (res.status === 403) {
-                    err = new Error('Ошибка загрузки предметов');
-                } else {
-                    err = new Error('Ошибка загрузки предметов');
-                }
-                throw err;
+            try {
+                return await fetchSubjects();
+            } catch (err) {
+                throw err instanceof Error ? err : new Error('Ошибка загрузки предметов');
             }
-            const data = await res.json();
-            if (Array.isArray(data) && data.length === 0) {
-                return [];
-            }
-            return data;
         },
         retry: false,
     });
