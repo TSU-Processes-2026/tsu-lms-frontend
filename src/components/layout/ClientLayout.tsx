@@ -5,11 +5,12 @@ import { useLogout } from '@/hooks/logout/useLogout';
 import { CreateSubjectModal } from '../modals/SubjectModal';
 import { useProfile } from '@/hooks/profile/useProfile';
 import { JoinSubjectModal } from '../modals/JoinSubjectModal';
+import { ASSIGNMENTS_PAGE, SUBJECT_PAGE_PREFIX } from '@/constants/paths/paths';
 
 const navItems = [
-    { id: '/subjects', label: 'Предметы', icon: <BookOpen size={20} /> },
+    { id: SUBJECT_PAGE_PREFIX, label: 'Предметы', icon: <BookOpen size={20} /> },
     {
-        id: 'assignments',
+        id: ASSIGNMENTS_PAGE,
         label: 'Задания',
         icon: <ClipboardCheck size={20} />,
     },
