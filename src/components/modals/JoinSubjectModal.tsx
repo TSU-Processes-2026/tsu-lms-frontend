@@ -30,7 +30,7 @@ export const JoinSubjectModal = ({ onClose }: JoinModalProps) => {
                 <form onSubmit={handleSubmit} className='space-y-5'>
                     <div>
                         <label className='block text-sm font-semibold text-slate-700 mb-2'>
-                            Выберите предмет
+                            Укажите идентификатор предмета
                         </label>
                         <input
                             value={selectedSubject}
@@ -46,6 +46,14 @@ export const JoinSubjectModal = ({ onClose }: JoinModalProps) => {
                     </div>
 
                     <div className='p-4 bg-blue-50 rounded-xl border border-blue-100'>
+                        <p className='text-xs text-blue-700 font-semibold mb-1'>
+                            ℹ️ Идентификатор предмета
+                        </p>
+                        <p className='text-xs text-blue-600'>
+                            Для получения <span className='font-bold'>идентификатора</span>.
+                            свяжитесь с преподавателем.
+                        </p>
+                        <br />
                         <p className='text-xs text-blue-700 font-semibold mb-1'>
                             ℹ️ Роль в предмете
                         </p>

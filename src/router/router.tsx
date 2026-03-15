@@ -5,6 +5,7 @@ import { LandingPage } from '@/pages/Landing';
 import ProtectedRoute from './ProtectedRoute';
 import { ClientLayout } from '@/components/layout/ClientLayout';
 import {
+    DASHBOARD_PAGE,
     FORBIDDEN_PAGE,
     HOME_PAGE_URL,
     INTERNAL_SERVER_ERROR_PAGE_URL,
@@ -16,7 +17,8 @@ import { SubjectsPage } from '@/pages/Subjects';
 import { ServerErrorPage } from '@/pages/ErrorPages/ServerErrorPage.tsx';
 import { NotFoundPage } from '@/pages/ErrorPages/NotFoundPage.tsx';
 import { ForbiddenPage } from '@/pages/ErrorPages/ForbiddenPage.tsx';
-import { HomePage } from "@/pages/HomePage";
+import { HomePage } from '@/pages/HomePage';
+import { Dashboard } from '@/pages/Dashboard';
 
 export const router = createBrowserRouter([
     {
@@ -40,6 +42,10 @@ export const router = createBrowserRouter([
                     {
                         path: HOME_PAGE_URL,
                         element: <HomePage />,
+                    },
+                    {
+                        path: DASHBOARD_PAGE,
+                        element: <Dashboard />,
                     },
                     {
                         path: '/subjects',
