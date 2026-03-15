@@ -7,7 +7,7 @@ const CreateAssignmentModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
             <div className="bg-white w-full max-w-3xl max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden">
                 <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200/50">
+                        <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
                             <ClipboardCheck className="text-white" size={20} />
                         </div>
                         <h3 className="text-xl font-bold text-slate-800">Создать тест</h3>
@@ -25,27 +25,15 @@ const CreateAssignmentModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                                        required />
                             </div>
-                            <div className="col-span-2">
-                                <label className="block text-sm font-semibold text-slate-700 mb-2">Описание / инструкция</label>
-                                <textarea placeholder="Опишите задание для студентов..."
-                                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
-                                          rows={3} required />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-semibold text-slate-700 mb-2">Максимум баллов</label>
-                                <input type="number" min={1}
-                                       className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                                       required />
-                            </div>
-                            <div className="flex items-end">
-                                <div className="p-3 bg-blue-50 rounded-xl border border-blue-100 text-sm text-blue-700 font-medium flex-1 text-center">
-                                    {/* Иконка количества вопросов */} 1 вопрос
-                                </div>
-                            </div>
                         </div>
                         <div className="border-t border-slate-200 pt-6">
                             <div className="flex justify-between items-center mb-5">
-                                <h4 className="font-bold text-slate-800">Вопросы</h4>
+                                <div className="flex items-center gap-3">
+                                    <h4 className="font-bold text-slate-800 text-lg">Вопросы</h4>
+                                    <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 font-semibold rounded-full text-sm ml-2">
+                                        1 вопрос
+                                    </span>
+                                </div>
                                 <button type="button"
                                         className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-50 transition-all">
                                     {/* Иконка добавления */} Добавить вопрос
@@ -91,7 +79,7 @@ const CreateAssignmentModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
                             Отмена
                         </button>
                         <button type="submit"
-                                className="flex-1 bg-linear-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-200/50 hover:-translate-y-0.5 transition-all">
+                                className="flex-1 bg-linear-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl font-bold">
                             Опубликовать тест
                         </button>
                     </div>
