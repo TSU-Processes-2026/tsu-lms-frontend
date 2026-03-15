@@ -28,7 +28,7 @@ const MaterialPostCard: React.FC<MaterialPostCardProps> = ({ post }) => {
             <p className="text-xs text-slate-400 mt-1">{post.createdAt}</p>
           </div>
         </div>
-        <h3 className="text-xl font-bold text-slate-800 mb-3">{post.content}</h3>
+        <h3 className="text-xl font-bold text-slate-800 mb-3">{post.fileName}</h3>
         <p className="text-slate-600 leading-relaxed">{post.content}</p>
         <div className="mt-5 p-5 border border-slate-100 rounded-2xl bg-linear-to-br from-slate-50 to-slate-100/50 flex items-center justify-between hover:border-blue-200 cursor-pointer transition-all">
           <div className="flex items-center gap-4">

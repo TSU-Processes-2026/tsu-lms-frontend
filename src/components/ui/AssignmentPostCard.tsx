@@ -33,8 +33,7 @@ const AssignmentPostCard: React.FC<AssignmentPostCardProps> = ({ post, assignmen
           </div>
         </div>
         <span className="text-xs font-bold text-purple-600 uppercase tracking-wider">Новое задание</span>
-        <h3 className="text-xl font-bold text-slate-800 mt-1 mb-2">{post.content}</h3>
-        <p className="text-slate-600 leading-relaxed mb-4">{post.content}</p>
+        <h3 className="text-xl font-bold text-slate-800 mt-1 mb-4">{post.content}</h3>
         {assignment && (
           <div className="p-4 bg-purple-50 rounded-2xl border border-purple-100 flex items-center justify-between">
             <div className="flex items-center gap-3">
