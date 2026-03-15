@@ -1,16 +1,19 @@
-import { useState } from 'react';
+import { useSubjectView, UseSubjectView } from '@/hooks/subject/useSubjectView.ts';
 import StudentsModal from '@/components/modals/StudentsModal';
 import CreateAssignmentModal from '@/components/modals/CreateAssignmentModal';
 import { User as UserIcon, Upload, ClipboardCheck, Bell, FileText, Edit, Download, Send, Users } from 'lucide-react';
 
 const SubjectView = () => {
-    const [showModal, setShowModal] = useState(false);
-    const [showAssignmentModal, setShowAssignmentModal] = useState(false);
-    const [activeTab, setActiveTab] = useState<'feed' | 'students'>('feed');
-    const handleShowModal = () => setShowModal(true);
-    const handleCloseModal = () => setShowModal(false);
-    const handleShowAssignmentModal = () => setShowAssignmentModal(true);
-    const handleCloseAssignmentModal = () => setShowAssignmentModal(false);
+    const {
+        showModal,
+        showAssignmentModal,
+        activeTab,
+        handleShowModal,
+        handleCloseModal,
+        handleShowAssignmentModal,
+        handleCloseAssignmentModal,
+        setActiveTab,
+    }: UseSubjectView = useSubjectView();
 
     return (
         <>
