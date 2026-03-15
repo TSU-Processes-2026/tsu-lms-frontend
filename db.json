@@ -295,15 +295,21 @@
       "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       "postType": "Announcement",
       "content": "Добро пожаловать на курс 'Основы программирования'!",
-      "createdAt": "2026-03-15T09:00:00.000Z"
-    }, 
+      "createdAt": "2026-03-15T09:00:00.000Z",
+      "$type": "Announcement"
+    },
     {
       "id": "post-2",
       "subjectId": "1773129500000-newsubj1",
       "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
       "postType": "Material",
       "content": "0JzQsNGC0LXRgNC40LDQu9GLINC/0LXRgNCy0L7QuSDQu9C10LrRhtC40Lgg0LTQvtGB0YLRg9C/0L3RiyDQsiDRgNCw0LfQtNC10LvQtSAn0JTQvtC60YPQvNC10L3RgtGLJy4NCg==",
-      "createdAt": "2026-03-15T09:30:00.000Z"
+      "createdAt": "2026-03-15T09:30:00.000Z",
+      "$type": "Material",
+      "fileName": "material1.txt",
+      "storagePath": "materials/material1.txt",
+      "fileSize": 1024,
+      "downloadUrl": "/api/posts/post-2/file"
     },
     {
       "id": "post-3",
@@ -311,15 +317,142 @@
       "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa3",
       "postType": "Announcement",
       "content": "Старт курса 'Продвинутое программирование'.",
-      "createdAt": "2026-03-15T10:00:00.000Z"
-    }, 
+      "createdAt": "2026-03-15T10:00:00.000Z",
+      "$type": "Announcement"
+    },
     {
       "id": "post-4",
       "subjectId": "1773129600000-advprog",
       "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
       "postType": "Material",
       "content": "0JLRgtC+0YDQvtC5INC80LDRgtC10YDQuNCw0Lsg0LfQsNCz0YDRg9C20LXQvSDQsiDRgdC40YHRgtC10LzRgy4NCg==",
-      "createdAt": "2026-03-15T10:30:00.000Z"
+      "createdAt": "2026-03-15T10:30:00.000Z",
+      "$type": "Material",
+      "fileName": "material2.txt",
+      "storagePath": "materials/material2.txt",
+      "fileSize": 2048,
+      "downloadUrl": "/api/posts/post-4/file"
+    },
+    {
+      "id": "post-5",
+      "subjectId": "1773129500000-newsubj1",
+      "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "postType": "Assignment",
+      "content": "Задание по основам программирования",
+      "createdAt": "2026-03-16T09:00:00.000Z",
+      "$type": "Assignment",
+      "assignmentData": "Решить простую задачу на Python",
+      "questions": [
+        {
+          "id": "q-4",
+          "questionType": "Text",
+          "questionData": "Напишите функцию, которая возвращает сумму двух чисел",
+          "options": []
+        }
+      ]
+    },
+    {
+      "id": "post-6",
+      "subjectId": "1773129600000-advprog",
+      "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa3",
+      "postType": "Assignment",
+      "content": "Задание с отправкой и оценкой",
+      "createdAt": "2026-03-16T10:00:00.000Z",
+      "$type": "Assignment",
+      "assignmentData": "Реализовать паттерн Observer",
+      "questions": [
+        {
+          "id": "q-7",
+          "questionType": "Text",
+          "questionData": "Опишите паттерн Observer",
+          "options": []
+        }
+      ]
+    },
+    {
+      "id": "post-7",
+      "subjectId": "1773129600000-advprog",
+      "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa3",
+      "postType": "Assignment",
+      "content": "Задание с отправкой без оценки",
+      "createdAt": "2026-03-16T11:00:00.000Z",
+      "$type": "Assignment",
+      "assignmentData": "Реализовать паттерн Singleton",
+      "questions": [
+        {
+          "id": "q-6",
+          "questionType": "Text",
+          "questionData": "Опишите паттерн Singleton",
+          "options": []
+        }
+      ]
+    },
+    {
+      "id": "post-8",
+      "subjectId": "1773129600000-advprog",
+      "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa3",
+      "postType": "Assignment",
+      "content": "Задание с черновиком",
+      "createdAt": "2026-03-16T12:00:00.000Z",
+      "$type": "Assignment",
+      "assignmentData": "Написать функцию сортировки",
+      "questions": [
+        {
+          "id": "q-5",
+          "questionType": "Text",
+          "questionData": "Реализуйте быструю сортировку",
+          "options": []
+        }
+      ]
+    },
+    {
+      "id": "post-9",
+      "subjectId": "1773129035372-dr012hhflxj",
+      "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa3",
+      "postType": "Assignment",
+      "content": "Задание 1: UML диаграммы",
+      "createdAt": "2026-03-16T13:00:00.000Z",
+      "$type": "Assignment",
+      "assignmentData": "Сделать диаграмму классов",
+      "questions": [
+        {
+          "id": "q-1",
+          "questionType": "Text",
+          "questionData": "Опишите паттерн Singleton",
+          "options": []
+        },
+        {
+          "id": "q-2",
+          "questionType": "SingleChoice",
+          "questionData": "Выберите верный паттерн",
+          "options": [
+            { "id": "opt-1", "text": "Factory" },
+            { "id": "opt-2", "text": "Observer" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "post-10",
+      "subjectId": "1773129035372-dr012hhflxj",
+      "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa3",
+      "postType": "Assignment",
+      "content": "Задание 2: паттерны проектирования",
+      "createdAt": "2026-03-16T14:00:00.000Z",
+      "$type": "Assignment",
+      "assignmentData": "Реализовать паттерн Observer",
+      "questions": [
+        {
+          "id": "q-3",
+          "questionType": "MultipleChoice",
+          "questionData": "Выберите порождающие паттерны",
+          "options": [
+            { "id": "opt-3", "text": "Singleton" },
+            { "id": "opt-4", "text": "Factory Method" },
+            { "id": "opt-5", "text": "Observer" }
+          ]
+        }
+      ]
     }
   ]
 }
