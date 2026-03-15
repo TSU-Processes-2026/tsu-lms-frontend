@@ -40,7 +40,7 @@ export interface AssignmentQuestionOption {
  * Interface representing a question in an assignment.
  * @property {string} id - Unique identifier of the question (GUID).
  * @property {string} questionType - Type of the question.
- * @property {string} questionData - Data for the question (text, etc).
+ * @property {string} questionData - Data for the question (text, etc.).
  * @property {AssignmentQuestionOption[]} options - Options for the question.
  */
 export interface AssignmentQuestion {

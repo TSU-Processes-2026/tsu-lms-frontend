@@ -2,8 +2,11 @@ import { useSubjectView, UseSubjectViewResult } from '@/hooks/subject/useSubject
 import StudentsModal from '@/components/modals/StudentsModal';
 import CreateAssignmentModal from '@/components/modals/CreateAssignmentModal';
 import { User as UserIcon, Upload, ClipboardCheck, Users } from 'lucide-react';
-import PostCard from '@/components/ui/PostCard';
+import AnnouncementPostCard from '@/components/ui/AnnouncementPostCard';
+import MaterialPostCard from '@/components/ui/MaterialPostCard';
+import AssignmentPostCard from '@/components/ui/AssignmentPostCard';
 import { Post } from '@/types/subject/FeedTypes';
+import { useProfile } from '@/hooks/profile/useProfile';
 
 const SubjectView = () => {
     const {
@@ -19,6 +22,22 @@ const SubjectView = () => {
         subjectCode,
         subjectParticipants,
     }: UseSubjectViewResult = useSubjectView();
+    const { profile } = useProfile();
+
+    // Определяем роль пользователя
+    const userRole = 'student'; // TODO: определить роль пользователя из участников
+
+    // Обработчик редактирования поста
+    const handleEditPost = () => {
+        // Здесь логика редактирования поста
+        // ...
+    };
+
+    // Обработчик открытия задания
+    const handleOpenAssignment = () => {
+        // Здесь логика открытия задания
+        // ...
+    };
 
     return (
         <>
@@ -62,16 +81,47 @@ const SubjectView = () => {
                         </div>
                         {feed.loading && <div className="text-center text-slate-400">Загрузка...</div>}
                         {feed.error && <div className="text-center text-red-500">{feed.error}</div>}
-                        {(feed.posts as Post[]).map((post: Post) => (
-                            <PostCard
-                                key={post.id}
-                                post={post}
-                                authorName={post.authorId}
-                                date={post.createdAt}
-                                comments={feed.comments[post.id] || []}
-                                onAddComment={text => feed.addComment(post.id, text)}
-                            />
-                        ))}
+                        {(feed.posts as Post[]).map((post: Post) => {
+                            switch (post.postType) {
+                                case 'announcement':
+                                    return (
+                                        <AnnouncementPostCard
+                                            key={post.id}
+                                            post={post}
+                                            userId={profile.id}
+                                            userRole={userRole}
+                                            onEditPost={handleEditPost}
+                                        />
+                                    );
+                                case 'material':
+                                    return (
+                                        <MaterialPostCard
+                                            key={post.id}
+                                            post={post}
+                                        />
+                                    );
+                                case 'assignment':
+                                    return (
+                                        <AssignmentPostCard
+                                            key={post.id}
+                                            post={post}
+                                            assignment={{
+                                                id: post.id,
+                                                subjectId: '',
+                                                authorId: post.authorId,
+                                                postType: post.postType,
+                                                content: post.content,
+                                                createdAt: post.createdAt,
+                                                assignmentData: post.assignmentData || '',
+                                                questions: post.questions || [],
+                                            }}
+                                            onOpenAssignment={handleOpenAssignment}
+                                        />
+                                    );
+                                default:
+                                    return <div key={post.id} className="text-slate-400">Неизвестный тип поста</div>;
+                            }
+                        })}
                     </div>
                 )}
                 {activeTab === 'students' && (
