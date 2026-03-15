@@ -2,6 +2,7 @@ import React from 'react';
 import { User as UserIcon, Bell } from 'lucide-react';
 import { AnnouncementPostResponse } from '@/types/subject/FeedTypes';
 import CommentSection from './CommentSection';
+import { formatPostDate } from '@/utils/formatPostDate';
 
 /**
  * AnnouncementPostCard component displays an announcement post.
@@ -50,7 +51,7 @@ const AnnouncementPostCard: React.FC<AnnouncementPostCardProps> = ({ post, userI
             </div>
             <div>
               <p className="font-bold text-slate-800">{post.authorId}</p>
-              <p className="text-xs text-slate-400 mt-1">{post.createdAt}</p>
+              <p className="text-xs text-slate-400 mt-1">{formatPostDate(post.createdAt)}</p>
             </div>
           </div>
           {(userRole === 'admin' || userRole === 'teacher' || post.authorId === userId) && (

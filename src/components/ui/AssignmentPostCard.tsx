@@ -2,6 +2,7 @@ import React from 'react';
 import { ClipboardCheck, HelpCircle } from 'lucide-react';
 import { AssignmentPostResponse, AssignmentResponse } from '@/types/subject/FeedTypes';
 import CommentSection from './CommentSection';
+import { formatPostDate } from '@/utils/formatPostDate';
 
 /**
  * AssignmentPostCard component displays an assignment post with comments and comment composer.
@@ -29,7 +30,7 @@ const AssignmentPostCard: React.FC<AssignmentPostCardProps> = ({ post, assignmen
           </div>
           <div>
             <p className="font-bold text-slate-800">{post.authorId}</p>
-            <p className="text-xs text-slate-400 mt-1">{post.createdAt}</p>
+            <p className="text-xs text-slate-400 mt-1">{formatPostDate(post.createdAt)}</p>
           </div>
         </div>
         <span className="text-xs font-bold text-purple-600 uppercase tracking-wider">Новое задание</span>

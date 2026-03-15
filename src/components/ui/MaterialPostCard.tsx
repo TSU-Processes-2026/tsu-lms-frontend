@@ -2,6 +2,7 @@ import React from 'react';
 import { FileText, Download } from 'lucide-react';
 import { MaterialPostResponse } from '@/types/subject/FeedTypes';
 import CommentSection from './CommentSection';
+import { formatPostDate } from '@/utils/formatPostDate';
 
 /**
  * MaterialPostCard component displays a material post with comments and comment composer.
@@ -25,7 +26,7 @@ const MaterialPostCard: React.FC<MaterialPostCardProps> = ({ post }) => {
           </div>
           <div>
             <p className="font-bold text-slate-800">{post.authorId}</p>
-            <p className="text-xs text-slate-400 mt-1">{post.createdAt}</p>
+            <p className="text-xs text-slate-400 mt-1">{formatPostDate(post.createdAt)}</p>
           </div>
         </div>
         <h3 className="text-xl font-bold text-slate-800 mb-3">{post.fileName}</h3>
