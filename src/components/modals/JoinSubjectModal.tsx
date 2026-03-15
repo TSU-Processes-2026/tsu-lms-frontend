@@ -1,3 +1,5 @@
+import { useJoinSubject } from '@/hooks/subject/useJoinSubject';
+import { Subject } from '@/types/subject/Subject';
 import { AlertCircle, Key, X } from 'lucide-react';
 import { useState } from 'react';
 
@@ -6,12 +8,7 @@ interface JoinModalProps {
 }
 
 export const JoinSubjectModal = ({ onClose }: JoinModalProps) => {
-    const [code, setCode] = useState<string>('');
-    const [errorMessage, setErrorMessage] = useState<string>('');
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-    };
+    const { selectedSubject, errorMessage, handleSubmit, handleSelectSubject } = useJoinSubject();
 
     return (
         <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm'>
@@ -33,15 +30,14 @@ export const JoinSubjectModal = ({ onClose }: JoinModalProps) => {
                 <form onSubmit={handleSubmit} className='space-y-5'>
                     <div>
                         <label className='block text-sm font-semibold text-slate-700 mb-2'>
-                            Код предмета
+                            Выберите предмет
                         </label>
                         <input
-                            type='text'
-                            value={code}
-                            onChange={(e) => {}}
-                            placeholder='MATH001'
-                            className='w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-center text-2xl font-bold tracking-widest transition-all'
-                        />
+                            value={selectedSubject}
+                            onChange={handleSelectSubject}
+                            className='px-3 py-2 w-full bg-white border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500'
+                            required
+                        ></input>
                         {errorMessage && (
                             <p className='text-red-500 text-sm mt-2 flex items-center gap-1'>
                                 <AlertCircle size={14} /> {errorMessage}
