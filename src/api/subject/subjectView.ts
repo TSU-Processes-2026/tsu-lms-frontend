@@ -60,7 +60,6 @@ export async function publishSubjectPost(
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`
-      // Content-Type не указывается для FormData
     },
     body: formData,
   });
