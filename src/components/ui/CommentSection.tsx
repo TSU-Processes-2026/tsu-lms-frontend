@@ -6,7 +6,7 @@
  */
 import React from 'react';
 import { User as UserIcon, Send } from 'lucide-react';
-import { useComments } from '@/hooks/useComments';
+import {useSubjectView} from "@/hooks/subject/useSubjectView.ts";
 
 export interface CommentItem {
   id: string;
@@ -23,13 +23,13 @@ interface CommentSectionProps {
   initialComments?: CommentItem[];
 }
 
-const CommentSection: React.FC<CommentSectionProps> = ({ initialComments = [] }) => {
+const CommentSection: React.FC<CommentSectionProps> = () => {
   const {
     comments,
     composerText,
     setComposerText,
     handleComment,
-  } = useComments(initialComments);
+  } = useSubjectView();
 
   return (
     <div className="bg-slate-50 border-t border-slate-100 p-5 space-y-3">

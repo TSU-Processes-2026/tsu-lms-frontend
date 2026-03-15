@@ -6,6 +6,7 @@ import { Subject } from '@/types/subject/Subject';
 import { UserResponse } from '@/types/user/UserResponse';
 import { PostResponse, AssignmentResponse } from '@/types/subject/FeedTypes';
 import { useProfile } from '@/hooks/profile/useProfile';
+import {CommentItem} from "@/components/ui/CommentSection.tsx";
 
 /**
  * useSubjectView hook return type.
@@ -28,6 +29,10 @@ import { useProfile } from '@/hooks/profile/useProfile';
  * @property {UserResponse} profile - Current user profile.
  * @property {(post: PostResponse) => void} handleEditPost - Handler for editing a post.
  * @property {(assignment: AssignmentResponse) => void} handleOpenAssignment - Handler for opening an assignment.
+ * @property {string} composerText - Current value of comment composer input.
+ * @property {(text: string) => void} setComposerText - Handler to set composer text.
+ * @property {CommentItem[]} comments - Array of comments.
+ * @property {() => void} handleComment - Handler for adding a new comment.
  */
 export type UseSubjectViewResult = {
   showModal: boolean;
@@ -48,6 +53,10 @@ export type UseSubjectViewResult = {
   profile: UserResponse;
   handleEditPost: (post: PostResponse) => void;
   handleOpenAssignment: (assignment: AssignmentResponse) => void;
+  composerText: string;
+  setComposerText: (text: string) => void;
+  comments: CommentItem[];
+  handleComment: () => void;
 };
 
 /**
@@ -57,6 +66,7 @@ export type UseSubjectViewResult = {
  * - Modal windows (students and assignment modals)
  * - Tab switching (feed/students)
  * - Subject business logic (subjectId, feed, subject info, participants)
+ * - Comments section logic (composerText, setComposerText, comments, handleComment)
  *
  * @returns {UseSubjectViewResult} State and business logic for SubjectView.
  * @throws {Error} If fetching subject data fails.
@@ -97,6 +107,30 @@ export function useSubjectView(): UseSubjectViewResult {
     // ...
   };
 
+  const [comments, setComments] = useState<CommentItem[]>([]);
+  const [composerText, setComposerText] = useState('');
+
+  /**
+   * Adds a new comment to the comments array.
+   * Ignores empty input.
+   * @throws Does not throw.
+   * @returns void
+   */
+  const handleComment = () => {
+    if (!composerText.trim()) return;
+    setComments([
+      ...comments,
+      {
+        id: 'c' + Date.now(),
+        author: 'Вы',
+        text: composerText,
+        avatar: 'В',
+        date: 'Только что',
+      },
+    ]);
+    setComposerText('');
+  };
+
   return {
     showModal,
     showAssignmentModal,
@@ -116,5 +150,9 @@ export function useSubjectView(): UseSubjectViewResult {
     profile,
     handleEditPost,
     handleOpenAssignment,
+    composerText,
+    setComposerText,
+    comments,
+    handleComment,
   };
 }
