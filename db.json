@@ -57,21 +57,81 @@
     }
   ],
   "participants": [
-    { "subjectId": "1773129035372-dr012hhflxj", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6", "role": "Student" },
-    { "subjectId": "1773129035372-dr012hhflxj", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2", "role": "Student" },
-    { "subjectId": "1773129035372-dr012hhflxj", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa3", "role": "Teacher" },
-    { "subjectId": "1773129101042-jiwhlih6mu", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa1", "role": "Student" },
-    { "subjectId": "1773129101042-jiwhlih6mu", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2", "role": "Teacher" },
-    { "subjectId": "1773129500000-newsubj1", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6", "role": "Student" },
-    { "subjectId": "1773129500000-newsubj1", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2", "role": "Student" },
-    { "subjectId": "1773129500000-newsubj1", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa1", "role": "Student" },
-    { "subjectId": "1773129500000-newsubj1", "userId": "1772748407938-rqnwuv6zbrh", "role": "Student" },
-    { "subjectId": "1773129500000-newsubj1", "userId": "extra-user-1", "role": "Student" },
-    { "subjectId": "1773129500000-newsubj1", "userId": "extra-user-2", "role": "Student" },
-    { "subjectId": "1773129500000-newsubj1", "userId": "extra-user-3", "role": "Student" }
-    ,{ "subjectId": "1773129600000-advprog", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6", "role": "Student" }
-    ,{ "subjectId": "1773129600000-advprog", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2", "role": "Student" }
-    ,{ "subjectId": "1773129600000-advprog", "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa3", "role": "Teacher" }
+    {
+      "subjectId": "1773129035372-dr012hhflxj",
+      "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "role": "Student"
+    },
+    {
+      "subjectId": "1773129035372-dr012hhflxj",
+      "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+      "role": "Student"
+    },
+    {
+      "subjectId": "1773129035372-dr012hhflxj",
+      "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa3",
+      "role": "Teacher"
+    },
+    {
+      "subjectId": "1773129101042-jiwhlih6mu",
+      "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa1",
+      "role": "Student"
+    },
+    {
+      "subjectId": "1773129101042-jiwhlih6mu",
+      "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+      "role": "Teacher"
+    },
+    {
+      "subjectId": "1773129500000-newsubj1",
+      "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "role": "Student"
+    },
+    {
+      "subjectId": "1773129500000-newsubj1",
+      "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+      "role": "Student"
+    },
+    {
+      "subjectId": "1773129500000-newsubj1",
+      "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa1",
+      "role": "Student"
+    },
+    {
+      "subjectId": "1773129500000-newsubj1",
+      "userId": "1772748407938-rqnwuv6zbrh",
+      "role": "Student"
+    },
+    {
+      "subjectId": "1773129500000-newsubj1",
+      "userId": "extra-user-1",
+      "role": "Student"
+    },
+    {
+      "subjectId": "1773129500000-newsubj1",
+      "userId": "extra-user-2",
+      "role": "Student"
+    },
+    {
+      "subjectId": "1773129500000-newsubj1",
+      "userId": "extra-user-3",
+      "role": "Student"
+    },
+    {
+      "subjectId": "1773129600000-advprog",
+      "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "role": "Student"
+    },
+    {
+      "subjectId": "1773129600000-advprog",
+      "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+      "role": "Student"
+    },
+    {
+      "subjectId": "1773129600000-advprog",
+      "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa3",
+      "role": "Teacher"
+    }
   ],
   "assignments": [
     {
@@ -92,8 +152,14 @@
           "questionType": "SingleChoice",
           "questionData": "Выберите верный паттерн",
           "options": [
-            { "id": "opt-1", "text": "Factory" },
-            { "id": "opt-2", "text": "Observer" }
+            {
+              "id": "opt-1",
+              "text": "Factory"
+            },
+            {
+              "id": "opt-2",
+              "text": "Observer"
+            }
           ]
         }
       ],
@@ -112,9 +178,18 @@
           "questionType": "MultipleChoice",
           "questionData": "Выберите порождающие паттерны",
           "options": [
-            { "id": "opt-3", "text": "Singleton" },
-            { "id": "opt-4", "text": "Factory Method" },
-            { "id": "opt-5", "text": "Observer" }
+            {
+              "id": "opt-3",
+              "text": "Singleton"
+            },
+            {
+              "id": "opt-4",
+              "text": "Factory Method"
+            },
+            {
+              "id": "opt-5",
+              "text": "Observer"
+            }
           ]
         }
       ],
@@ -135,8 +210,8 @@
         }
       ],
       "createdAt": "2026-03-15T10:00:00.000Z"
-    }
-    ,{
+    },
+    {
       "id": "assgn-4",
       "subjectId": "1773129600000-advprog",
       "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa3",
@@ -145,8 +220,8 @@
       "assignmentData": "Просто прочитать материал",
       "questions": [],
       "createdAt": "2026-03-15T13:00:00.000Z"
-    }
-    ,{
+    },
+    {
       "id": "assgn-5",
       "subjectId": "1773129600000-advprog",
       "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa3",
@@ -161,8 +236,8 @@
         }
       ],
       "createdAt": "2026-03-15T14:00:00.000Z"
-    }
-    ,{
+    },
+    {
       "id": "assgn-6",
       "subjectId": "1773129600000-advprog",
       "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa3",
@@ -177,8 +252,8 @@
         }
       ],
       "createdAt": "2026-03-15T15:00:00.000Z"
-    }
-    ,{
+    },
+    {
       "id": "assgn-7",
       "subjectId": "1773129600000-advprog",
       "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa3",
@@ -201,8 +276,16 @@
       "assignmentId": "assgn-1",
       "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       "answers": [
-        { "questionId": "q-1", "answerType": "TextAnswer", "text": "Описание паттерна" },
-        { "questionId": "q-2", "answerType": "SingleChoiceAnswer", "selectedOptionId": "opt-1" }
+        {
+          "questionId": "q-1",
+          "answerType": "TextAnswer",
+          "text": "Описание паттерна"
+        },
+        {
+          "questionId": "q-2",
+          "answerType": "SingleChoiceAnswer",
+          "selectedOptionId": "opt-1"
+        }
       ],
       "status": "Graded",
       "submittedAt": "2024-01-03T10:00:00.000Z"
@@ -212,8 +295,16 @@
       "assignmentId": "assgn-1",
       "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
       "answers": [
-        { "questionId": "q-1", "answerType": "TextAnswer", "text": "..." },
-        { "questionId": "q-2", "answerType": "SingleChoiceAnswer", "selectedOptionId": "opt-2" }
+        {
+          "questionId": "q-1",
+          "answerType": "TextAnswer",
+          "text": "..."
+        },
+        {
+          "questionId": "q-2",
+          "answerType": "SingleChoiceAnswer",
+          "selectedOptionId": "opt-2"
+        }
       ],
       "status": "RequiresReview",
       "submittedAt": "2024-01-03T11:00:00.000Z"
@@ -231,35 +322,47 @@
       "assignmentId": "assgn-3",
       "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       "answers": [
-        { "questionId": "q-4", "answerType": "TextAnswer", "text": "def add(a, b): return a + b" }
+        {
+          "questionId": "q-4",
+          "answerType": "TextAnswer",
+          "text": "def add(a, b): return a + b"
+        }
       ],
       "status": "Graded",
       "submittedAt": "2026-03-15T12:00:00.000Z"
-    }
-    ,{
+    },
+    {
       "id": "subm-5",
       "assignmentId": "assgn-5",
       "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       "answers": [],
       "status": "Draft",
       "submittedAt": null
-    }
-    ,{
+    },
+    {
       "id": "subm-6",
       "assignmentId": "assgn-6",
       "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       "answers": [
-        { "questionId": "q-6", "answerType": "TextAnswer", "text": "Singleton — это паттерн, который гарантирует единственный экземпляр класса." }
+        {
+          "questionId": "q-6",
+          "answerType": "TextAnswer",
+          "text": "Singleton — это паттерн, который гарантирует единственный экземпляр класса."
+        }
       ],
       "status": "RequiresReview",
       "submittedAt": "2026-03-15T17:00:00.000Z"
-    }
-    ,{
+    },
+    {
       "id": "subm-7",
       "assignmentId": "assgn-7",
       "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       "answers": [
-        { "questionId": "q-7", "answerType": "TextAnswer", "text": "Observer — это паттерн, который позволяет подписчикам реагировать на изменения объекта." }
+        {
+          "questionId": "q-7",
+          "answerType": "TextAnswer",
+          "text": "Observer — это паттерн, который позволяет подписчикам реагировать на изменения объекта."
+        }
       ],
       "status": "Graded",
       "submittedAt": "2026-03-15T18:00:00.000Z"
@@ -279,8 +382,8 @@
       "score": 100,
       "verdictText": "Выполнено отлично",
       "gradedAt": "2026-03-15T13:00:00.000Z"
-    }
-    ,{
+    },
+    {
       "id": "grade-3",
       "submissionId": "subm-7",
       "score": 95,
@@ -426,8 +529,14 @@
           "questionType": "SingleChoice",
           "questionData": "Выберите верный паттерн",
           "options": [
-            { "id": "opt-1", "text": "Factory" },
-            { "id": "opt-2", "text": "Observer" }
+            {
+              "id": "opt-1",
+              "text": "Factory"
+            },
+            {
+              "id": "opt-2",
+              "text": "Observer"
+            }
           ]
         }
       ]
@@ -447,12 +556,103 @@
           "questionType": "MultipleChoice",
           "questionData": "Выберите порождающие паттерны",
           "options": [
-            { "id": "opt-3", "text": "Singleton" },
-            { "id": "opt-4", "text": "Factory Method" },
-            { "id": "opt-5", "text": "Observer" }
+            {
+              "id": "opt-3",
+              "text": "Singleton"
+            },
+            {
+              "id": "opt-4",
+              "text": "Factory Method"
+            },
+            {
+              "id": "opt-5",
+              "text": "Observer"
+            }
           ]
         }
       ]
+    }
+  ],
+  "comments": [
+    {
+      "id": "comm-1",
+      "targetType": "Post",
+      "targetId": "post-1",
+      "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+      "text": "Спасибо за приглашение!",
+      "createdAt": "2026-03-15T09:05:00.000Z"
+    },
+    {
+      "id": "comm-2",
+      "targetType": "Post",
+      "targetId": "post-2",
+      "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "text": "Очень полезный материал, спасибо!",
+      "createdAt": "2026-03-15T09:35:00.000Z"
+    },
+    {
+      "id": "comm-3",
+      "targetType": "Post",
+      "targetId": "post-5",
+      "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+      "text": "Можно ли использовать встроенные функции Python?",
+      "createdAt": "2026-03-16T09:10:00.000Z"
+    },
+    {
+      "id": "1773607560395-b960iqv0q0a",
+      "targetType": "post",
+      "targetId": "1773129500000-newsubj1",
+      "text": "еуые",
+      "createdAt": "2026-03-15T20:46:00.395Z"
+    },
+    {
+      "id": "1773608371614-163ndfuo1id",
+      "targetType": "post",
+      "targetId": "1773129500000-newsubj1",
+      "text": "sdfsd",
+      "createdAt": "2026-03-15T20:59:31.614Z"
+    },
+    {
+      "id": "1773610248891-dhdhw4gl8el",
+      "targetType": "post",
+      "targetId": "post-1",
+      "text": "выа",
+      "createdAt": "2026-03-15T21:30:48.891Z"
+    },
+    {
+      "id": "1773610286935-a2atzxllcpl",
+      "targetType": "post",
+      "targetId": "post-1",
+      "text": "аоапотп",
+      "createdAt": "2026-03-15T21:31:26.935Z"
+    },
+    {
+      "id": "1773610473257-5zy8t2ackda",
+      "targetType": "post",
+      "targetId": "post-1",
+      "text": "апвап",
+      "createdAt": "2026-03-15T21:34:33.257Z"
+    },
+    {
+      "id": "1773610510047-5qobk5dx059",
+      "targetType": "post",
+      "targetId": "post-1",
+      "text": "впав",
+      "createdAt": "2026-03-15T21:35:10.047Z"
+    },
+    {
+      "id": "1773610754142-zauun4ts3l",
+      "targetType": "post",
+      "targetId": "post-1",
+      "text": "опроа",
+      "createdAt": "2026-03-15T21:39:14.142Z"
+    },
+    {
+      "id": "1773611093219-msx5gaa38kg",
+      "targetType": "post",
+      "targetId": "post-2",
+      "text": "ваы",
+      "createdAt": "2026-03-15T21:44:53.219Z"
     }
   ]
 }
