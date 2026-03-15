@@ -4,8 +4,9 @@
  * @param comments Initial array of comments.
  * @returns JSX.Element Comment section with comments and input.
  */
-import React, { useState } from 'react';
+import React from 'react';
 import { User as UserIcon, Send } from 'lucide-react';
+import { useComments } from '@/hooks/useComments';
 
 export interface CommentItem {
   id: string;
@@ -23,23 +24,12 @@ interface CommentSectionProps {
 }
 
 const CommentSection: React.FC<CommentSectionProps> = ({ initialComments = [] }) => {
-  const [comments, setComments] = useState<CommentItem[]>(initialComments);
-  const [composerText, setComposerText] = useState('');
-
-  const handleComment = () => {
-    if (!composerText.trim()) return;
-    setComments([
-      ...comments,
-      {
-        id: 'c' + Date.now(),
-        author: 'Вы',
-        text: composerText,
-        avatar: 'В',
-        date: 'Только что',
-      },
-    ]);
-    setComposerText('');
-  };
+  const {
+    comments,
+    composerText,
+    setComposerText,
+    handleComment,
+  } = useComments(initialComments);
 
   return (
     <div className="bg-slate-50 border-t border-slate-100 p-5 space-y-3">
