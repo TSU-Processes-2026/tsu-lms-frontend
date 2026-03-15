@@ -46,6 +46,10 @@ export const router = createBrowserRouter([
                         element: <SubjectsPage />,
                     },
                     {
+                        path: '/subjects/:subjectId',
+                        element: <SubjectsPage />,
+                    },
+                    {
                         path: '/assignments',
                         element: <div>Страница с решениями</div>,
                     },

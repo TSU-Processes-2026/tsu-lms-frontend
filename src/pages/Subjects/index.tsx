@@ -1,16 +1,22 @@
 ﻿import { SubjectCard } from '@/components/ui/SubjectCard';
 import { useSubjects } from '@/hooks/subject/useSubjects';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ExtendedSubject } from '@/hooks/subject/useSubjects';
+import SubjectView from '../SubjectView';
 
 const SubjectsPage = () => {
     const { subjects, selectSubject, participants, isLoading, isError, error, errorsParticipants } = useSubjects();
     const navigate = useNavigate();
+    const { subjectId } = useParams();
 
     const onSelectSubject = (subject: ExtendedSubject) => {
         selectSubject(subject);
         navigate(`/subjects/${subject.id}`);
     };
+
+    if (subjectId) {
+        return <SubjectView />;
+    }
 
     return (
         <div className="max-w-6xl mx-auto">
