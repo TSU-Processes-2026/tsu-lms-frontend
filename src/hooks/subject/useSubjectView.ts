@@ -5,6 +5,7 @@ import { useSubjects, Participant, ExtendedSubject } from '@/hooks/subject/useSu
 import { Subject } from '@/types/subject/Subject';
 import { UserResponse } from '@/types/user/UserResponse';
 import { Post, Assignment } from '@/types/subject/FeedTypes';
+import { useProfile } from '@/hooks/profile/useProfile';
 
 /**
  * useSubjectView hook return type.
@@ -57,6 +58,8 @@ export type UseSubjectViewResult = {
  * @throws {Error} If fetching subject data fails.
  */
 export function useSubjectView(): UseSubjectViewResult {
+  const { profile } = useProfile();
+
   const [showModal, setShowModal] = useState(false);
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'feed' | 'students'>('feed');
@@ -72,25 +75,19 @@ export function useSubjectView(): UseSubjectViewResult {
   const subjectCode = selectedSubject && 'code' in selectedSubject ? selectedSubject.code : '';
   const subjectParticipants = subjectId && participants[subjectId] ? participants[subjectId].length : 0;
 
-  // Определение роли пользователя
-  // TODO: реализовать определение роли пользователя на основе участников
-  const userRole = 'student';
+  let userRole: 'admin' | 'teacher' | 'student' = 'student';
+  if (subjectId && participants[subjectId] && profile.id) {
+    const found = participants[subjectId].find(p => p.userId === profile.id);
+    if (found && found.role) {
+      userRole = found.role;
+    }
+  }
 
-  // Получение профиля пользователя
-  // TODO: реализовать получение профиля из хука useProfile
-  const profile: UserResponse = {
-    id: 'userId',
-    username: '',
-    // ... другие поля по необходимости
-  };
-
-  // Обработчик редактирования поста
   const handleEditPost = () => {
     // Здесь логика редактирования поста
     // ...
   };
 
-  // Обработчик открытия задания
   const handleOpenAssignment = () => {
     // Здесь логика открытия задания
     // ...

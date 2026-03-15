@@ -1,14 +1,4 @@
 /**
- * Enum representing possible member roles in a subject.
- * @enum {string}
- */
-export enum MemberRole {
-  Admin = 'admin',
-  Teacher = 'teacher',
-  Student = 'student'
-}
-
-/**
  * Interface representing a comment returned from API.
  * @property {string} id - Unique identifier of the comment (GUID).
  * @property {string} targetType - Type of the entity the comment is attached to.

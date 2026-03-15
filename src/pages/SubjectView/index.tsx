@@ -69,7 +69,8 @@ const SubjectView = () => {
                         {feed.loading && <div className="text-center text-slate-400">Загрузка...</div>}
                         {feed.error && <div className="text-center text-red-500">{feed.error}</div>}
                         {(feed.posts as Post[]).map((post: Post) => {
-                            switch (post.postType) {
+                            const normalizedType = post.postType.toLowerCase();
+                            switch (normalizedType) {
                                 case 'announcement':
                                     return (
                                         <AnnouncementPostCard
