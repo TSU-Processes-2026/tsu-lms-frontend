@@ -24,6 +24,9 @@ const SubjectView = () => {
         profile,
         handleEditPost,
         handleOpenAssignment,
+        composerText,
+        setComposerText,
+        handlePublish,
     }: UseSubjectViewResult = useSubjectView();
 
     return (
@@ -50,7 +53,13 @@ const SubjectView = () => {
                                 <div className="w-11 h-11 rounded-full bg-linear-to-br from-blue-400 to-blue-600 flex items-center justify-center shrink-0 shadow-lg">
                                     <UserIcon size={22} className="text-white" />
                                 </div>
-                                <textarea className="w-full resize-none border-none bg-transparent p-2 text-slate-700 focus:ring-0 outline-none placeholder:text-slate-400" placeholder="Поделиться объявлением или материалом..." rows={2} />
+                                <textarea
+                                    className="w-full resize-none border-none bg-transparent p-2 text-slate-700 focus:ring-0 outline-none placeholder:text-slate-400"
+                                    placeholder="Поделиться объявлением или материалом..."
+                                    rows={2}
+                                    value={composerText}
+                                    onChange={e => setComposerText(e.target.value)}
+                                />
                             </div>
                             <div className="flex justify-between items-center mt-5 pt-4 border-t border-slate-100">
                                 <div className="flex gap-2">
@@ -61,7 +70,10 @@ const SubjectView = () => {
                                         <ClipboardCheck size={18} /> Задание
                                     </button>
                                 </div>
-                                <button className="bg-linear-to-r from-blue-600 to-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-xl shadow-blue-200/50 hover:-translate-y-0.5 transition-all">
+                                <button
+                                    className="bg-linear-to-r from-blue-600 to-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-xl shadow-blue-200/50 hover:-translate-y-0.5 transition-all"
+                                    onClick={handlePublish}
+                                >
                                     Опубликовать
                                 </button>
                             </div>

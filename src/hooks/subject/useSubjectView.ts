@@ -34,6 +34,7 @@ import { addPostComment } from '@/api/subject/subjectView';
  * @property {(text: string) => void} setComposerText - Handler to set composer text.
  * @property {CommentItem[]} comments - Array of comments.
  * @property {() => void} handleComment - Handler for adding a new comment.
+ * @property {() => void} handlePublish - Handler for publishing a post.
  */
 export type UseSubjectViewResult = {
   showModal: boolean;
@@ -58,6 +59,7 @@ export type UseSubjectViewResult = {
   setComposerText: (text: string) => void;
   comments: CommentItem[];
   handleComment: (postId: string) => Promise<void>;
+  handlePublish: () => Promise<void>;
 };
 
 /**
@@ -138,6 +140,24 @@ export function useSubjectView(): UseSubjectViewResult {
     }
   };
 
+  /**
+   * Handler for publishing a post from the composer.
+   * Calls feed.publishPost and resets composerText.
+   * Ignores empty input.
+   * @throws Does not throw.
+   * @returns void
+   */
+  const handlePublish = async () => {
+    if (!composerText.trim()) return;
+    try {
+      await feed.publishPost({ PostType: 'announcement', Content: composerText });
+      setComposerText('');
+    } catch {
+      // Ошибка публикации поста
+      // Можно добавить обработку ошибки
+    }
+  };
+
   return {
     showModal,
     showAssignmentModal,
@@ -161,5 +181,6 @@ export function useSubjectView(): UseSubjectViewResult {
     setComposerText,
     comments,
     handleComment,
+    handlePublish,
   };
 }
