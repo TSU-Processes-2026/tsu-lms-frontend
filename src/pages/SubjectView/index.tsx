@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import StudentsModal from '@/components/modals/StudentsModal';
+import CreateAssignmentModal from '@/components/modals/CreateAssignmentModal';
 
 const SubjectView = () => {
     const [showModal, setShowModal] = useState(false);
+    const [showAssignmentModal, setShowAssignmentModal] = useState(false);
     const handleShowModal = () => setShowModal(true);
     const handleCloseModal = () => setShowModal(false);
+    const handleShowAssignmentModal = () => setShowAssignmentModal(true);
+    const handleCloseAssignmentModal = () => setShowAssignmentModal(false);
 
     return (
         <>
@@ -26,7 +30,7 @@ const SubjectView = () => {
                                 <button className="px-4 py-2 hover:bg-slate-50 rounded-xl text-slate-600 flex items-center gap-2 text-sm font-semibold transition-all">
                                     {/* Иконка загрузки */} Файл
                                 </button>
-                                <button className="px-4 py-2 hover:bg-purple-50 rounded-xl text-purple-600 flex items-center gap-2 text-sm font-semibold transition-all">
+                                <button className="px-4 py-2 hover:bg-purple-50 rounded-xl text-purple-600 flex items-center gap-2 text-sm font-semibold transition-all" onClick={handleShowAssignmentModal}>
                                     {/* Иконка задания */} Задание
                                 </button>
                             </div>
@@ -99,6 +103,7 @@ const SubjectView = () => {
                 </div>
             </div>
             {showModal && <StudentsModal onClose={handleCloseModal} />}
+            {showAssignmentModal && <CreateAssignmentModal onClose={handleCloseAssignmentModal} />}
         </>
     );
 };
