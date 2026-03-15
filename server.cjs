@@ -240,6 +240,118 @@ function getMockGrade(submissionId) {
     return database.get('grades').find({ submissionId }).value() || null;
 }
 
+/**
+ * Returns a mock array of posts for a subject from the database.
+ * @param {string} subjectId - Subject identifier.
+ * @param {number} limit - Max number of posts to return.
+ * @param {number} offset - Offset for pagination.
+ * @returns {Array} Array of post objects.
+ */
+function getMockPosts(subjectId, limit = 20, offset = 0) {
+    const all = database.get('posts').filter({ subjectId }).value() || [];
+    return all.slice(offset, offset + limit);
+}
+
+/**
+ * Creates a mock post for a subject in the database.
+ * @param {string} subjectId - Subject identifier.
+ * @param {object} postData - Post data (type, content, file).
+ * @returns {object} Created post object.
+ */
+function createMockPost(subjectId, postData) {
+    const newId = `${Date.now()}-${Math.random().toString(36).substr(2)}`;
+    const newPost = {
+        id: newId,
+        subjectId,
+        ...postData,
+        createdAt: new Date().toISOString(),
+    };
+    database.get('posts').push(newPost).write();
+    return newPost;
+}
+
+/**
+ * Returns a mock array of comments for a target (post).
+ * @param {string} targetId - Target identifier (postId).
+ * @param {string} targetType - Target type (e.g., 'post').
+ * @param {number} limit - Max number of comments to return.
+ * @param {number} offset - Offset for pagination.
+ * @returns {Array} Array of comment objects.
+ */
+function getMockComments(targetId, targetType = 'post', limit = 20, offset = 0) {
+    const all = database.get('comments').filter({ targetId, targetType }).value() || [];
+    return all.slice(offset, offset + limit);
+}
+
+/**
+ * Creates a mock comment for a post in the database.
+ * @param {object} commentData - Comment data (targetId, targetType, text, authorId).
+ * @returns {object} Created comment object.
+ */
+function createMockComment(commentData) {
+    const newId = `${Date.now()}-${Math.random().toString(36).substr(2)}`;
+    const newComment = {
+        id: newId,
+        ...commentData,
+        createdAt: new Date().toISOString(),
+    };
+    database.get('comments').push(newComment).write();
+    return newComment;
+}
+
+/**
+ * Adds a participant to a subject in the database.
+ * @param {string} subjectId - Subject identifier.
+ * @param {object} participantData - Participant data (userId, role).
+ * @returns {object} Created participant object.
+ */
+function addMockParticipant(subjectId, participantData) {
+    const newParticipant = {
+        subjectId,
+        ...participantData,
+    };
+    database.get('participants').push(newParticipant).write();
+    return newParticipant;
+}
+
+/**
+ * Updates a participant's role in a subject.
+ * @param {string} subjectId - Subject identifier.
+ * @param {string} userId - User identifier.
+ * @param {string} role - New role.
+ * @returns {object|null} Updated participant object or null if not found.
+ */
+function updateMockParticipantRole(subjectId, userId, role) {
+    const participant = database.get('participants').find({ subjectId, userId }).value();
+    if (!participant) return null;
+    participant.role = role;
+    database.get('participants').find({ subjectId, userId }).assign({ role }).write();
+    return participant;
+}
+
+/**
+ * Removes a participant from a subject.
+ * @param {string} subjectId - Subject identifier.
+ * @param {string} userId - User identifier.
+ * @returns {boolean} True if removed, false otherwise.
+ */
+function removeMockParticipant(subjectId, userId) {
+    const removed = database.get('participants').remove({ subjectId, userId }).write();
+    return removed.length > 0;
+}
+
+/**
+ * Joins a subject by invite code (mock).
+ * @param {string} subjectId - Subject identifier.
+ * @param {string} userId - User identifier.
+ * @returns {object} Participant object.
+ */
+function joinMockSubject(subjectId, userId) {
+    const participant = { subjectId, userId, role: 'student' };
+    database.get('participants').push(participant).write();
+    return participant;
+}
+
 // =========================
 // MOCK ENDPOINTS
 // =========================
@@ -325,6 +437,176 @@ server.get('/api/submissions/:submissionId/grade', (req, res) => {
     res.status(200).jsonp(grade);
 });
 
+// =========================
+// POSTS ENDPOINTS
+// =========================
+
+server.get('/api/subjects/:subjectId/posts', (req, res) => {
+    const { subjectId } = req.params;
+    const { limit = 20, offset = 0, postType, mockError } = req.query;
+    if (mockError === '401') {
+        return res.status(401).jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
+    }
+    if (mockError === '403') {
+        return res.status(403).jsonp(getProblemDetails(403, 'Forbidden', 'User is not a participant of this subject'));
+    }
+    let posts = getMockPosts(subjectId, Number(limit), Number(offset));
+    if (postType) {
+        posts = posts.filter(p => p.postType === postType);
+    }
+    res.status(200).jsonp(posts);
+});
+
+server.post('/api/subjects/:subjectId/posts', (req, res) => {
+    const { subjectId } = req.params;
+    const { mockError } = req.query;
+    if (mockError === '401') {
+        return res.status(401).jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
+    }
+    if (mockError === '403') {
+        return res.status(403).jsonp(getProblemDetails(403, 'Forbidden', 'User is not a participant of this subject'));
+    }
+    const postData = req.body;
+    if (!postData || !postData.content) {
+        return res.status(400).jsonp(getProblemDetails(400, 'Bad request', 'Content is required'));
+    }
+    const newPost = createMockPost(subjectId, postData);
+    res.status(201).jsonp(newPost);
+});
+
+// =========================
+// COMMENTS ENDPOINTS
+// =========================
+
+server.get('/api/comments', (req, res) => {
+    const { targetId, targetType = 'post', limit = 20, offset = 0, mockError } = req.query;
+    if (mockError === '401') {
+        return res.status(401).jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
+    }
+    if (mockError === '403') {
+        return res.status(403).jsonp(getProblemDetails(403, 'Forbidden', 'User is not allowed to view comments'));
+    }
+    if (!targetId) {
+        return res.status(400).jsonp(getProblemDetails(400, 'Bad request', 'targetId is required'));
+    }
+    const comments = getMockComments(targetId, targetType, Number(limit), Number(offset));
+    res.status(200).jsonp(comments);
+});
+
+server.post('/api/comments', (req, res) => {
+    const { mockError } = req.query;
+    if (mockError === '401') {
+        return res.status(401).jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
+    }
+    if (mockError === '403') {
+        return res.status(403).jsonp(getProblemDetails(403, 'Forbidden', 'User is not allowed to comment'));
+    }
+    const commentData = req.body;
+    if (!commentData || !commentData.targetId || !commentData.text) {
+        return res.status(400).jsonp(getProblemDetails(400, 'Bad request', 'targetId and text are required'));
+    }
+    const newComment = createMockComment(commentData);
+    res.status(201).jsonp(newComment);
+});
+
+// =========================
+// PARTICIPANTS ENDPOINTS
+// =========================
+
+server.post('/api/subjects/:subjectId/participants', (req, res) => {
+    const { subjectId } = req.params;
+    const { mockError } = req.query;
+    if (mockError === '401') {
+        return res.status(401).jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
+    }
+    if (mockError === '403') {
+        return res.status(403).jsonp(getProblemDetails(403, 'Forbidden', 'User is not allowed to add participants'));
+    }
+    const participantData = req.body;
+    if (!participantData || !participantData.userId || !participantData.role) {
+        return res.status(400).jsonp(getProblemDetails(400, 'Bad request', 'userId and role are required'));
+    }
+    const newParticipant = addMockParticipant(subjectId, participantData);
+    res.status(201).jsonp(newParticipant);
+});
+
+server.patch('/api/subjects/:subjectId/participants/:userId', (req, res) => {
+    const { subjectId, userId } = req.params;
+    const { mockError } = req.query;
+    if (mockError === '401') {
+        return res.status(401).jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
+    }
+    if (mockError === '403') {
+        return res.status(403).jsonp(getProblemDetails(403, 'Forbidden', 'User is not allowed to update participant role'));
+    }
+    const { role } = req.body;
+    if (!role) {
+        return res.status(400).jsonp(getProblemDetails(400, 'Bad request', 'role is required'));
+    }
+    const updated = updateMockParticipantRole(subjectId, userId, role);
+    if (!updated) {
+        return res.status(404).jsonp(getProblemDetails(404, 'Not Found', 'Participant not found'));
+    }
+    res.status(200).jsonp(updated);
+});
+
+server.delete('/api/subjects/:subjectId/participants/:userId', (req, res) => {
+    const { subjectId, userId } = req.params;
+    const { mockError } = req.query;
+    if (mockError === '401') {
+        return res.status(401).jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
+    }
+    if (mockError === '403') {
+        return res.status(403).jsonp(getProblemDetails(403, 'Forbidden', 'User is not allowed to remove participant'));
+    }
+    const removed = removeMockParticipant(subjectId, userId);
+    if (!removed) {
+        return res.status(404).jsonp(getProblemDetails(404, 'Not Found', 'Participant not found'));
+    }
+    res.status(204).send();
+});
+
+server.post('/api/subjects/:subjectId/join', (req, res) => {
+    const { subjectId } = req.params;
+    const { userId, mockError } = req.body;
+    if (mockError === '401') {
+        return res.status(401).jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
+    }
+    if (!userId) {
+        return res.status(400).jsonp(getProblemDetails(400, 'Bad request', 'userId is required'));
+    }
+    const participant = joinMockSubject(subjectId, userId);
+    res.status(200).jsonp(participant);
+});
+
+// =========================
+// ASSIGNMENTS CREATE ENDPOINT
+// =========================
+
+server.post('/api/subjects/:subjectId/assignments', (req, res) => {
+    const { subjectId } = req.params;
+    const { mockError } = req.query;
+    if (mockError === '401') {
+        return res.status(401).jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
+    }
+    if (mockError === '403') {
+        return res.status(403).jsonp(getProblemDetails(403, 'Forbidden', 'User is not allowed to create assignments'));
+    }
+    const assignmentData = req.body;
+    if (!assignmentData || !assignmentData.content) {
+        return res.status(400).jsonp(getProblemDetails(400, 'Bad request', 'content is required'));
+    }
+    const newId = `${Date.now()}-${Math.random().toString(36).substr(2)}`;
+    const newAssignment = {
+        id: newId,
+        subjectId,
+        ...assignmentData,
+        createdAt: new Date().toISOString(),
+    };
+    database.get('assignments').push(newAssignment).write();
+    res.status(201).jsonp(newAssignment);
+});
+
 server.use('/api', router);
 
 const PORT = 3001;
@@ -340,4 +622,11 @@ server.listen(PORT, () => {
     console.log(`  GET  http://localhost:${PORT}/api/subjects/:subjectId/assignments`);
     console.log(`  GET  http://localhost:${PORT}/api/assignments/:assignmentId/submissions`);
     console.log(`  GET  http://localhost:${PORT}/api/submissions/:submissionId/grade`);
+    console.log(`  POST http://localhost:${PORT}/api/posts`);
+    console.log(`  GET  http://localhost:${PORT}/api/posts`);
+    console.log(`  POST http://localhost:${PORT}/api/comments`);
+    console.log(`  GET  http://localhost:${PORT}/api/comments`);
+    console.log(`  POST http://localhost:${PORT}/api/subjects/:subjectId/participants`);
+    console.log(`  PUT  http://localhost:${PORT}/api/subjects/:subjectId/participants/:userId/role`);
+    console.log(`  DELETE http://localhost:${PORT}/api/subjects/:subjectId/participants/:userId`);
 });
