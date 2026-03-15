@@ -121,7 +121,7 @@ export function useSubjectView(): UseSubjectViewResult {
         ...comments,
         {
           id: response.id,
-          author: profile.id,
+          author: response.authorId,
           text: response.text,
           date: response.createdAt,
         },

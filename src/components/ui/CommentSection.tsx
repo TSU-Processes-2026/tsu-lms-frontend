@@ -49,7 +49,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
         setComments(
           data.map((c) => ({
             id: c.id,
-            author: c.authorId && c.authorId.length > 0 ? c.authorId : '?',
+            author: c.authorId,
             text: c.text,
             date: c.createdAt,
           }))
