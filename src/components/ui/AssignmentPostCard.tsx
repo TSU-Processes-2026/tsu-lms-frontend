@@ -1,22 +1,21 @@
 import React, { useState } from 'react';
 import { ClipboardCheck, HelpCircle, User as UserIcon, Send } from 'lucide-react';
-import { Post } from '@/types/subject/FeedTypes';
-import { Assignment } from '@/types/subject/FeedTypes';
+import { AssignmentPostResponse, AssignmentResponse } from '@/types/subject/FeedTypes';
 
 /**
  * AssignmentPostCard component displays an assignment post with comments and comment composer.
  *
  * Displays assignment post with author, creation date, content, questions count, test button, comments and comment input.
  *
- * @param post Assignment post object.
- * @param assignment Assignment object if available.
+ * @param post Assignment post object returned from API.
+ * @param assignment Assignment object returned from API if available.
  * @param onOpenAssignment Callback for opening assignment.
  * @returns JSX.Element Assignment post card element.
  */
 type AssignmentPostCardProps = {
-  post: Post;
-  assignment?: Assignment;
-  onOpenAssignment: (assignment: Assignment) => void;
+  post: AssignmentPostResponse;
+  assignment?: AssignmentResponse;
+  onOpenAssignment: (assignment: AssignmentResponse) => void;
 };
 
 const AssignmentPostCard: React.FC<AssignmentPostCardProps> = ({ post, assignment, onOpenAssignment }) => {

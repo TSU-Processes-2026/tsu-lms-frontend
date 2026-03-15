@@ -5,7 +5,7 @@ import { User as UserIcon, Upload, ClipboardCheck, Users } from 'lucide-react';
 import AnnouncementPostCard from '@/components/ui/AnnouncementPostCard';
 import MaterialPostCard from '@/components/ui/MaterialPostCard';
 import AssignmentPostCard from '@/components/ui/AssignmentPostCard';
-import { Post } from '@/types/subject/FeedTypes';
+import { PostResponse, AnnouncementPostResponse, MaterialPostResponse, AssignmentPostResponse } from '@/types/subject/FeedTypes';
 
 const SubjectView = () => {
     const {
@@ -68,14 +68,14 @@ const SubjectView = () => {
                         </div>
                         {feed.loading && <div className="text-center text-slate-400">Загрузка...</div>}
                         {feed.error && <div className="text-center text-red-500">{feed.error}</div>}
-                        {(feed.posts as Post[]).map((post: Post) => {
+                        {(feed.posts as PostResponse[]).map((post: PostResponse) => {
                             const normalizedType = post.postType.toLowerCase();
                             switch (normalizedType) {
                                 case 'announcement':
                                     return (
                                         <AnnouncementPostCard
                                             key={post.id}
-                                            post={post}
+                                            post={post as AnnouncementPostResponse}
                                             userId={profile.id}
                                             userRole={userRole}
                                             onEditPost={handleEditPost}
@@ -85,27 +85,29 @@ const SubjectView = () => {
                                     return (
                                         <MaterialPostCard
                                             key={post.id}
-                                            post={post}
+                                            post={post as MaterialPostResponse}
                                         />
                                     );
-                                case 'assignment':
+                                case 'assignment': {
+                                    const assignmentPost = post as AssignmentPostResponse;
                                     return (
                                         <AssignmentPostCard
-                                            key={post.id}
-                                            post={post}
+                                            key={assignmentPost.id}
+                                            post={assignmentPost}
                                             assignment={{
-                                                id: post.id,
-                                                subjectId: '',
-                                                authorId: post.authorId,
-                                                postType: post.postType,
-                                                content: post.content,
-                                                createdAt: post.createdAt,
-                                                assignmentData: post.assignmentData || '',
-                                                questions: post.questions || [],
+                                                id: assignmentPost.id,
+                                                subjectId: assignmentPost.subjectId,
+                                                authorId: assignmentPost.authorId,
+                                                postType: assignmentPost.postType,
+                                                content: assignmentPost.content,
+                                                createdAt: assignmentPost.createdAt,
+                                                assignmentData: assignmentPost.assignmentData,
+                                                questions: assignmentPost.questions,
                                             }}
                                             onOpenAssignment={handleOpenAssignment}
                                         />
                                     );
+                                }
                                 default:
                                     return <div key={post.id} className="text-slate-400">Неизвестный тип поста</div>;
                             }

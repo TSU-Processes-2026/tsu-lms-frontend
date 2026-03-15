@@ -5,9 +5,9 @@
  * @property {string} targetId - ID of the entity the comment is attached to (GUID).
  * @property {string} authorId - ID of the comment author (GUID).
  * @property {string} text - Content of the comment.
- * @property {string} createdAt - Date and time when the comment was created (ISO string).
+ * @property {string} createdAt - Date and time when the comment was created (ISO 8601 date-time string).
  */
-export interface Comment {
+export interface CommentResponse {
   id: string;
   targetType: string;
   targetId: string;
@@ -17,27 +17,27 @@ export interface Comment {
 }
 
 /**
- * Interface representing an option for assignment question.
+ * Interface representing an option for assignment question returned from API.
  * @property {string} id - Unique identifier of the option (GUID).
  * @property {string} text - Option text.
  */
-export interface AssignmentQuestionOption {
+export interface AssignmentQuestionOptionResponse {
   id: string;
   text: string;
 }
 
 /**
- * Interface representing a question in an assignment.
+ * Interface representing a question in an assignment returned from API.
  * @property {string} id - Unique identifier of the question (GUID).
  * @property {string} questionType - Type of the question.
  * @property {string} questionData - Data for the question (text, etc.).
- * @property {AssignmentQuestionOption[]} options - Options for the question.
+ * @property {AssignmentQuestionOptionResponse[]} options - Options for the question.
  */
-export interface AssignmentQuestion {
+export interface AssignmentQuestionResponse {
   id: string;
   questionType: string;
   questionData: string;
-  options: AssignmentQuestionOption[];
+  options: AssignmentQuestionOptionResponse[];
 }
 
 /**
@@ -47,11 +47,11 @@ export interface AssignmentQuestion {
  * @property {string} authorId - ID of the assignment author (GUID).
  * @property {string} postType - Type of the post ("assignment").
  * @property {string} content - Content of the assignment post.
- * @property {string} createdAt - Date and time when the assignment was created (ISO string).
+ * @property {string} createdAt - Date and time when the assignment was created (ISO 8601 date-time string).
  * @property {string} assignmentData - Assignment-specific data (JSON string).
- * @property {AssignmentQuestion[]} questions - Questions in the assignment.
+ * @property {AssignmentQuestionResponse[]} questions - Questions in the assignment.
  */
-export interface Assignment {
+export interface AssignmentResponse {
   id: string;
   subjectId: string;
   authorId: string;
@@ -59,31 +59,93 @@ export interface Assignment {
   content: string;
   createdAt: string;
   assignmentData: string;
-  questions: AssignmentQuestion[];
+  questions: AssignmentQuestionResponse[];
 }
 
 /**
- * Interface representing a post returned from API.
+ * Interface representing a post returned from API (base type).
  * @property {string} id - Unique identifier of the post (GUID).
  * @property {string} authorId - ID of the post author (GUID).
  * @property {string} postType - Type of the post ("announcement", "material", "assignment").
  * @property {string} content - Content of the post.
- * @property {string} createdAt - Date and time when the post was created (ISO string).
- * @property {string} fileName - Name of the attached file (for material posts).
- * @property {string} storagePath - Path to the file in storage (for material posts).
- * @property {number} fileSize - Size of the file in bytes (for material posts).
- * @property {string} assignmentData - Assignment-specific data (for assignment posts).
- * @property {AssignmentQuestion[]} questions - Questions (for assignment posts).
+ * @property {string} createdAt - Date and time when the post was created (ISO 8601 date-time string).
+ * @property {string} $type - Discriminator for post type.
  */
-export interface Post {
+export interface PostResponse {
   id: string;
   authorId: string;
   postType: string;
   content: string;
   createdAt: string;
-  fileName?: string;
-  storagePath?: string;
-  fileSize?: number;
-  assignmentData?: string;
-  questions?: AssignmentQuestion[];
+  $type: string;
+}
+
+/**
+ * Interface representing an announcement post returned from API.
+ * Extends PostResponse.
+ */
+export interface AnnouncementPostResponse extends PostResponse {}
+
+/**
+ * Interface representing a material post returned from API.
+ * Extends PostResponse.
+ * @property {string} fileName - Name of the attached file.
+ * @property {string} storagePath - Path to the file in storage.
+ * @property {number} fileSize - Size of the file in bytes.
+ * @property {string} downloadUrl - URL for downloading the file.
+ */
+export interface MaterialPostResponse extends PostResponse {
+  fileName: string;
+  storagePath: string;
+  fileSize: number;
+  downloadUrl: string;
+}
+
+/**
+ * Interface representing an assignment post returned from API.
+ * Extends PostResponse.
+ * @property {string} subjectId - ID of the subject (GUID).
+ * @property {string} assignmentData - Assignment-specific data (JSON string).
+ * @property {AssignmentPostQuestionResponse[]} questions - Questions in the assignment post.
+ */
+export interface AssignmentPostResponse extends PostResponse {
+  subjectId: string;
+  assignmentData: string;
+  questions: AssignmentPostQuestionResponse[];
+}
+
+/**
+ * Interface representing a question in an assignment post returned from API.
+ * @property {string} id - Unique identifier of the question (GUID).
+ * @property {string} questionType - Type of the question.
+ * @property {string} questionData - Data for the question (text, etc.).
+ * @property {AssignmentPostQuestionOptionResponse[]} options - Options for the question.
+ */
+export interface AssignmentPostQuestionResponse {
+  id: string;
+  questionType: string;
+  questionData: string;
+  options: AssignmentPostQuestionOptionResponse[];
+}
+
+/**
+ * Interface representing an option for assignment post question returned from API.
+ * @property {string} id - Unique identifier of the option (GUID).
+ * @property {string} text - Option text.
+ */
+export interface AssignmentPostQuestionOptionResponse {
+  id: string;
+  text: string;
+}
+
+/**
+ * Interface representing file info for a material post.
+ * @property {string} fileName - Name of the file.
+ * @property {number} fileSize - Size of the file in bytes.
+ * @property {string} downloadUrl - URL for downloading the file.
+ */
+export interface PostFileInfoResponse {
+  fileName: string;
+  fileSize: number;
+  downloadUrl: string;
 }

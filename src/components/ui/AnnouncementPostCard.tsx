@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User as UserIcon, Bell, Send } from 'lucide-react';
-import { Post } from '@/types/subject/FeedTypes';
+import { AnnouncementPostResponse } from '@/types/subject/FeedTypes';
 
 /**
  * AnnouncementPostCard component displays an announcement post.
@@ -13,11 +13,18 @@ import { Post } from '@/types/subject/FeedTypes';
  * @param onEditPost Callback for editing the post.
  * @returns JSX.Element Announcement post card element.
  */
+/**
+ * AnnouncementPostCardProps defines the properties for AnnouncementPostCard component.
+ * @property post Announcement post object returned from API.
+ * @property userId Current user's ID.
+ * @property userRole Current user's role.
+ * @property onEditPost Callback for editing the post.
+ */
 type AnnouncementPostCardProps = {
-  post: Post;
+  post: AnnouncementPostResponse;
   userId: string;
   userRole: string;
-  onEditPost: (post: Post) => void;
+  onEditPost: (post: AnnouncementPostResponse) => void;
 };
 
 /**

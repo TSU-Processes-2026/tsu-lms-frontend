@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Post, Comment } from '@/types/subject/FeedTypes';
+import { PostResponse, CommentResponse } from '@/types/subject/FeedTypes';
 
 export interface UseSubjectFeed {
-  posts: Post[];
-  comments: Record<string, Comment[]>;
+  posts: PostResponse[];
+  comments: Record<string, CommentResponse[]>;
   loading: boolean;
   error: string | null;
-  publishPost: (post: Omit<Post, 'id' | 'createdAt'>) => Promise<void>;
+  publishPost: (post: Omit<PostResponse, 'id' | 'createdAt' | '$type'>) => Promise<void>;
   addComment: (postId: string, text: string) => Promise<void>;
 }
 
@@ -16,8 +16,8 @@ export interface UseSubjectFeed {
  *
  * @param {string} subjectId - ID of the subject.
  * @returns {Object} Feed state and handlers.
- * @property {Post[]} posts - Array of posts.
- * @property {Record<string, Comment[]>} comments - Comments grouped by postId.
+ * @property {PostResponse[]} posts - Array of posts.
+ * @property {Record<string, CommentResponse[]>} comments - Comments grouped by postId.
  * @property {boolean} loading - Loading state.
  * @property {string | null} error - Error message.
  * @property {function} publishPost - Handler to publish a new post.
@@ -25,8 +25,8 @@ export interface UseSubjectFeed {
  */
 export function useSubjectFeed(subjectId: string): UseSubjectFeed {
   const [state, setState] = useState<{
-    posts: Post[];
-    comments: Record<string, Comment[]>;
+    posts: PostResponse[];
+    comments: Record<string, CommentResponse[]>;
     loading: boolean;
     error: string | null;
   }>({
@@ -45,19 +45,19 @@ export function useSubjectFeed(subjectId: string): UseSubjectFeed {
       try {
         const postsRes = await fetch(`/api/subjects/${subjectId}/posts`);
         if (!postsRes.ok) throw new Error('Ошибка сети');
-        const postsData: Post[] = await postsRes.json();
+        const postsData: PostResponse[] = await postsRes.json();
 
         const commentsResults = await Promise.all(
             postsData.map(post =>
                 fetch(`/api/comments?targetId=${post.id}`)
                     .then(res => res.json())
-                    .then((comments: Comment[]) => ({ postId: post.id, comments }))
+                    .then((comments: CommentResponse[]) => ({ postId: post.id, comments }))
             )
         );
 
         if (!isMounted) return;
 
-        const grouped: Record<string, Comment[]> = {};
+        const grouped: Record<string, CommentResponse[]> = {};
         commentsResults.forEach(r => { grouped[r.postId] = r.comments; });
 
         setState({
@@ -84,7 +84,7 @@ export function useSubjectFeed(subjectId: string): UseSubjectFeed {
     };
   }, [subjectId]);
 
-  const publishPost = async (post: Omit<Post, 'id' | 'createdAt'>) => {
+  const publishPost = async (post: Omit<PostResponse, 'id' | 'createdAt' | '$type'>) => {
     setState(prev => ({ ...prev, loading: true, error: null }));
     try {
       const res = await fetch(`/api/subjects/${subjectId}/posts`, {
@@ -92,7 +92,7 @@ export function useSubjectFeed(subjectId: string): UseSubjectFeed {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(post),
       });
-      const newPost: Post = await res.json();
+      const newPost: PostResponse = await res.json();
       setState(prev => ({
         ...prev,
         posts: [newPost, ...prev.posts],
@@ -111,7 +111,7 @@ export function useSubjectFeed(subjectId: string): UseSubjectFeed {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ targetType: 'post', targetId: postId, text }),
       });
-      const newComment: Comment = await res.json();
+      const newComment: CommentResponse = await res.json();
       setState(prev => ({
         ...prev,
         comments: {

@@ -4,7 +4,7 @@ import { useSubjectFeed, UseSubjectFeed } from '@/hooks/subject/useSubjectFeed';
 import { useSubjects, Participant, ExtendedSubject } from '@/hooks/subject/useSubjects';
 import { Subject } from '@/types/subject/Subject';
 import { UserResponse } from '@/types/user/UserResponse';
-import { Post, Assignment } from '@/types/subject/FeedTypes';
+import { PostResponse, AssignmentResponse } from '@/types/subject/FeedTypes';
 import { useProfile } from '@/hooks/profile/useProfile';
 
 /**
@@ -24,6 +24,10 @@ import { useProfile } from '@/hooks/profile/useProfile';
  * @property {Record<string, Participant[]>} participants - Participants grouped by subjectId.
  * @property {string} subjectCode - Subject code (empty string if not found).
  * @property {number} subjectParticipants - Number of participants for the subject.
+ * @property {string} userRole - User role in the subject.
+ * @property {UserResponse} profile - Current user profile.
+ * @property {(post: PostResponse) => void} handleEditPost - Handler for editing a post.
+ * @property {(assignment: AssignmentResponse) => void} handleOpenAssignment - Handler for opening an assignment.
  */
 export type UseSubjectViewResult = {
   showModal: boolean;
@@ -42,8 +46,8 @@ export type UseSubjectViewResult = {
   subjectParticipants: number;
   userRole: string;
   profile: UserResponse;
-  handleEditPost: (post: Post) => void;
-  handleOpenAssignment: (assignment: Assignment) => void;
+  handleEditPost: (post: PostResponse) => void;
+  handleOpenAssignment: (assignment: AssignmentResponse) => void;
 };
 
 /**
