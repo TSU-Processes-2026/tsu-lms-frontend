@@ -1,4 +1,5 @@
 ﻿import React from 'react';
+import { fetchSubjectParticipants, fetchSubjectAssignments, fetchAssignmentSubmissions } from '@/api/subject/subjectFeed';
 import { Subject } from '@/types/subject/Subject.ts';
 import { GraduationCap } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -137,21 +138,6 @@ export interface UseSubjectsResult {
      */
     errorsSubmissions: Record<string, Error>;
 }
-
-/**
- * Builds query string for pagination parameters (limit, offset).
- *
- * @param {number | undefined} limit - Limit of items to fetch.
- * @param {number | undefined} offset - Offset for pagination.
- * @returns {string} Query string starting with '?' or empty string if no params.
- */
-function buildPaginationParams(limit?: number, offset?: number): string {
-    const params = [];
-    if (typeof limit === 'number') params.push(`limit=${limit}`);
-    if (typeof offset === 'number') params.push(`offset=${offset}`);
-    return params.length > 0 ? '?' + params.join('&') : '';
-}
-
 /**
  * useSubjects hook for managing subjects, participants, assignments, and progress calculation.
  *
@@ -261,19 +247,8 @@ export function useSubjects(autoLoadParticipants: boolean = true): UseSubjectsRe
      * @throws {Error} Throws error for 404, 401, 403 statuses.
      */
     const loadParticipants = React.useCallback(async (subjectId: string, limit?: number, offset?: number): Promise<void> => {
-        const url = `/api/subjects/${subjectId}/participants` + buildPaginationParams(limit, offset);
         try {
-            const res = await fetch(url, {});
-            if (!res.ok) {
-                let err: Error;
-                if (res.status === 404) err = new Error('Not found');
-                else if (res.status === 401) err = new Error('Unauthorized');
-                else if (res.status === 403) err = new Error('Forbidden');
-                else err = new Error('Failed to load participants');
-                setErrorsParticipants(prev => ({ ...prev, [subjectId]: err }));
-                throw err;
-            }
-            const data = await res.json();
+            const data = await fetchSubjectParticipants(subjectId, { limit, offset });
             setParticipants(prev => ({ ...prev, [subjectId]: data }));
             setErrorsParticipants(prev => {
                 const copy = { ...prev };
@@ -296,19 +271,8 @@ export function useSubjects(autoLoadParticipants: boolean = true): UseSubjectsRe
      * @throws {Error} Throws error for 404, 401, 403 statuses.
      */
     const loadAssignments = React.useCallback(async (subjectId: string, limit?: number, offset?: number): Promise<void> => {
-        const url = `/api/subjects/${subjectId}/assignments` + buildPaginationParams(limit, offset);
         try {
-            const res = await fetch(url, {});
-            if (!res.ok) {
-                let err: Error;
-                if (res.status === 404) err = new Error('Not found');
-                else if (res.status === 401) err = new Error('Unauthorized');
-                else if (res.status === 403) err = new Error('Forbidden');
-                else err = new Error('Failed to load assignments');
-                setErrorsAssignments(prev => ({ ...prev, [subjectId]: err }));
-                throw err;
-            }
-            const data = await res.json();
+            const data = await fetchSubjectAssignments(subjectId, { limit, offset });
             setAssignments(prev => ({ ...prev, [subjectId]: data }));
             setErrorsAssignments(prev => {
                 const copy = { ...prev };
@@ -332,24 +296,8 @@ export function useSubjects(autoLoadParticipants: boolean = true): UseSubjectsRe
      * @throws {Error} Throws error for 404, 401, 403 statuses.
      */
     const loadSubmissions = React.useCallback(async (assignmentId: string, limit?: number, offset?: number, isTeacher?: boolean): Promise<void> => {
-        let url = `/api/assignments/${assignmentId}/submissions`;
-        const params = [];
-        if (typeof limit === 'number') params.push(`limit=${limit}`);
-        if (typeof offset === 'number') params.push(`offset=${offset}`);
-        if (typeof isTeacher === 'boolean') params.push(`isTeacher=${isTeacher}`);
-        if (params.length > 0) url += '?' + params.join('&');
         try {
-            const res = await fetch(url, {});
-            if (!res.ok) {
-                let err: Error;
-                if (res.status === 404) err = new Error('Not found');
-                else if (res.status === 401) err = new Error('Unauthorized');
-                else if (res.status === 403) err = new Error('Forbidden');
-                else err = new Error('Failed to load submissions');
-                setErrorsSubmissions(prev => ({ ...prev, [assignmentId]: err }));
-                throw err;
-            }
-            const data = await res.json();
+            const data = await fetchAssignmentSubmissions(assignmentId, { limit, offset, isTeacher });
             setSubmissions(prev => ({ ...prev, [assignmentId]: data }));
             setErrorsSubmissions(prev => {
                 const copy = { ...prev };
