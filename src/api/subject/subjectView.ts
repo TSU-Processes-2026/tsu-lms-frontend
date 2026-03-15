@@ -105,7 +105,7 @@ export async function fetchPostComments(
 export async function addPostComment(
   postId: string,
   text: string,
-  targetType: string = 'post'
+  targetType: string = 'Post'
 ): Promise<CommentResponse> {
   const res = await fetch(`${BASE_URL}/comments`, {
     method: 'POST',
