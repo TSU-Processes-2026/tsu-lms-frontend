@@ -14,6 +14,7 @@ export interface Participant {
     userId: string;
     username: string;
     avatarUrl: string;
+    role?: 'admin' | 'teacher' | 'student';
 }
 
 /**
