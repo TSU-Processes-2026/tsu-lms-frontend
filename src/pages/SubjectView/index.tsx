@@ -1,7 +1,9 @@
-import { useSubjectView, UseSubjectView } from '@/hooks/subject/useSubjectView.ts';
+import { useSubjectView, UseSubjectViewResult } from '@/hooks/subject/useSubjectView.ts';
 import StudentsModal from '@/components/modals/StudentsModal';
 import CreateAssignmentModal from '@/components/modals/CreateAssignmentModal';
-import { User as UserIcon, Upload, ClipboardCheck, Bell, FileText, Edit, Download, Send, Users } from 'lucide-react';
+import { User as UserIcon, Upload, ClipboardCheck, Users } from 'lucide-react';
+import PostCard from '@/components/ui/PostCard';
+import { Post } from '@/types/subject/FeedTypes';
 
 const SubjectView = () => {
     const {
@@ -13,7 +15,10 @@ const SubjectView = () => {
         handleShowAssignmentModal,
         handleCloseAssignmentModal,
         setActiveTab,
-    }: UseSubjectView = useSubjectView();
+        feed,
+        subjectCode,
+        subjectParticipants,
+    }: UseSubjectViewResult = useSubjectView();
 
     return (
         <>
@@ -55,56 +60,18 @@ const SubjectView = () => {
                                 </button>
                             </div>
                         </div>
-                        <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-slate-100 overflow-hidden hover:shadow-xl transition-all">
-                            <div className="p-6">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="flex gap-4">
-                                        <div className="w-11 h-11 rounded-full flex items-center justify-center shadow-lg bg-linear-to-br from-amber-400 to-amber-600">
-                                            <Bell size={22} className="text-white" />
-                                        </div>
-                                        <div>
-                                            <p className="font-bold text-slate-800">Автор</p>
-                                            <p className="text-xs text-slate-400 mt-1">Дата</p>
-                                        </div>
-                                    </div>
-                                    <button className="p-2 text-slate-300 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
-                                        <Edit size={18} />
-                                    </button>
-                                </div>
-                                <h3 className="text-xl font-bold text-slate-800 mb-3">Заголовок</h3>
-                                <p className="text-slate-600 leading-relaxed">Текст объявления или материала</p>
-                                <div className="mt-5 p-5 border border-slate-100 rounded-2xl bg-linear-to-br from-slate-50 to-slate-100/50 flex items-center justify-between hover:border-blue-200 cursor-pointer transition-all">
-                                    <div className="flex items-center gap-4">
-                                        <div className="p-3 bg-white rounded-xl shadow-md"><FileText className="text-blue-500" size={24} /></div>
-                                        <div>
-                                            <span className="font-semibold text-slate-800">Название файла</span>
-                                            <p className="text-xs text-slate-400 mt-1">Размер файла</p>
-                                        </div>
-                                    </div>
-                                    <button className="p-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all"><Download size={18} /></button>
-                                </div>
-                            </div>
-                            <div className="bg-slate-50 border-t border-slate-100 p-5 space-y-3">
-                                <div className="flex gap-3">
-                                    <div className="w-9 h-9 rounded-full bg-linear-to-br from-slate-200 to-slate-300 shadow-sm flex items-center justify-center text-xs font-bold shrink-0 text-slate-600">
-                                        <UserIcon size={16} className="text-slate-600" />
-                                    </div>
-                                    <div className="flex-1 bg-white p-3 rounded-2xl shadow-sm">
-                                        <span className="font-bold text-slate-800 text-sm mr-2">Автор</span>
-                                        <span className="text-slate-600 text-sm">Комментарий</span>
-                                    </div>
-                                </div>
-                                <div className="flex gap-3 items-center pt-1">
-                                    <div className="w-9 h-9 rounded-full bg-linear-to-br from-blue-400 to-blue-600 shadow-lg flex items-center justify-center shrink-0">
-                                        <UserIcon size={16} className="text-white" />
-                                    </div>
-                                    <div className="flex-1 relative">
-                                        <input placeholder="Написать комментарий..." className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-3 pr-12 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none shadow-sm transition-all" />
-                                        <button className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-500 hover:text-blue-700 transition-all"><Send size={18} /></button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        {feed.loading && <div className="text-center text-slate-400">Загрузка...</div>}
+                        {feed.error && <div className="text-center text-red-500">{feed.error}</div>}
+                        {(feed.posts as Post[]).map((post: Post) => (
+                            <PostCard
+                                key={post.id}
+                                post={post}
+                                authorName={post.authorId}
+                                date={post.createdAt}
+                                comments={feed.comments[post.id] || []}
+                                onAddComment={text => feed.addComment(post.id, text)}
+                            />
+                        ))}
                     </div>
                 )}
                 {activeTab === 'students' && (
@@ -113,8 +80,8 @@ const SubjectView = () => {
                             <Users size={36} className="text-blue-500" />
                         </div>
                         <h4 className="text-xl font-bold text-slate-800 mb-2">Участники предмета</h4>
-                        <p className="text-slate-500 mb-2">Всего участников: <span className="font-bold text-slate-700">0</span></p>
-                        <p className="text-xs text-slate-400 font-mono mb-8">Код предмета: CODE</p>
+                        <p className="text-slate-500 mb-2">Всего участников: <span className="font-bold text-slate-700">{subjectParticipants}</span></p>
+                        <p className="text-xs text-slate-400 font-mono mb-8">Код предмета: {subjectCode}</p>
                         <button className="bg-linear-to-r from-blue-600 to-blue-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all" onClick={handleShowModal}>
                             Управление участниками
                         </button>
