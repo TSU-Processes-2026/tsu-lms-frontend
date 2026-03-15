@@ -4,7 +4,7 @@ import { useSubjectFeed, UseSubjectFeed } from '@/hooks/subject/useSubjectFeed';
 import { useSubjects, Participant, ExtendedSubject } from '@/hooks/subject/useSubjects';
 import { Subject } from '@/types/subject/Subject';
 import { UserResponse } from '@/types/user/UserResponse';
-import { PostResponse, AssignmentResponse } from '@/types/subject/FeedTypes';
+import { PostResponse } from '@/types/subject/FeedTypes';
 import { useProfile } from '@/hooks/profile/useProfile';
 import {CommentItem} from "@/components/ui/CommentSection.tsx";
 import { addPostComment } from '@/api/subject/subjectView';
@@ -29,7 +29,6 @@ import { addPostComment } from '@/api/subject/subjectView';
  * @property {string} userRole - User role in the subject.
  * @property {UserResponse} profile - Current user profile.
  * @property {(post: PostResponse) => void} handleEditPost - Handler for editing a post.
- * @property {(assignment: AssignmentResponse) => void} handleOpenAssignment - Handler for opening an assignment.
  * @property {string} composerText - Current value of comment composer input.
  * @property {(text: string) => void} setComposerText - Handler to set composer text.
  * @property {CommentItem[]} comments - Array of comments.
@@ -54,7 +53,6 @@ export type UseSubjectViewResult = {
   userRole: string;
   profile: UserResponse;
   handleEditPost: (post: PostResponse) => void;
-  handleOpenAssignment: (assignment: AssignmentResponse) => void;
   composerText: string;
   setComposerText: (text: string) => void;
   comments: CommentItem[];
@@ -105,11 +103,6 @@ export function useSubjectView(): UseSubjectViewResult {
     // ...
   };
 
-  const handleOpenAssignment = () => {
-    // Здесь логика открытия задания
-    // ...
-  };
-
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [composerText, setComposerText] = useState('');
 
@@ -128,7 +121,7 @@ export function useSubjectView(): UseSubjectViewResult {
         ...comments,
         {
           id: response.id,
-          author: response.authorId && response.authorId.length > 0 ? response.authorId : '?',
+          author: profile.id,
           text: response.text,
           date: response.createdAt,
         },
@@ -176,7 +169,6 @@ export function useSubjectView(): UseSubjectViewResult {
     userRole,
     profile,
     handleEditPost,
-    handleOpenAssignment,
     composerText,
     setComposerText,
     comments,

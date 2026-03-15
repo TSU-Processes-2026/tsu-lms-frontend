@@ -23,7 +23,6 @@ const SubjectView = () => {
         userRole,
         profile,
         handleEditPost,
-        handleOpenAssignment,
         composerText,
         setComposerText,
         handlePublish,
@@ -116,7 +115,7 @@ const SubjectView = () => {
                                                 assignmentData: assignmentPost.assignmentData,
                                                 questions: assignmentPost.questions,
                                             }}
-                                            onOpenAssignment={handleOpenAssignment}
+                                            onOpenAssignment={() => {}} //TODO: добавить открытие теста
                                         />
                                     );
                                 }
