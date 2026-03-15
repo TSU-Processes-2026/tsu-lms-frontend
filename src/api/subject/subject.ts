@@ -19,3 +19,34 @@ export const createSubject = async (
         throw error;
     }
 };
+
+export const getSubjects = async () => {
+    try {
+        const response = await axios.get(`${BASE_URL}/subjects?limit=100&offset=0`, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
+            },
+        });
+        return response;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const joinSubject = async (id: string) => {
+    try {
+        const response = await axios.post(
+            `${BASE_URL}/subjects/${id}/join`,
+            {},
+            {
+                headers: {
+                    accept: 'application/json',
+                    Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
+                },
+            },
+        );
+        return response;
+    } catch (error) {
+        throw error;
+    }
+};

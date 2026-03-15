@@ -51,7 +51,7 @@ describe('useCreateSubject: Тесты сценария создания пре�
 
     test('Успешный сценарий создания предмета', async () => {
         mockedCreateSubject.mockResolvedValueOnce(mockAxiosSuccessResponse as AxiosResponse);
-        const { result } = renderHook(() => useCreateSubject());
+        const { result } = renderHook(() => useCreateSubject(() => {}));
 
         act(() => {
             result.current.setTitle(validRequest.title);
@@ -84,7 +84,7 @@ describe('useCreateSubject: Тесты сценария создания пре�
         };
 
         mockedCreateSubject.mockRejectedValueOnce(error400Response);
-        const { result } = renderHook(() => useCreateSubject());
+        const { result } = renderHook(() => useCreateSubject(() => {}));
 
         act(() => {
             result.current.setTitle(invalidRequest.title);
@@ -116,7 +116,7 @@ describe('useCreateSubject: Тесты сценария создания пре�
             isAxiosError: true,
         };
         mockedCreateSubject.mockRejectedValueOnce(error401Response);
-        const { result } = renderHook(() => useCreateSubject());
+        const { result } = renderHook(() => useCreateSubject(() => {}));
 
         act(() => {
             result.current.setTitle(validRequest.title);
@@ -150,7 +150,7 @@ describe('useCreateSubject: Тесты сценария создания пре�
             isAxiosError: true,
         };
         mockedCreateSubject.mockRejectedValueOnce(error500Response);
-        const { result } = renderHook(() => useCreateSubject());
+        const { result } = renderHook(() => useCreateSubject(() => {}));
 
         act(() => {
             result.current.setTitle(validRequest.title);

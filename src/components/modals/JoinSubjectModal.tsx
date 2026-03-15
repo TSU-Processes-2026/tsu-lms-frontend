@@ -1,17 +1,13 @@
+import { useJoinSubject } from '@/hooks/subject/useJoinSubject';
 import { AlertCircle, Key, X } from 'lucide-react';
-import { useState } from 'react';
 
 interface JoinModalProps {
     onClose: () => void;
 }
 
 export const JoinSubjectModal = ({ onClose }: JoinModalProps) => {
-    const [code, setCode] = useState<string>('');
-    const [errorMessage, setErrorMessage] = useState<string>('');
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-    };
+    const { selectedSubject, errorMessage, handleSubmit, handleSelectSubject } =
+        useJoinSubject(onClose);
 
     return (
         <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm'>
@@ -33,15 +29,14 @@ export const JoinSubjectModal = ({ onClose }: JoinModalProps) => {
                 <form onSubmit={handleSubmit} className='space-y-5'>
                     <div>
                         <label className='block text-sm font-semibold text-slate-700 mb-2'>
-                            Код предмета
+                            Укажите идентификатор предмета
                         </label>
                         <input
-                            type='text'
-                            value={code}
-                            onChange={(e) => {}}
-                            placeholder='MATH001'
-                            className='w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-center text-2xl font-bold tracking-widest transition-all'
-                        />
+                            value={selectedSubject}
+                            onChange={handleSelectSubject}
+                            className='px-3 py-2 w-full bg-white border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500'
+                            required
+                        ></input>
                         {errorMessage && (
                             <p className='text-red-500 text-sm mt-2 flex items-center gap-1'>
                                 <AlertCircle size={14} /> {errorMessage}
@@ -50,6 +45,14 @@ export const JoinSubjectModal = ({ onClose }: JoinModalProps) => {
                     </div>
 
                     <div className='p-4 bg-blue-50 rounded-xl border border-blue-100'>
+                        <p className='text-xs text-blue-700 font-semibold mb-1'>
+                            ℹ️ Идентификатор предмета
+                        </p>
+                        <p className='text-xs text-blue-600'>
+                            Для получения <span className='font-bold'>идентификатора</span>.
+                            свяжитесь с преподавателем.
+                        </p>
+                        <br />
                         <p className='text-xs text-blue-700 font-semibold mb-1'>
                             ℹ️ Роль в предмете
                         </p>
