@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom';
 import { useSubjectFeed, UseSubjectFeed } from '@/hooks/subject/useSubjectFeed';
 import { useSubjects, Participant, ExtendedSubject } from '@/hooks/subject/useSubjects';
 import { Subject } from '@/types/subject/Subject';
+import { UserResponse } from '@/types/user/UserResponse';
+import { Post, Assignment } from '@/types/subject/FeedTypes';
 
 /**
  * useSubjectView hook return type.
@@ -37,6 +39,10 @@ export type UseSubjectViewResult = {
   participants: Record<string, Participant[]>;
   subjectCode: string;
   subjectParticipants: number;
+  userRole: string;
+  profile: UserResponse;
+  handleEditPost: (post: Post) => void;
+  handleOpenAssignment: (assignment: Assignment) => void;
 };
 
 /**
@@ -66,6 +72,30 @@ export function useSubjectView(): UseSubjectViewResult {
   const subjectCode = selectedSubject && 'code' in selectedSubject ? selectedSubject.code : '';
   const subjectParticipants = subjectId && participants[subjectId] ? participants[subjectId].length : 0;
 
+  // Определение роли пользователя
+  // TODO: реализовать определение роли пользователя на основе участников
+  const userRole = 'student';
+
+  // Получение профиля пользователя
+  // TODO: реализовать получение профиля из хука useProfile
+  const profile: UserResponse = {
+    id: 'userId',
+    username: '',
+    // ... другие поля по необходимости
+  };
+
+  // Обработчик редактирования поста
+  const handleEditPost = () => {
+    // Здесь логика редактирования поста
+    // ...
+  };
+
+  // Обработчик открытия задания
+  const handleOpenAssignment = () => {
+    // Здесь логика открытия задания
+    // ...
+  };
+
   return {
     showModal,
     showAssignmentModal,
@@ -81,5 +111,9 @@ export function useSubjectView(): UseSubjectViewResult {
     participants,
     subjectCode,
     subjectParticipants,
+    userRole,
+    profile,
+    handleEditPost,
+    handleOpenAssignment,
   };
 }

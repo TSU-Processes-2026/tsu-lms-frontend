@@ -6,7 +6,6 @@ import AnnouncementPostCard from '@/components/ui/AnnouncementPostCard';
 import MaterialPostCard from '@/components/ui/MaterialPostCard';
 import AssignmentPostCard from '@/components/ui/AssignmentPostCard';
 import { Post } from '@/types/subject/FeedTypes';
-import { useProfile } from '@/hooks/profile/useProfile';
 
 const SubjectView = () => {
     const {
@@ -21,23 +20,11 @@ const SubjectView = () => {
         feed,
         subjectCode,
         subjectParticipants,
+        userRole,
+        profile,
+        handleEditPost,
+        handleOpenAssignment,
     }: UseSubjectViewResult = useSubjectView();
-    const { profile } = useProfile();
-
-    // Определяем роль пользователя
-    const userRole = 'student'; // TODO: определить роль пользователя из участников
-
-    // Обработчик редактирования поста
-    const handleEditPost = () => {
-        // Здесь логика редактирования поста
-        // ...
-    };
-
-    // Обработчик открытия задания
-    const handleOpenAssignment = () => {
-        // Здесь логика открытия задания
-        // ...
-    };
 
     return (
         <>
