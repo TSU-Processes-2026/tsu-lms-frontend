@@ -35,11 +35,16 @@ export const getSubjects = async () => {
 
 export const joinSubject = async (id: string) => {
     try {
-        const response = await axios.post(`${BASE_URL}/subjects/${id}/join`, {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
+        const response = await axios.post(
+            `${BASE_URL}/subjects/${id}/join`,
+            {},
+            {
+                headers: {
+                    accept: 'application/json',
+                    Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
+                },
             },
-        });
+        );
         return response;
     } catch (error) {
         throw error;

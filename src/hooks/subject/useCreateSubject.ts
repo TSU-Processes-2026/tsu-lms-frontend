@@ -12,7 +12,7 @@ import { AxiosResponse, isAxiosError } from 'axios';
 import { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-export const useCreateSubject = () => {
+export const useCreateSubject = (onClose: () => void) => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
@@ -41,6 +41,7 @@ export const useCreateSubject = () => {
                 description: description,
             });
             resetForm();
+            onClose();
             navigate(SUBJECT_PAGE_PREFIX + response.data.id);
         } catch (error) {
             if (isAxiosError(error)) {

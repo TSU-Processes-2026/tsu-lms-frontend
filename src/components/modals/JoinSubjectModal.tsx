@@ -1,14 +1,13 @@
 import { useJoinSubject } from '@/hooks/subject/useJoinSubject';
-import { Subject } from '@/types/subject/Subject';
 import { AlertCircle, Key, X } from 'lucide-react';
-import { useState } from 'react';
 
 interface JoinModalProps {
     onClose: () => void;
 }
 
 export const JoinSubjectModal = ({ onClose }: JoinModalProps) => {
-    const { selectedSubject, errorMessage, handleSubmit, handleSelectSubject } = useJoinSubject();
+    const { selectedSubject, errorMessage, handleSubmit, handleSelectSubject } =
+        useJoinSubject(onClose);
 
     return (
         <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm'>

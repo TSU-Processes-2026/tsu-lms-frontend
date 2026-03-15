@@ -8,14 +8,14 @@ interface ModalProps {
 
 export const CreateSubjectModal = ({ onClose, onCreate }: ModalProps) => {
     const { title, description, errorMessage, handleSubmit, setTitle, setDescription } =
-        useCreateSubject();
+        useCreateSubject(onClose);
 
     return (
         <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm'>
             <div className='bg-white w-full max-w-md rounded-3xl shadow-2xl p-8'>
                 <div className='flex items-center justify-between mb-6'>
                     <div className='flex items-center gap-3'>
-                        <div className='w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-200/50'>
+                        <div className='w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-300/50'>
                             <Plus className='text-white' size={20} />
                         </div>
                         <h3 className='text-xl font-bold text-slate-800'>Создать предмет</h3>
@@ -76,7 +76,7 @@ export const CreateSubjectModal = ({ onClose, onCreate }: ModalProps) => {
                         </button>
                         <button
                             type='submit'
-                            className='flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-emerald-200/50 hover:-translate-y-0.5 transition-all'
+                            className='flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-300/50 hover:-translate-y-0.5 transition-all'
                         >
                             Создать
                         </button>

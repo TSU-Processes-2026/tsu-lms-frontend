@@ -7,7 +7,6 @@ import { useProfile } from '@/hooks/profile/useProfile';
 import { JoinSubjectModal } from '../modals/JoinSubjectModal';
 
 const navItems = [
-    { id: '/dashboard', label: 'Панель', icon: <Layout size={20} /> },
     { id: '/subjects', label: 'Предметы', icon: <BookOpen size={20} /> },
     {
         id: 'assignments',

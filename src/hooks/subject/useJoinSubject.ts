@@ -1,11 +1,10 @@
-import { getSubjects, joinSubject } from '@/api/subject/subject';
+import { joinSubject } from '@/api/subject/subject';
 import { INTERNAL_SERVER_ERROR_PAGE_URL, LOGIN_PAGE_URL } from '@/constants/paths/paths';
-import { Subject } from '@/types/subject/Subject';
 import { isAxiosError } from 'axios';
-import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
+import { ChangeEvent, FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-export const useJoinSubject = () => {
+export const useJoinSubject = (onClose: () => void) => {
     const [selectedSubject, setSelectedSubject] = useState<string>('');
     const [errorMessage, setErrorMessage] = useState<string>('');
     const handleSelectSubject = (e: ChangeEvent<HTMLInputElement>) => {
@@ -17,6 +16,9 @@ export const useJoinSubject = () => {
         e.preventDefault();
         try {
             await joinSubject(selectedSubject);
+            onClose();
+            setErrorMessage('');
+            navigate(`/subjects/${selectedSubject}`);
         } catch (error) {
             if (isAxiosError(error)) {
                 if (error.response?.status === 401) {
