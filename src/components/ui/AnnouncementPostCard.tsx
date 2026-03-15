@@ -62,7 +62,6 @@ const AnnouncementPostCard: React.FC<AnnouncementPostCardProps> = ({ post, userI
         </div>
         <p className="text-slate-600 leading-relaxed">{post.content}</p>
       </div>
-      {/* Блок комментариев */}
       <CommentSection />
     </div>
   );

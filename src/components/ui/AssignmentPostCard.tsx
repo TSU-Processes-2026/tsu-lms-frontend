@@ -52,7 +52,6 @@ const AssignmentPostCard: React.FC<AssignmentPostCardProps> = ({ post, assignmen
           </div>
         )}
       </div>
-      {/* Блок комментариев */}
       <CommentSection />
     </div>
   );
