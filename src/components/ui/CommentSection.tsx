@@ -21,9 +21,13 @@ interface CommentSectionProps {
    * Initial comments array.
    */
   initialComments?: CommentItem[];
+  /**
+   * Post identifier for which comments are managed.
+   */
+  postId: string;
 }
 
-const CommentSection: React.FC<CommentSectionProps> = () => {
+const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
   const {
     comments,
     composerText,
@@ -36,7 +40,7 @@ const CommentSection: React.FC<CommentSectionProps> = () => {
       {comments.map(c => (
         <div key={c.id} className="flex gap-3">
           <div className="w-9 h-9 rounded-full bg-linear-to-br from-slate-200 to-slate-300 shadow-sm flex items-center justify-center text-xs font-bold shrink-0 text-slate-600">
-            {c.avatar || c.author[0]}
+            {c.avatar || (c.author && c.author.length > 0 ? c.author[0] : '?')}
           </div>
           <div className="flex-1 bg-white p-3 rounded-2xl shadow-sm">
             <span className="font-bold text-slate-800 text-sm mr-2">{c.author}</span>
@@ -50,10 +54,10 @@ const CommentSection: React.FC<CommentSectionProps> = () => {
         </div>
         <div className="flex-1 relative">
           <input value={composerText} onChange={e => setComposerText(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleComment()}
+            onKeyDown={async e => e.key === 'Enter' && await handleComment(postId)}
             placeholder="Написать комментарий..."
             className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-3 pr-12 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none shadow-sm transition-all" />
-          <button onClick={handleComment}
+          <button onClick={async () => await handleComment(postId)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-500 hover:text-blue-700 transition-all">
             <Send size={18} />
           </button>

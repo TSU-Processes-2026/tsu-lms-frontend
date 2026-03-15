@@ -7,6 +7,7 @@ import { UserResponse } from '@/types/user/UserResponse';
 import { PostResponse, AssignmentResponse } from '@/types/subject/FeedTypes';
 import { useProfile } from '@/hooks/profile/useProfile';
 import {CommentItem} from "@/components/ui/CommentSection.tsx";
+import { addPostComment } from '@/api/subject/subjectView';
 
 /**
  * useSubjectView hook return type.
@@ -56,7 +57,7 @@ export type UseSubjectViewResult = {
   composerText: string;
   setComposerText: (text: string) => void;
   comments: CommentItem[];
-  handleComment: () => void;
+  handleComment: (postId: string) => Promise<void>;
 };
 
 /**
@@ -111,24 +112,30 @@ export function useSubjectView(): UseSubjectViewResult {
   const [composerText, setComposerText] = useState('');
 
   /**
-   * Adds a new comment to the comments array.
+   * Adds a new comment to the comments array and saves it to API.
    * Ignores empty input.
+   * @param {string} postId - Post identifier.
    * @throws Does not throw.
    * @returns void
    */
-  const handleComment = () => {
+  const handleComment = async (postId: string) => {
     if (!composerText.trim()) return;
-    setComments([
-      ...comments,
-      {
-        id: 'c' + Date.now(),
-        author: 'Вы',
-        text: composerText,
-        avatar: 'В',
-        date: 'Только что',
-      },
-    ]);
-    setComposerText('');
+    try {
+      const response = await addPostComment(postId, composerText);
+      setComments([
+        ...comments,
+        {
+          id: response.id,
+          author: response.authorId && response.authorId.length > 0 ? response.authorId : '?',
+          text: response.text,
+          date: response.createdAt,
+        },
+      ]);
+      setComposerText('');
+    } catch {
+      // Ошибка при сохранении комментария
+      // Можно добавить обработку ошибки
+    }
   };
 
   return {

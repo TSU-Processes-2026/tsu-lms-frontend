@@ -42,7 +42,7 @@ const MaterialPostCard: React.FC<MaterialPostCardProps> = ({ post }) => {
           <a href={post.downloadUrl} download className="p-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all"><Download size={18} /></a>
         </div>
       </div>
-      <CommentSection />
+      <CommentSection postId={post.id} />
     </div>
   );
 };

@@ -52,7 +52,7 @@ const AssignmentPostCard: React.FC<AssignmentPostCardProps> = ({ post, assignmen
           </div>
         )}
       </div>
-      <CommentSection />
+      <CommentSection postId={post.id} />
     </div>
   );
 };
