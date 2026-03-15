@@ -296,15 +296,15 @@
       "postType": "Announcement",
       "content": "Добро пожаловать на курс 'Основы программирования'!",
       "createdAt": "2026-03-15T09:00:00.000Z"
+    }, 
+    {
+      "id": "post-2",
+      "subjectId": "1773129500000-newsubj1",
+      "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+      "postType": "Material",
+      "content": "0JzQsNGC0LXRgNC40LDQu9GLINC/0LXRgNCy0L7QuSDQu9C10LrRhtC40Lgg0LTQvtGB0YLRg9C/0L3RiyDQsiDRgNCw0LfQtNC10LvQtSAn0JTQvtC60YPQvNC10L3RgtGLJy4NCg==",
+      "createdAt": "2026-03-15T09:30:00.000Z"
     },
-      {
-        "id": "post-2",
-        "subjectId": "1773129500000-newsubj1",
-        "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
-        "postType": "Material",
-        "content": "0JzQsNGC0LXRgNC40LDQu9GLINC/0LXRgNCy0L7QuSDQu9C10LrRhtC40Lgg0LTQvtGB0YLRg9C/0L3RiyDQsiDRgNCw0LfQtNC10LvQtSAn0JTQvtC60YPQvNC10L3RgtGLJy4NCg==",
-        "createdAt": "2026-03-15T09:30:00.000Z"
-      },
     {
       "id": "post-3",
       "subjectId": "1773129600000-advprog",
@@ -312,14 +312,14 @@
       "postType": "Announcement",
       "content": "Старт курса 'Продвинутое программирование'.",
       "createdAt": "2026-03-15T10:00:00.000Z"
-    },
-      {
-        "id": "post-4",
-        "subjectId": "1773129600000-advprog",
-        "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
-        "postType": "Material",
-        "content": "0JLRgtC+0YDQvtC5INC80LDRgtC10YDQuNCw0Lsg0LfQsNCz0YDRg9C20LXQvSDQsiDRgdC40YHRgtC10LzRgy4NCg==",
-        "createdAt": "2026-03-15T10:30:00.000Z"
-      }
+    }, 
+    {
+      "id": "post-4",
+      "subjectId": "1773129600000-advprog",
+      "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+      "postType": "Material",
+      "content": "0JLRgtC+0YDQvtC5INC80LDRgtC10YDQuNCw0Lsg0LfQsNCz0YDRg9C20LXQvSDQsiDRgdC40YHRgtC10LzRgy4NCg==",
+      "createdAt": "2026-03-15T10:30:00.000Z"
+    }
   ]
 }
