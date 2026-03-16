@@ -176,7 +176,7 @@ export function useSubjectView(): UseSubjectViewResult {
 
   const { subjectId } = useParams();
   const feed = useSubjectFeed(subjectId ?? '');
-  const { selectedSubject, participants } = useSubjects();
+  const { selectedSubject, participants, subjects, selectSubject } = useSubjects();
   const subjectCode = selectedSubject && 'code' in selectedSubject ? selectedSubject.code : '';
   const subjectParticipants = subjectId && participants[subjectId] ? participants[subjectId].length : 0;
 
@@ -390,6 +390,15 @@ export function useSubjectView(): UseSubjectViewResult {
             setPublishError('Ошибка создания теста');
         }
     };
+
+  React.useEffect(() => {
+    if (subjectId && (!selectedSubject || selectedSubject.id !== subjectId) && subjects && subjects.length > 0 && selectSubject) {
+      const found = subjects.find(s => s.id === subjectId);
+      if (found) {
+        selectSubject(found);
+      }
+    }
+  }, [subjectId, selectedSubject, subjects, selectSubject]);
 
   return {
     handleOpenAssignment,
