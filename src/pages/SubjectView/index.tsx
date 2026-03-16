@@ -45,6 +45,7 @@ const SubjectView = () => {
         getAuthorUsername,
         getShowEditButton,
         handleCreateAssignment,
+        selectedSubject,
     } = useSubjectView();
 
     return (
@@ -226,7 +227,7 @@ const SubjectView = () => {
                     </div>
                 )}
             </div>
-            {showModal && <StudentsModal onClose={handleCloseModal} />}
+            {showModal && <StudentsModal onClose={handleCloseModal} subjectId={subjectId ?? ''} selectedSubject={selectedSubject ?? null} />}
             {showAssignmentModal && <CreateAssignmentModal subjectId={subjectId ?? ''} onClose={handleCloseAssignmentModal} onCreate={handleCreateAssignment} />}
         </>
     );
