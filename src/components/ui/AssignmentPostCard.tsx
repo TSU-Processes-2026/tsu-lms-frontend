@@ -5,17 +5,19 @@ import CommentSection from './CommentSection';
 import { formatPostDate } from '@/utils/formatPostDate';
 
 /**
- * AssignmentPostCard component displays an assignment post with comments and comment composer.
- *
- * Displays assignment post with author, creation date, content, questions count, test button, comments and comment input.
- *
- * @param post Assignment post object returned from API.
- * @param assignment Assignment object returned from API if available.
- * @param onOpenAssignment Callback for opening assignment.
- * @returns JSX.Element Assignment post card element.
+ * AssignmentPostCardData extends AssignmentPostResponse with authorUsername.
+ * Used for post prop in AssignmentPostCard to eliminate TS2339 error.
+ */
+type AssignmentPostCardData = AssignmentPostResponse & { authorUsername: string };
+
+/**
+ * AssignmentPostCardProps defines the properties for AssignmentPostCard component.
+ * @property post Assignment post object returned from API, extended with authorUsername.
+ * @property assignment Assignment object returned from API if available.
+ * @property onOpenAssignment Callback for opening assignment.
  */
 type AssignmentPostCardProps = {
-  post: AssignmentPostResponse;
+  post: AssignmentPostCardData;
   assignment?: AssignmentResponse;
   onOpenAssignment: (assignment: AssignmentResponse) => void;
 };
@@ -29,7 +31,7 @@ const AssignmentPostCard: React.FC<AssignmentPostCardProps> = ({ post, assignmen
             <ClipboardCheck size={22} className="text-white" />
           </div>
           <div>
-            <p className="font-bold text-slate-800">{post.authorId}</p>
+            <p className="font-bold text-slate-800">{post.authorUsername}</p>
             <p className="text-xs text-slate-400 mt-1">{formatPostDate(post.createdAt)}</p>
           </div>
         </div>

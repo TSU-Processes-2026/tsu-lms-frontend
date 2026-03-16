@@ -1,23 +1,33 @@
 import React from 'react';
 import { FileText, Download } from 'lucide-react';
-import { MaterialPostResponse } from '@/types/subject/FeedTypes';
 import CommentSection from './CommentSection';
 import { formatPostDate } from '@/utils/formatPostDate';
 import { formatFileSize } from '@/utils/formatFileSize';
 import { useSubjectView } from '@/hooks/subject/useSubjectView';
+import { MaterialPostResponse } from '@/types/subject/FeedTypes';
+
+/**
+ * MaterialPostCardData extends MaterialPostResponse with authorUsername.
+ * Used for post prop in MaterialPostCard to eliminate TS2339 error.
+ */
+type MaterialPostCardData = MaterialPostResponse & { authorUsername: string };
+
+/**
+ * MaterialPostCardProps defines the properties for MaterialPostCard component.
+ * @property post Material post object returned from API, extended with authorUsername.
+ */
+type MaterialPostCardProps = {
+  post: MaterialPostCardData;
+};
 
 /**
  * MaterialPostCard component displays a material post with comments and comment composer.
  *
  * Displays material post with author, creation date, content, download block, comments and comment input.
  *
- * @param post Material post object returned from API.
+ * @param post Material post object returned from API, extended with authorUsername.
  * @returns JSX.Element Material post card element.
  */
-type MaterialPostCardProps = {
-  post: MaterialPostResponse;
-};
-
 const MaterialPostCard: React.FC<MaterialPostCardProps> = ({ post }) => {
   const { handleDownloadFile } = useSubjectView();
 
@@ -33,7 +43,7 @@ const MaterialPostCard: React.FC<MaterialPostCardProps> = ({ post }) => {
             <FileText size={22} className="text-white" />
           </div>
           <div>
-            <p className="font-bold text-slate-800">{post.authorId}</p>
+            <p className="font-bold text-slate-800">{post.authorUsername}</p>
             <p className="text-xs text-slate-400 mt-1">{formatPostDate(post.createdAt)}</p>
           </div>
         </div>

@@ -83,8 +83,11 @@ export interface PostResponse {
 /**
  * Interface representing an announcement post returned from API.
  * Extends PostResponse.
+ * @property {string} authorUsername - Username of the post author.
  */
-export interface AnnouncementPostResponse extends PostResponse {}
+export interface AnnouncementPostResponse extends PostResponse {
+  authorUsername: string;
+}
 
 /**
  * Interface representing a material post returned from API.
@@ -93,12 +96,14 @@ export interface AnnouncementPostResponse extends PostResponse {}
  * @property {string} storagePath - Path to the file in storage.
  * @property {number} fileSize - Size of the file in bytes.
  * @property {string} downloadUrl - URL for downloading the file.
+ * @property {string} authorUsername - Username of the post author.
  */
 export interface MaterialPostResponse extends PostResponse {
   fileName: string;
   storagePath: string;
   fileSize: number;
   downloadUrl: string;
+  authorUsername: string;
 }
 
 /**
@@ -136,16 +141,4 @@ export interface AssignmentPostQuestionResponse {
 export interface AssignmentPostQuestionOptionResponse {
   id: string;
   text: string;
-}
-
-/**
- * Interface representing file info for a material post.
- * @property {string} fileName - Name of the file.
- * @property {number} fileSize - Size of the file in bytes.
- * @property {string} downloadUrl - URL for downloading the file.
- */
-export interface PostFileInfoResponse {
-  fileName: string;
-  fileSize: number;
-  downloadUrl: string;
 }

@@ -16,6 +16,12 @@ import { formatPostDate } from '@/utils/formatPostDate';
  * @returns JSX.Element Announcement post card element.
  */
 /**
+ * AnnouncementPostCardData extends AnnouncementPostResponse with authorUsername.
+ * Used for post prop in AnnouncementPostCard to eliminate TS2339 error.
+ */
+type AnnouncementPostCardData = AnnouncementPostResponse & { authorUsername: string };
+
+/**
  * AnnouncementPostCardProps defines the properties for AnnouncementPostCard component.
  * @property post Announcement post object returned from API.
  * @property userId Current user's ID.
@@ -23,10 +29,10 @@ import { formatPostDate } from '@/utils/formatPostDate';
  * @property onEditPost Callback for editing the post.
  */
 type AnnouncementPostCardProps = {
-  post: AnnouncementPostResponse;
+  post: AnnouncementPostCardData;
   userId: string;
   userRole: string;
-  onEditPost: (post: AnnouncementPostResponse) => void;
+  onEditPost: (post: AnnouncementPostCardData) => void;
 };
 
 /**
@@ -50,7 +56,7 @@ const AnnouncementPostCard: React.FC<AnnouncementPostCardProps> = ({ post, userI
               <Bell size={22} className="text-white" />
             </div>
             <div>
-              <p className="font-bold text-slate-800">{post.authorId}</p>
+              <p className="font-bold text-slate-800">{post.authorUsername}</p>
               <p className="text-xs text-slate-400 mt-1">{formatPostDate(post.createdAt)}</p>
             </div>
           </div>

@@ -7,6 +7,14 @@ import MaterialPostCard from '@/components/ui/MaterialPostCard';
 import AssignmentPostCard from '@/components/ui/AssignmentPostCard';
 import { PostResponse, AnnouncementPostResponse, MaterialPostResponse, AssignmentPostResponse } from '@/types/subject/FeedTypes';
 
+interface MaterialPostCardData extends MaterialPostResponse {
+  authorUsername: string;
+}
+
+interface AssignmentPostCardData extends AssignmentPostResponse {
+  authorUsername: string;
+}
+
 const SubjectView = () => {
     const {
         showModal,
@@ -32,7 +40,15 @@ const SubjectView = () => {
         handleRemoveFile,
         publishError,
         setPublishError,
+        participants,
+        subjectId,
     } = useSubjectView();
+
+    const getAuthorUsername = (authorId: string): string => {
+        if (!subjectId || !participants[subjectId]) return authorId;
+        const found = participants[subjectId].find((p: { userId: string; username: string }) => p.userId === authorId);
+        return found ? found.username : authorId;
+    };
 
     return (
         <>
@@ -130,30 +146,56 @@ const SubjectView = () => {
                         {feed.error && <div className="text-center text-red-500">{feed.error}</div>}
                         {(feed.posts as PostResponse[]).map((post: PostResponse) => {
                             const normalizedType = post.postType.toLowerCase();
+                            const authorUsername = getAuthorUsername(post.authorId);
                             switch (normalizedType) {
                                 case 'announcement':
                                     return (
                                         <AnnouncementPostCard
                                             key={post.id}
-                                            post={post as AnnouncementPostResponse}
+                                            post={{ ...post, authorUsername } as AnnouncementPostResponse}
                                             userId={profile.id}
                                             userRole={userRole}
                                             onEditPost={handleEditPost}
                                         />
                                     );
-                                case 'material':
+                                case 'material': {
+                                    const materialPost = post as MaterialPostResponse;
                                     return (
                                         <MaterialPostCard
-                                            key={post.id}
-                                            post={post as MaterialPostResponse}
+                                            key={materialPost.id}
+                                            post={{
+                                                id: materialPost.id,
+                                                authorId: materialPost.authorId,
+                                                postType: materialPost.postType,
+                                                content: materialPost.content,
+                                                createdAt: materialPost.createdAt,
+                                                $type: materialPost.$type,
+                                                fileName: materialPost.fileName,
+                                                storagePath: materialPost.storagePath,
+                                                fileSize: materialPost.fileSize,
+                                                downloadUrl: materialPost.downloadUrl,
+                                                authorUsername,
+                                            } as MaterialPostCardData}
                                         />
                                     );
+                                }
                                 case 'assignment': {
                                     const assignmentPost = post as AssignmentPostResponse;
                                     return (
                                         <AssignmentPostCard
                                             key={assignmentPost.id}
-                                            post={assignmentPost}
+                                            post={{
+                                                id: assignmentPost.id,
+                                                subjectId: assignmentPost.subjectId,
+                                                authorId: assignmentPost.authorId,
+                                                postType: assignmentPost.postType,
+                                                content: assignmentPost.content,
+                                                createdAt: assignmentPost.createdAt,
+                                                $type: assignmentPost.$type,
+                                                assignmentData: assignmentPost.assignmentData,
+                                                questions: assignmentPost.questions,
+                                                authorUsername,
+                                            } as AssignmentPostCardData}
                                             assignment={{
                                                 id: assignmentPost.id,
                                                 subjectId: assignmentPost.subjectId,
