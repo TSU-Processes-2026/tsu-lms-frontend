@@ -1,46 +1,67 @@
-// src/pages/Assignments/TeacherReviewModal.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { UserIcon, X, Trash2, PenLine, MessageSquare, Send, Save } from 'lucide-react';
-import { Assignment, Submission, Comment } from '../../types/assignments/assignments';
+import { Assignment, Submission, Comment, Grade } from '../../types/assignments/assignments';
 
 interface Props {
     submission: Submission;
     assignment: Assignment;
-    token: string;
     onClose: () => void;
-    onGradeUpdated?: () => void;
+    onGradeCreate: (submissionId: string, score: number, verdictText: string) => Promise<Grade | null>;
+    onGradeUpdate: (submissionId: string, score: number, verdictText: string) => Promise<Grade | null>;
+    onGradeDelete: (submissionId: string) => Promise<boolean>;
+    onLoadComments: (submissionId: string) => Promise<Comment[]>;
+    onAddComment: (submissionId: string, text: string) => Promise<Comment | null>;
 }
 
 export const TeacherReviewModal: React.FC<Props> = ({
     submission,
     assignment,
-    token,
     onClose,
-    onGradeUpdated,
+    onGradeCreate,
+    onGradeUpdate,
+    onGradeDelete,
+    onLoadComments,
+    onAddComment,
 }) => {
     const [score, setScore] = useState(submission.grade?.score?.toString() || '');
     const [verdictText, setVerdictText] = useState(submission.grade?.verdictText || '');
     const [comment, setComment] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [comments, setComments] = useState<Comment[]>(submission.comments || []);
 
-    const API_BASE = 'http://http://89.23.105.66:14823/';
+    useEffect(() => {
+        onLoadComments(submission.id)
+            .then((data) => setComments(data))
+            .catch(() => setComments([]));
+    }, [onLoadComments, submission.id]);
+
+    useEffect(() => {
+        setScore(submission.grade?.score?.toString() || '');
+        setVerdictText(submission.grade?.verdictText || '');
+    }, [submission]);
 
     const handleGrade = async () => {
+        if (!score) return;
         setSubmitting(true);
         try {
-            const res = await fetch(`${API_BASE}/api/submissions/${submission.id}/grade`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ score: Number(score), verdictText }),
-            });
-            if (!res.ok) {
-                const err = await res.json().catch(() => ({}));
-                throw new Error(err.detail || 'Ошибка оценки');
+            const scoreValue = Number(score);
+            if (submission.grade) {
+                await onGradeUpdate(submission.id, scoreValue, verdictText);
+            } else {
+                await onGradeCreate(submission.id, scoreValue, verdictText);
             }
-            onGradeUpdated?.();
+            onClose();
+        } catch (err) {
+            alert('Ошибка: ' + (err as Error).message);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleDeleteGrade = async () => {
+        setSubmitting(true);
+        try {
+            await onGradeDelete(submission.id);
             onClose();
         } catch (err) {
             alert('Ошибка: ' + (err as Error).message);
@@ -52,24 +73,11 @@ export const TeacherReviewModal: React.FC<Props> = ({
     const handleComment = async () => {
         if (!comment.trim()) return;
         try {
-            const res = await fetch(`${API_BASE}/api/comments`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    targetType: 'Submission',
-                    targetId: submission.id,
-                    text: comment,
-                }),
-            });
-            if (!res.ok) {
-                const err = await res.json().catch(() => ({}));
-                throw new Error(err.detail || 'Ошибка комментария');
+            const created = await onAddComment(submission.id, comment.trim());
+            if (created) {
+                setComments((prev) => [...prev, created]);
+                setComment('');
             }
-            setComment('');
-            onGradeUpdated?.();
         } catch (err) {
             alert('Ошибка: ' + (err as Error).message);
         }
@@ -81,7 +89,6 @@ export const TeacherReviewModal: React.FC<Props> = ({
         <div className='fixed inset-0 z-50 flex items-center justify-center p-4'>
             <div className='absolute inset-0 bg-slate-900/60 backdrop-blur-sm' onClick={onClose} />
             <div className='bg-white w-full max-w-5xl max-h-[90vh] rounded-[2.5rem] shadow-2xl z-10 flex flex-col overflow-hidden'>
-                {/* Header */}
                 <div className='px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/30 shrink-0'>
                     <div className='flex items-center gap-4'>
                         <div className='w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg bg-gradient-to-br from-blue-500 to-blue-600'>
@@ -94,16 +101,14 @@ export const TeacherReviewModal: React.FC<Props> = ({
                             <p className='text-sm text-slate-500'>
                                 {title} • Сдано:{' '}
                                 {new Date(submission.createdAt).toLocaleDateString()}
-                                {submission.grade &&
-                                    submission.grade.score !== undefined &&
-                                    ' • Оценено'}
+                                {submission.grade && submission.grade.score !== undefined && ' • Оценено'}
                             </p>
                         </div>
                     </div>
                     <div className='flex items-center gap-2'>
                         {submission.grade && (
                             <button
-                                onClick={() => setScore('')}
+                                onClick={handleDeleteGrade}
                                 className='px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 rounded-xl transition-all flex items-center gap-1'
                             >
                                 <Trash2 size={16} /> Удалить оценку
@@ -119,7 +124,6 @@ export const TeacherReviewModal: React.FC<Props> = ({
                 </div>
 
                 <div className='flex-1 overflow-y-auto p-8 space-y-6'>
-                    {/* Ответы студента */}
                     <div className='space-y-4'>
                         <h4 className='font-bold text-slate-700 flex items-center gap-2'>
                             <PenLine size={16} className='text-blue-500' /> Ответы студента
@@ -138,8 +142,7 @@ export const TeacherReviewModal: React.FC<Props> = ({
                                     {q.questionType === 'SingleChoice' && (
                                         <p className='text-slate-600'>
                                             <span className='font-semibold'>Ответ:</span>{' '}
-                                            {q.options?.find((opt) => opt.id === studentAnswer)
-                                                ?.text ||
+                                            {q.options?.find((opt) => opt.id === studentAnswer)?.text ||
                                                 studentAnswer ||
                                                 '—'}
                                         </p>
@@ -151,15 +154,14 @@ export const TeacherReviewModal: React.FC<Props> = ({
                                             {(Array.isArray(studentAnswer) ? studentAnswer : [])
                                                 .map(
                                                     (id) =>
-                                                        q.options?.find((opt) => opt.id === id)
-                                                            ?.text,
+                                                        q.options?.find((opt) => opt.id === id)?.text,
                                                 )
                                                 .filter(Boolean)
                                                 .join(', ') || '—'}
                                         </p>
                                     )}
 
-                                    {['Text', 'ShortText', 'Essay'].includes(q.questionType) && (
+                                    {q.questionType === 'Text' && (
                                         <div className='bg-white p-4 rounded-xl border border-slate-200'>
                                             <p className='text-slate-700 whitespace-pre-wrap'>
                                                 {studentAnswer || '—'}
@@ -178,19 +180,18 @@ export const TeacherReviewModal: React.FC<Props> = ({
                         })}
                     </div>
 
-                    {/* Комментарии */}
                     <div className='bg-slate-50 rounded-2xl border border-slate-200 p-6'>
                         <h4 className='font-bold text-slate-800 mb-4 flex items-center gap-2'>
                             <MessageSquare size={16} className='text-slate-500' /> Комментарии к
                             решению
                         </h4>
                         <div className='space-y-3 mb-4'>
-                            {(submission.comments || []).length === 0 && (
+                            {comments.length === 0 && (
                                 <p className='text-sm text-slate-400 text-center py-4'>
                                     Пока нет комментариев
                                 </p>
                             )}
-                            {(submission.comments || []).map((c: Comment) => (
+                            {comments.map((c: Comment) => (
                                 <div key={c.id} className='flex gap-3'>
                                     <div className='w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0'>
                                         {c.authorName?.[0]?.toUpperCase() || 'A'}
@@ -226,7 +227,6 @@ export const TeacherReviewModal: React.FC<Props> = ({
                         </div>
                     </div>
 
-                    {/* Оценка */}
                     <div className='p-6 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-2xl border border-blue-100'>
                         <h4 className='font-bold text-slate-800 mb-4'>Оценка</h4>
                         <div className='grid grid-cols-2 gap-4 mb-4'>
@@ -272,7 +272,6 @@ export const TeacherReviewModal: React.FC<Props> = ({
                     </div>
                 </div>
 
-                {/* Кнопки */}
                 <div className='px-8 py-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/30 shrink-0'>
                     <button
                         onClick={onClose}
@@ -307,8 +306,7 @@ export const TeacherReviewModal: React.FC<Props> = ({
                             </>
                         ) : (
                             <>
-                                <Save size={18} />{' '}
-                                {submission.grade ? 'Обновить оценку' : 'Сохранить оценку'}
+                                <Save size={18} /> {submission.grade ? 'Обновить оценку' : 'Сохранить оценку'}
                             </>
                         )}
                     </button>

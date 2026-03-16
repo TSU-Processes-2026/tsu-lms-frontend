@@ -1,7 +1,6 @@
-// src/pages/Assignments/QuizEngine.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { CheckCircle, FileUp, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Question, Option } from '../../types/assignments/assignments';
+import { Question } from '../../types/assignments/assignments';
 
 interface Props {
     questions: Question[];
@@ -10,6 +9,7 @@ interface Props {
     onSaveDraft: () => void;
     onSubmit: () => void;
     isSubmitting: boolean;
+    readOnly?: boolean;
 }
 
 export const QuizEngine: React.FC<Props> = ({
@@ -19,20 +19,50 @@ export const QuizEngine: React.FC<Props> = ({
     onSaveDraft,
     onSubmit,
     isSubmitting,
+    readOnly = false,
 }) => {
     const [currentStep, setCurrentStep] = useState(0);
     const [answers, setAnswers] = useState<Record<string, any>>(initialAnswers);
     const [isFinished, setIsFinished] = useState(false);
 
+    useEffect(() => {
+        setAnswers(initialAnswers);
+    }, [initialAnswers]);
+
+    useEffect(() => {
+        setCurrentStep(0);
+        setIsFinished(false);
+    }, [questions.length]);
+
+    if (questions.length === 0) {
+        return (
+            <div className='flex flex-col items-center justify-center h-full p-10 text-center'>
+                <h2 className='text-2xl font-bold text-slate-800 mb-4'>Вопросов нет</h2>
+                <p className='text-slate-600 mb-8'>Можно сразу отправить решение на проверку.</p>
+                {!readOnly && (
+                    <button
+                        onClick={onSubmit}
+                        disabled={isSubmitting}
+                        className='py-4 px-8 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-2xl transition-all disabled:opacity-50'
+                    >
+                        {isSubmitting ? 'Отправка...' : 'Отправить на проверку'}
+                    </button>
+                )}
+            </div>
+        );
+    }
+
     const currentQuestion = questions[currentStep];
 
     const handleAnswer = (qId: string, value: any) => {
+        if (readOnly) return;
         const newAnswers = { ...answers, [qId]: value };
         setAnswers(newAnswers);
         onAnswerChange(newAnswers);
     };
 
     const toggleMultiple = (qId: string, optionId: string) => {
+        if (readOnly) return;
         const current = (answers[qId] as string[]) || [];
         const newValue = current.includes(optionId)
             ? current.filter((id) => id !== optionId)
@@ -60,32 +90,32 @@ export const QuizEngine: React.FC<Props> = ({
                 <CheckCircle size={80} className='text-emerald-600 mb-8 animate-pulse' />
                 <h2 className='text-4xl font-bold text-slate-800 mb-4'>Тест завершён!</h2>
                 <p className='text-lg text-slate-600 mb-10 max-w-md'>
-                    Вы ответили на все вопросы. Теперь можно сохранить черновик или отправить
-                    работу.
+                    Вы ответили на все вопросы.
                 </p>
-                <div className='flex flex-col sm:flex-row gap-6 w-full max-w-sm'>
-                    <button
-                        onClick={onSaveDraft}
-                        disabled={isSubmitting}
-                        className='flex-1 py-5 px-8 bg-slate-700 hover:bg-slate-800 text-white font-bold rounded-2xl transition-all disabled:opacity-50'
-                    >
-                        Сохранить черновик
-                    </button>
-                    <button
-                        onClick={onSubmit}
-                        disabled={isSubmitting}
-                        className='flex-1 py-5 px-8 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-2xl transition-all disabled:opacity-50'
-                    >
-                        {isSubmitting ? 'Отправка...' : 'Отправить на проверку'}
-                    </button>
-                </div>
+                {!readOnly && (
+                    <div className='flex flex-col sm:flex-row gap-6 w-full max-w-sm'>
+                        <button
+                            onClick={onSaveDraft}
+                            disabled={isSubmitting}
+                            className='flex-1 py-5 px-8 bg-slate-700 hover:bg-slate-800 text-white font-bold rounded-2xl transition-all disabled:opacity-50'
+                        >
+                            Сохранить черновик
+                        </button>
+                        <button
+                            onClick={onSubmit}
+                            disabled={isSubmitting}
+                            className='flex-1 py-5 px-8 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-2xl transition-all disabled:opacity-50'
+                        >
+                            {isSubmitting ? 'Отправка...' : 'Отправить на проверку'}
+                        </button>
+                    </div>
+                )}
             </div>
         );
     }
 
     return (
         <div className='flex flex-col h-full p-6 md:p-10'>
-            {/* Progress */}
             <div className='mb-8'>
                 <div className='h-2 bg-slate-200 rounded-full overflow-hidden'>
                     <div
@@ -101,12 +131,10 @@ export const QuizEngine: React.FC<Props> = ({
                 </div>
             </div>
 
-            {/* Question */}
             <h2 className='text-2xl md:text-3xl font-bold text-slate-800 mb-8'>
                 {currentQuestion.questionData}
             </h2>
 
-            {/* Options */}
             <div className='flex-1 space-y-4 overflow-y-auto'>
                 {currentQuestion.questionType === 'SingleChoice' && currentQuestion.options && (
                     <div className='space-y-3'>
@@ -114,11 +142,12 @@ export const QuizEngine: React.FC<Props> = ({
                             <button
                                 key={opt.id}
                                 onClick={() => handleAnswer(currentQuestion.id, opt.id)}
+                                disabled={readOnly}
                                 className={`w-full p-5 rounded-2xl border-2 text-left transition-all flex items-center gap-4 ${
                                     answers[currentQuestion.id] === opt.id
                                         ? 'border-blue-500 bg-blue-50'
                                         : 'border-slate-200 hover:border-slate-300'
-                                }`}
+                                } ${readOnly ? 'opacity-60 cursor-not-allowed' : ''}`}
                             >
                                 <div
                                     className={`w-7 h-7 rounded-full border-2 flex items-center justify-center ${
@@ -147,11 +176,12 @@ export const QuizEngine: React.FC<Props> = ({
                                 <button
                                     key={opt.id}
                                     onClick={() => toggleMultiple(currentQuestion.id, opt.id)}
+                                    disabled={readOnly}
                                     className={`w-full p-5 rounded-2xl border-2 text-left transition-all flex items-center gap-4 ${
                                         selected
                                             ? 'border-indigo-500 bg-indigo-50'
                                             : 'border-slate-200 hover:border-slate-300'
-                                    }`}
+                                    } ${readOnly ? 'opacity-60 cursor-not-allowed' : ''}`}
                                 >
                                     <div
                                         className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center ${
@@ -176,7 +206,8 @@ export const QuizEngine: React.FC<Props> = ({
                         value={answers[currentQuestion.id] || ''}
                         onChange={(e) => handleAnswer(currentQuestion.id, e.target.value)}
                         placeholder='Введите ваш ответ...'
-                        className='w-full h-40 p-6 bg-white border-2 border-slate-200 rounded-2xl outline-none focus:border-blue-500 resize-none text-lg'
+                        disabled={readOnly}
+                        className='w-full h-40 p-6 bg-white border-2 border-slate-200 rounded-2xl outline-none focus:border-blue-500 resize-none text-lg disabled:opacity-60'
                     />
                 )}
 
@@ -185,12 +216,11 @@ export const QuizEngine: React.FC<Props> = ({
                         <FileUp className='text-blue-600 mb-4' size={40} />
                         <p className='font-bold text-slate-800'>Загрузите файл</p>
                         <p className='text-sm text-slate-500'>PDF, DOCX, изображение до 10 МБ</p>
-                        <input type='file' className='hidden' />
+                        <input type='file' className='hidden' disabled={readOnly} />
                     </label>
                 )}
             </div>
 
-            {/* Navigation */}
             <div className='mt-10 flex justify-between'>
                 <button
                     onClick={handlePrev}

@@ -1,19 +1,13 @@
-// src/pages/Assignments/AssignmentsPage.tsx
 import React, { useState } from 'react';
 import { HelpCircle } from 'lucide-react';
-import {
-    Assignment,
-    Role,
-    AssignmentFilter,
-    Submission,
-} from '../../types/assignments/assignments';
+import { Assignment, AssignmentFilter, Submission, Role } from '../../types/assignments/assignments';
 import ReactMarkdown from 'react-markdown';
 
 interface Props {
     assignments: Assignment[];
     submissions: Submission[];
-    token: string;
-    role: Role;
+    currentUserId: string;
+    subjectRoles: Record<string, Role>;
     onOpenAssignment: (a: Assignment) => void;
     onOpenSolution: (s: Submission) => void;
     onOpenSolutionsList: (a: Assignment) => void;
@@ -22,20 +16,19 @@ interface Props {
 export const AssignmentsPage: React.FC<Props> = ({
     assignments,
     submissions,
-    token,
-    role,
+    currentUserId,
+    subjectRoles,
     onOpenAssignment,
     onOpenSolution,
     onOpenSolutionsList,
 }) => {
     const [filter] = useState<AssignmentFilter>('all');
-    const isTeacher = role === 'teacher';
-    const userId = 'u1';
 
     const filtered = assignments.filter((a) => {
         const sols = submissions.filter((s) => s.assignmentId === a.id);
-        if (isTeacher) return true;
-        const mySol = sols.find((s) => s.authorId === userId);
+        const role = subjectRoles[a.subjectId] ?? 'student';
+        if (role === 'teacher') return true;
+        const mySol = sols.find((s) => s.authorId === currentUserId);
         return !!mySol || sols.length === 0;
     });
 
@@ -43,14 +36,15 @@ export const AssignmentsPage: React.FC<Props> = ({
         <div className='max-w-6xl mx-auto space-y-6'>
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
                 {filtered.map((a) => {
+                    const role = subjectRoles[a.subjectId] ?? 'student';
+                    const isTeacher = role === 'teacher';
                     const mySub = submissions.find(
-                        (s) => s.assignmentId === a.id && s.authorId === userId,
+                        (s) => s.assignmentId === a.id && s.authorId === currentUserId,
                     );
                     const anySubs = submissions.filter((s) => s.assignmentId === a.id);
                     const pending = anySubs.filter((s) => s.status === 'RequiresReview');
                     const graded = anySubs.filter((s) => s.status === 'Graded');
 
-                    // Первая строка content = заголовок, остальное = описание
                     const lines = a.content.split('\n');
                     const title = lines[0] || 'Без названия';
                     const description = lines.slice(1).join('\n') || 'Нет описания';
@@ -60,7 +54,6 @@ export const AssignmentsPage: React.FC<Props> = ({
                             key={a.id}
                             className='bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all flex flex-col'
                         >
-                            {/* Заголовок с иконкой */}
                             <div className='flex items-start gap-4 mb-4'>
                                 <div
                                     className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg shrink-0 ${
@@ -76,12 +69,10 @@ export const AssignmentsPage: React.FC<Props> = ({
                                 </div>
                             </div>
 
-                            {/* Описание */}
                             <div className='text-sm text-slate-500 line-clamp-4 mb-4 flex-1'>
                                 <ReactMarkdown>{description}</ReactMarkdown>
                             </div>
 
-                            {/* Статусы */}
                             <div className='flex flex-wrap gap-2 mb-6'>
                                 {isTeacher ? (
                                     <>
@@ -150,7 +141,6 @@ export const AssignmentsPage: React.FC<Props> = ({
                                 )}
                             </div>
 
-                            {/* Кнопка */}
                             <button
                                 onClick={() => {
                                     if (isTeacher) onOpenSolutionsList(a);

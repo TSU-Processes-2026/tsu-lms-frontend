@@ -10,7 +10,7 @@ export interface Option {
 
 export interface Question {
     id: string;
-    questionType: 'SingleChoice' | 'MultipleChoice' | 'Text' | 'ShortText' | 'Essay' | 'File';
+    questionType: 'SingleChoice' | 'MultipleChoice' | 'Text' | 'File';
     questionData: string;
     options?: Option[];
 }
@@ -34,7 +34,7 @@ export interface Assignment {
     questions: Question[];
 }
 
-export type SubmissionStatus = 'Draft' | 'Submitted' | 'RequiresReview' | 'Graded' | 'Withdrawn';
+export type SubmissionStatus = 'Draft' | 'RequiresReview' | 'Graded';
 
 export interface Submission {
     id: string;
@@ -44,32 +44,13 @@ export interface Submission {
     createdAt: string;
     submittedAt?: string;
     answers: Record<string, any>;
+    answerItems?: AnswerItemDto[];
     status: SubmissionStatus;
-    grade?: {
-        score: number;
-        maxScore?: number;
-        verdictText?: string;
-        gradedAt?: string;
-        gradedBy?: string;
-    };
+    grade?: Grade;
     comments?: Comment[];
 }
 
-// Формат отправки ответов на сервер (согласно OpenAPI)
-export type AnswerTypeEnum = 0 | 1 | 2; // SingleChoice | MultipleChoice | Text
-
-export interface AnswerItemDto {
-    id: string;
-    assignmentQuestionId: string;
-    answerType: AnswerTypeEnum;
-    selectedOptionId?: string | null;
-    selectedOptionIds?: string[] | null;
-    text?: string | null;
-}
-
-export interface SubmissionCreateRequest {
-    answers: AnswerItemDto[];
-}
+export type AnswerTypeEnum = 0 | 1 | 2;
 
 export interface AnswerItemDto {
     id: string;
@@ -87,4 +68,12 @@ export interface SubmissionCreateRequest {
 export interface GradeRequest {
     score: number;
     verdictText: string;
+}
+
+export interface Grade {
+    id?: string;
+    submissionId?: string;
+    score: number;
+    verdictText: string;
+    gradedAt?: string;
 }
