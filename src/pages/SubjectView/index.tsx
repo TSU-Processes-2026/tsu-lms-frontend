@@ -1,5 +1,4 @@
-import { useSubjectView, UseSubjectViewResult } from '@/hooks/subject/useSubjectView.ts';
-import React, { useState, useRef } from 'react';
+import { useSubjectView } from '@/hooks/subject/useSubjectView';
 import StudentsModal from '@/components/modals/StudentsModal';
 import CreateAssignmentModal from '@/components/modals/CreateAssignmentModal';
 import { User as UserIcon, Upload, ClipboardCheck, Users } from 'lucide-react';
@@ -9,7 +8,6 @@ import AssignmentPostCard from '@/components/ui/AssignmentPostCard';
 import { PostResponse, AnnouncementPostResponse, MaterialPostResponse, AssignmentPostResponse } from '@/types/subject/FeedTypes';
 
 const SubjectView = () => {
-    const [publishError, setPublishError] = useState<string | null>(null);
     const {
         showModal,
         showAssignmentModal,
@@ -27,46 +25,14 @@ const SubjectView = () => {
         composerText,
         setComposerText,
         handlePublish,
-    }: UseSubjectViewResult = useSubjectView();
-
-    const [file, setFile] = useState<File | null>(null);
-    const [fileLoading, setFileLoading] = useState<boolean>(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
-    /**
-     * Handles file selection and upload with progress tracking.
-     *
-     * @param e - React change event from file input.
-     * @throws May throw network errors during upload.
-     *
-     * This function initiates file upload via XMLHttpRequest,
-     * tracks progress and updates fileUploadProgress state.
-     * The fileLoading state ensures the publish button is disabled
-     * until upload is complete.
-     */
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const selectedFile = e.target.files?.[0] || null;
-        if (!selectedFile) return;
-        setFileLoading(true);
-
-        const formData = new FormData();
-        formData.append('file', selectedFile);
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', '/api/upload');
-        xhr.onload = () => {
-            setFile(selectedFile);
-            setFileLoading(false);
-        };
-        xhr.onerror = () => {
-            setFileLoading(false);
-        };
-        xhr.send(formData);
-    };
-
-    const handleRemoveFile = () => {
-        setFile(null);
-        if (fileInputRef.current) fileInputRef.current.value = '';
-    };
+        file,
+        fileLoading,
+        fileInputRef,
+        handleFileChange,
+        handleRemoveFile,
+        publishError,
+        setPublishError,
+    } = useSubjectView();
 
     return (
         <>
@@ -145,9 +111,8 @@ const SubjectView = () => {
                                         setPublishError(null);
                                         try {
                                             await handlePublish(file ? 'Material' : 'Announcement', composerText, file);
-                                            setFile(null);
+                                            handleRemoveFile();
                                             setPublishError(null);
-                                            if (fileInputRef.current) fileInputRef.current.value = '';
                                         } catch {
                                             setPublishError('Ошибка публикации поста');
                                         }

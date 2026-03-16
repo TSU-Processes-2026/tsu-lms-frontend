@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSubjectFeed, UseSubjectFeed } from '@/hooks/subject/useSubjectFeed';
 import { useSubjects, Participant, ExtendedSubject } from '@/hooks/subject/useSubjects';
@@ -6,7 +6,7 @@ import { Subject } from '@/types/subject/Subject';
 import { UserResponse } from '@/types/user/UserResponse';
 import { PostResponse } from '@/types/subject/FeedTypes';
 import { useProfile } from '@/hooks/profile/useProfile';
-import {CommentItem} from "@/components/ui/CommentSection.tsx";
+import { CommentItem } from "@/components/ui/CommentSection.tsx";
 import { addPostComment } from '@/api/subject/subjectView';
 
 /**
@@ -34,6 +34,13 @@ import { addPostComment } from '@/api/subject/subjectView';
  * @property {CommentItem[]} comments - Array of comments.
  * @property {() => void} handleComment - Handler for adding a new comment.
  * @property {() => void} handlePublish - Handler for publishing a post.
+ * @property {File | null} file - Selected file for material post.
+ * @property {boolean} fileLoading - File upload loading state.
+ * @property {React.RefObject<HTMLInputElement | null>} fileInputRef - Ref for file input.
+ * @property {(e: React.ChangeEvent<HTMLInputElement>) => void} handleFileChange - Handler for file selection/upload.
+ * @property {() => void} handleRemoveFile - Handler for removing selected file.
+ * @property {string | null} publishError - Error message for publishing post.
+ * @property {(error: string | null) => void} setPublishError - Setter for publish error.
  */
 export type UseSubjectViewResult = {
   showModal: boolean;
@@ -65,6 +72,13 @@ export type UseSubjectViewResult = {
    * @returns {Promise<void>} Promise resolving when post is published.
    */
   handlePublish: (postType: 'Announcement' | 'Material', composerText: string, file: File | null) => Promise<void>;
+  file: File | null;
+  fileLoading: boolean;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
+  handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleRemoveFile: () => void;
+  publishError: string | null;
+  setPublishError: (error: string | null) => void;
 };
 
 /**
@@ -112,6 +126,10 @@ export function useSubjectView(): UseSubjectViewResult {
 
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [composerText, setComposerText] = useState('');
+  const [file, setFile] = useState<File | null>(null);
+  const [fileLoading, setFileLoading] = useState<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [publishError, setPublishError] = useState<string | null>(null);
 
   /**
    * Adds a new comment to the comments array and saves it to API.
@@ -170,6 +188,46 @@ export function useSubjectView(): UseSubjectViewResult {
     }
   };
 
+  /**
+   * Handles file selection and upload with progress tracking.
+   *
+   * @param e - React change event from file input.
+   * @throws May throw network errors during upload.
+   *
+   * This function initiates file upload via XMLHttpRequest,
+   * tracks progress and updates fileLoading state.
+   * The fileLoading state ensures the publish button is disabled
+   * until upload is complete.
+   */
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0] || null;
+    if (!selectedFile) return;
+    setFileLoading(true);
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/upload');
+    xhr.onload = () => {
+      setFile(selectedFile);
+      setFileLoading(false);
+    };
+    xhr.onerror = () => {
+      setFileLoading(false);
+    };
+    xhr.send(formData);
+  };
+
+  /**
+   * Removes the selected file and resets file input value.
+   *
+   * @returns void
+   */
+  const handleRemoveFile = () => {
+    setFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   return {
     showModal,
     showAssignmentModal,
@@ -193,5 +251,12 @@ export function useSubjectView(): UseSubjectViewResult {
     comments,
     handleComment,
     handlePublish,
+    file,
+    fileLoading,
+    fileInputRef,
+    handleFileChange,
+    handleRemoveFile,
+    publishError,
+    setPublishError,
   };
 }
