@@ -3,6 +3,7 @@ import { FileText, Download } from 'lucide-react';
 import { MaterialPostResponse } from '@/types/subject/FeedTypes';
 import CommentSection from './CommentSection';
 import { formatPostDate } from '@/utils/formatPostDate';
+import { formatFileSize } from '@/utils/formatFileSize';
 
 /**
  * MaterialPostCard component displays a material post with comments and comment composer.
@@ -36,7 +37,7 @@ const MaterialPostCard: React.FC<MaterialPostCardProps> = ({ post }) => {
             <div className="p-3 bg-white rounded-xl shadow-md"><FileText className="text-blue-500" size={24} /></div>
             <div>
               <span className="font-semibold text-slate-800">{post.fileName}</span>
-              <p className="text-xs text-slate-400 mt-1">{post.fileSize} байт</p>
+              <p className="text-xs text-slate-400 mt-1">{formatFileSize(post.fileSize)}</p>
             </div>
           </div>
           <a href={post.downloadUrl} download className="p-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all"><Download size={18} /></a>
