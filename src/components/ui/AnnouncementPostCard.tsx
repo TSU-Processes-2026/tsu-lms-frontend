@@ -10,9 +10,8 @@ import { formatPostDate } from '@/utils/formatPostDate';
  * Displays announcement post with author, creation date, content and edit button.
  *
  * @param post Announcement post object.
- * @param userId Current user's ID.
- * @param userRole Current user's role.
  * @param onEditPost Callback for editing the post.
+ * @param showEditButton Whether to show edit button.
  * @returns JSX.Element Announcement post card element.
  */
 /**
@@ -24,15 +23,13 @@ type AnnouncementPostCardData = AnnouncementPostResponse & { authorUsername: str
 /**
  * AnnouncementPostCardProps defines the properties for AnnouncementPostCard component.
  * @property post Announcement post object returned from API.
- * @property userId Current user's ID.
- * @property userRole Current user's role.
  * @property onEditPost Callback for editing the post.
+ * @property showEditButton Whether to show edit button.
  */
 type AnnouncementPostCardProps = {
   post: AnnouncementPostCardData;
-  userId: string;
-  userRole: string;
   onEditPost: (post: AnnouncementPostCardData) => void;
+  showEditButton: boolean;
 };
 
 /**
@@ -41,12 +38,11 @@ type AnnouncementPostCardProps = {
  * Displays announcement post with author, creation date, content, edit button, comments and comment input.
  *
  * @param post Announcement post object.
- * @param userId Current user's ID.
- * @param userRole Current user's role.
  * @param onEditPost Callback for editing the post.
+ * @param showEditButton Whether to show edit button.
  * @returns JSX.Element Announcement post card element.
  */
-const AnnouncementPostCard: React.FC<AnnouncementPostCardProps> = ({ post, userId, userRole, onEditPost }) => {
+const AnnouncementPostCard: React.FC<AnnouncementPostCardProps> = ({ post, onEditPost, showEditButton }) => {
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-slate-100 overflow-hidden hover:shadow-xl transition-all">
       <div className="p-6">
@@ -60,7 +56,7 @@ const AnnouncementPostCard: React.FC<AnnouncementPostCardProps> = ({ post, userI
               <p className="text-xs text-slate-400 mt-1">{formatPostDate(post.createdAt)}</p>
             </div>
           </div>
-          {(userRole === 'admin' || userRole === 'teacher' || post.authorId === userId) && (
+          {showEditButton && (
             <button onClick={() => onEditPost(post)}
               className="p-2 text-slate-300 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
               <UserIcon size={18} />

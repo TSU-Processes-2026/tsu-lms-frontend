@@ -33,6 +33,14 @@ import React, { useState } from 'react';
  * @property {(text: string) => void} setComposerText - Handler to set composer text.
  * @property {() => void} handleDownloadFile - Handler for downloading a file.
  * @property {(authorId: string) => string} getAuthorUsername - Gets the username by authorId.
+ * @property {function} handlePublish - Publishes a post (announcement or material).
+ * @property {File | null} file - Selected file for post.
+ * @property {boolean} fileLoading - Loading state for file upload.
+ * @property {React.RefObject<HTMLInputElement | null>} fileInputRef - Ref for file input.
+ * @property {function} handleFileChange - Handler for file input change.
+ * @property {function} handleRemoveFile - Handler for removing selected file.
+ * @property {string | null} publishError - Error message for post publishing.
+ * @property {function} setPublishError - Setter for publishError.
  */
 export type UseSubjectViewResult = {
   showModal: boolean;
@@ -91,6 +99,24 @@ export type UseSubjectViewResult = {
   commentsByPostId: Record<string, CommentItem[]>;
   loadingByPostId: Record<string, boolean>;
   errorByPostId: Record<string, string | null>;
+  /**
+   * Publishes a post (announcement or material).
+   *
+   * @param {string} postType - Type of the post (announcement or material).
+   * @param {string} content - Content of the post.
+   * @param {File | null} file - Optional file for the post.
+   * @returns {Promise<void>} Promise resolving when post is published.
+   * @throws {Error} If publishing fails.
+   */
+  handlePublish: (postType: string, content: string, file?: File | null) => Promise<void>;
+  file: File | null;
+  fileLoading: boolean;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
+  handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleRemoveFile: () => void;
+  publishError: string | null;
+  setPublishError: (error: string | null) => void;
+  getShowEditButton: (post: PostResponse, userId: string, userRole: string) => boolean;
 };
 
 /**
@@ -107,6 +133,11 @@ export type UseSubjectViewResult = {
  */
 export function useSubjectView(): UseSubjectViewResult {
   const { profile } = useProfile();
+
+  const [file, setFile] = useState<File | null>(null);
+  const [fileLoading, setFileLoading] = useState<boolean>(false);
+  const fileInputRef: React.RefObject<HTMLInputElement | null> = React.createRef();
+  const [publishError, setPublishError] = useState<string | null>(null);
 
   const [showModal, setShowModal] = useState<boolean>(false);
   const [showAssignmentModal, setShowAssignmentModal] = useState<boolean>(false);
@@ -237,6 +268,71 @@ export function useSubjectView(): UseSubjectViewResult {
     return found ? found.username : authorId;
   };
 
+  /**
+   * Handles file input change event.
+   *
+   * @param e React.ChangeEvent<HTMLInputElement> - File input change event.
+   */
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files && e.target.files[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+    }
+  };
+
+  /**
+   * Removes the selected file from state.
+   */
+  const handleRemoveFile = () => {
+    setFile(null);
+  };
+
+  /**
+   * Publishes a post (announcement or material).
+   *
+   * @param {string} postType - Type of the post (announcement or material).
+   * @param {string} content - Content of the post.
+   * @param {File | null} file - Optional file for the post.
+   * @returns {Promise<void>} Promise resolving when post is published.
+   * @throws {Error} If publishing fails.
+   */
+  /**
+   * Publishes a post (announcement or material).
+   *
+   * @param {string} postType - Type of the post (announcement or material).
+   * @param {string} content - Content of the post.
+   * @param {File | null} file - Optional file for the post.
+   * @returns {Promise<void>} Promise resolving when post is published.
+   * @throws {Error} If publishing fails.
+  const handlePublish = async (postType: string, content: string, file?: File | null): Promise<void> => {
+    setFileLoading(true);
+    setPublishError(null);
+    try {
+      if (!subjectId) throw new Error('SubjectId is required');
+      await feed.publishPost({
+        PostType: postType,
+        File: file || undefined,
+      });
+      setFile(null);
+    } catch {
+      setPublishError('Ошибка публикации поста');
+    } finally {
+      setFileLoading(false);
+    }
+  };
+
+  /**
+   * Determines whether the edit button should be shown for a post.
+   *
+   * @param post Announcement post object.
+   * @param userId Current user's ID.
+   * @param userRole Current user's role.
+   * @returns {boolean} True if edit button should be shown, otherwise false.
+   */
+  const getShowEditButton = (post: PostResponse, userId: string, userRole: string): boolean => {
+    return userRole === 'admin' || userRole === 'teacher' || post.authorId === userId;
+  };
+
   return {
     showModal,
     showAssignmentModal,
@@ -264,5 +360,14 @@ export function useSubjectView(): UseSubjectViewResult {
     commentsByPostId,
     loadingByPostId,
     errorByPostId,
+    handlePublish,
+    file,
+    fileLoading,
+    fileInputRef,
+    handleFileChange,
+    handleRemoveFile,
+    publishError,
+    setPublishError,
+    getShowEditButton,
   };
 }

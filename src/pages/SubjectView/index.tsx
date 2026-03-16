@@ -41,8 +41,8 @@ const SubjectView = () => {
         publishError,
         setPublishError,
         getAuthorUsername,
+        getShowEditButton,
     } = useSubjectView();
-
 
     return (
         <>
@@ -141,15 +141,15 @@ const SubjectView = () => {
                         {(feed.posts as PostResponse[]).map((post: PostResponse) => {
                             const normalizedType = post.postType.toLowerCase();
                             const authorUsername = getAuthorUsername(post.authorId);
+                            const showEditButton = getShowEditButton(post, profile.id, userRole);
                             switch (normalizedType) {
                                 case 'announcement':
                                     return (
                                         <AnnouncementPostCard
                                             key={post.id}
                                             post={{ ...post, authorUsername } as AnnouncementPostResponse}
-                                            userId={profile.id}
-                                            userRole={userRole}
                                             onEditPost={handleEditPost}
+                                            showEditButton={showEditButton}
                                         />
                                     );
                                 case 'material': {
