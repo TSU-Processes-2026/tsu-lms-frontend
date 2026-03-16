@@ -1,22 +1,40 @@
 import React from 'react';
 import { FileText, Download } from 'lucide-react';
-import { MaterialPostResponse } from '@/types/subject/FeedTypes';
 import CommentSection from './CommentSection';
 import { formatPostDate } from '@/utils/formatPostDate';
+import { formatFileSize } from '@/utils/formatFileSize';
+import { useSubjectView } from '@/hooks/subject/useSubjectView';
+import { MaterialPostResponse } from '@/types/subject/FeedTypes';
+
+/**
+ * MaterialPostCardData extends MaterialPostResponse with authorUsername.
+ * Used for post prop in MaterialPostCard to eliminate TS2339 error.
+ */
+type MaterialPostCardData = MaterialPostResponse & { authorUsername: string };
+
+/**
+ * MaterialPostCardProps defines the properties for MaterialPostCard component.
+ * @property post Material post object returned from API, extended with authorUsername.
+ */
+type MaterialPostCardProps = {
+  post: MaterialPostCardData;
+};
 
 /**
  * MaterialPostCard component displays a material post with comments and comment composer.
  *
  * Displays material post with author, creation date, content, download block, comments and comment input.
  *
- * @param post Material post object returned from API.
+ * @param post Material post object returned from API, extended with authorUsername.
  * @returns JSX.Element Material post card element.
  */
-type MaterialPostCardProps = {
-  post: MaterialPostResponse;
-};
-
 const MaterialPostCard: React.FC<MaterialPostCardProps> = ({ post }) => {
+  const { handleDownloadFile } = useSubjectView();
+
+  const handleDownload = async () => {
+    await handleDownloadFile(post.id, post.fileName);
+  };
+
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-slate-100 overflow-hidden hover:shadow-xl transition-all">
       <div className="p-6">
@@ -25,7 +43,7 @@ const MaterialPostCard: React.FC<MaterialPostCardProps> = ({ post }) => {
             <FileText size={22} className="text-white" />
           </div>
           <div>
-            <p className="font-bold text-slate-800">{post.authorId}</p>
+            <p className="font-bold text-slate-800">{post.authorUsername}</p>
             <p className="text-xs text-slate-400 mt-1">{formatPostDate(post.createdAt)}</p>
           </div>
         </div>
@@ -36,10 +54,10 @@ const MaterialPostCard: React.FC<MaterialPostCardProps> = ({ post }) => {
             <div className="p-3 bg-white rounded-xl shadow-md"><FileText className="text-blue-500" size={24} /></div>
             <div>
               <span className="font-semibold text-slate-800">{post.fileName}</span>
-              <p className="text-xs text-slate-400 mt-1">{post.fileSize} байт</p>
+              <p className="text-xs text-slate-400 mt-1">{formatFileSize(post.fileSize)}</p>
             </div>
           </div>
-          <a href={post.downloadUrl} download className="p-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all"><Download size={18} /></a>
+          <button onClick={handleDownload} className="p-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all"><Download size={18} /></button>
         </div>
       </div>
       <CommentSection postId={post.id} />

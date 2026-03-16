@@ -1,4 +1,4 @@
-import { useSubjectView, UseSubjectViewResult } from '@/hooks/subject/useSubjectView.ts';
+import { useSubjectView } from '@/hooks/subject/useSubjectView';
 import StudentsModal from '@/components/modals/StudentsModal';
 import CreateAssignmentModal from '@/components/modals/CreateAssignmentModal';
 import { User as UserIcon, Upload, ClipboardCheck, Users } from 'lucide-react';
@@ -6,6 +6,14 @@ import AnnouncementPostCard from '@/components/ui/AnnouncementPostCard';
 import MaterialPostCard from '@/components/ui/MaterialPostCard';
 import AssignmentPostCard from '@/components/ui/AssignmentPostCard';
 import { PostResponse, AnnouncementPostResponse, MaterialPostResponse, AssignmentPostResponse } from '@/types/subject/FeedTypes';
+
+interface MaterialPostCardData extends MaterialPostResponse {
+  authorUsername: string;
+}
+
+interface AssignmentPostCardData extends AssignmentPostResponse {
+  authorUsername: string;
+}
 
 const SubjectView = () => {
     const {
@@ -18,6 +26,7 @@ const SubjectView = () => {
         handleCloseAssignmentModal,
         setActiveTab,
         feed,
+        subjectId,
         subjectCode,
         subjectParticipants,
         userRole,
@@ -26,7 +35,17 @@ const SubjectView = () => {
         composerText,
         setComposerText,
         handlePublish,
-    }: UseSubjectViewResult = useSubjectView();
+        file,
+        fileLoading,
+        fileInputRef,
+        handleFileChange,
+        handleRemoveFile,
+        publishError,
+        setPublishError,
+        getAuthorUsername,
+        getShowEditButton,
+        handleCreateAssignment,
+    } = useSubjectView();
 
     return (
         <>
@@ -54,57 +73,126 @@ const SubjectView = () => {
                                 </div>
                                 <textarea
                                     className="w-full resize-none border-none bg-transparent p-2 text-slate-700 focus:ring-0 outline-none placeholder:text-slate-400"
-                                    placeholder="Поделиться объявлением или материалом..."
+                                    placeholder="Поделиться объявлением..."
                                     rows={2}
                                     value={composerText}
                                     onChange={e => setComposerText(e.target.value)}
                                 />
                             </div>
+
+                            {fileLoading && null}
+                            {file && !fileLoading && (
+                                <div className="mt-3 flex items-center gap-2 bg-slate-50 rounded-xl px-3 py-2">
+                                    <span className="text-slate-700 text-sm font-medium">{file.name}</span>
+                                    <button
+                                        className="text-red-500 text-xs font-semibold hover:underline"
+                                        onClick={handleRemoveFile}
+                                    >Удалить файл</button>
+                                </div>
+                            )}
                             <div className="flex justify-between items-center mt-5 pt-4 border-t border-slate-100">
                                 <div className="flex gap-2">
-                                    <button className="px-4 py-2 hover:bg-slate-50 rounded-xl text-slate-600 flex items-center gap-2 text-sm font-semibold transition-all">
+                                    <button
+                                        className="px-4 py-2 hover:bg-slate-50 rounded-xl text-slate-600 flex items-center gap-2 text-sm font-semibold transition-all"
+                                        onClick={() => fileInputRef.current?.click()}
+                                    >
                                         <Upload size={18} /> Файл
                                     </button>
-                                    <button className="px-4 py-2 hover:bg-purple-50 rounded-xl text-purple-600 flex items-center gap-2 text-sm font-semibold transition-all" onClick={handleShowAssignmentModal}>
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        style={{ display: 'none' }}
+                                        onChange={handleFileChange}
+                                    />
+                                    <button
+                                        className="px-4 py-2 hover:bg-purple-50 rounded-xl text-purple-600 flex items-center gap-2 text-sm font-semibold transition-all"
+                                        onClick={handleShowAssignmentModal}
+                                    >
                                         <ClipboardCheck size={18} /> Задание
                                     </button>
                                 </div>
                                 <button
-                                    className="bg-linear-to-r from-blue-600 to-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-xl shadow-blue-200/50 hover:-translate-y-0.5 transition-all"
-                                    onClick={handlePublish}
+                                    className={
+                                        `bg-linear-to-r from-blue-600 to-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-xl shadow-blue-200/50 transition-all
+                                        ${fileLoading || (!file && !composerText.trim()) ? 'opacity-50 cursor-not-allowed hover:translate-y-0' : 'hover:-translate-y-0.5'}`
+                                    }
+                                    onClick={async (e) => {
+                                        if (fileLoading || (!file && !composerText.trim())) {
+                                            e.preventDefault();
+                                            return;
+                                        }
+                                        setPublishError(null);
+                                        try {
+                                            await handlePublish(file ? 'Material' : 'Announcement', composerText, file);
+                                            handleRemoveFile();
+                                            setPublishError(null);
+                                        } catch {
+                                            setPublishError('Ошибка публикации поста');
+                                        }
+                                    }}
+                                    disabled={fileLoading || (!file && !composerText.trim())}
                                 >
                                     Опубликовать
                                 </button>
+                                {publishError && (
+                                    <div className="text-red-500 text-xs mt-2">{publishError}</div>
+                                )}
                             </div>
                         </div>
                         {feed.loading && <div className="text-center text-slate-400">Загрузка...</div>}
                         {feed.error && <div className="text-center text-red-500">{feed.error}</div>}
                         {(feed.posts as PostResponse[]).map((post: PostResponse) => {
                             const normalizedType = post.postType.toLowerCase();
+                            const authorUsername = getAuthorUsername(post.authorId);
+                            const showEditButton = getShowEditButton(post, profile.id, userRole);
                             switch (normalizedType) {
                                 case 'announcement':
                                     return (
                                         <AnnouncementPostCard
                                             key={post.id}
-                                            post={post as AnnouncementPostResponse}
-                                            userId={profile.id}
-                                            userRole={userRole}
+                                            post={{ ...post, authorUsername } as AnnouncementPostResponse}
                                             onEditPost={handleEditPost}
+                                            showEditButton={showEditButton}
                                         />
                                     );
-                                case 'material':
+                                case 'material': {
+                                    const materialPost = post as MaterialPostResponse;
                                     return (
                                         <MaterialPostCard
-                                            key={post.id}
-                                            post={post as MaterialPostResponse}
+                                            key={materialPost.id}
+                                            post={{
+                                                id: materialPost.id,
+                                                authorId: materialPost.authorId,
+                                                postType: materialPost.postType,
+                                                content: materialPost.content,
+                                                createdAt: materialPost.createdAt,
+                                                $type: materialPost.$type,
+                                                fileName: materialPost.fileName,
+                                                storagePath: materialPost.storagePath,
+                                                fileSize: materialPost.fileSize,
+                                                downloadUrl: materialPost.downloadUrl,
+                                                authorUsername,
+                                            } as MaterialPostCardData}
                                         />
                                     );
+                                }
                                 case 'assignment': {
                                     const assignmentPost = post as AssignmentPostResponse;
                                     return (
                                         <AssignmentPostCard
                                             key={assignmentPost.id}
-                                            post={assignmentPost}
+                                            post={{
+                                                id: assignmentPost.id,
+                                                subjectId: assignmentPost.subjectId,
+                                                authorId: assignmentPost.authorId,
+                                                postType: assignmentPost.postType,
+                                                content: assignmentPost.content,
+                                                createdAt: assignmentPost.createdAt,
+                                                $type: assignmentPost.$type,
+                                                assignmentData: assignmentPost.assignmentData,
+                                                questions: assignmentPost.questions,
+                                                authorUsername,
+                                            } as AssignmentPostCardData}
                                             assignment={{
                                                 id: assignmentPost.id,
                                                 subjectId: assignmentPost.subjectId,
@@ -115,7 +203,6 @@ const SubjectView = () => {
                                                 assignmentData: assignmentPost.assignmentData,
                                                 questions: assignmentPost.questions,
                                             }}
-                                            onOpenAssignment={() => {}} //TODO: добавить открытие теста
                                         />
                                     );
                                 }
@@ -140,7 +227,7 @@ const SubjectView = () => {
                 )}
             </div>
             {showModal && <StudentsModal onClose={handleCloseModal} />}
-            {showAssignmentModal && <CreateAssignmentModal onClose={handleCloseAssignmentModal} />}
+            {showAssignmentModal && <CreateAssignmentModal subjectId={subjectId ?? ''} onClose={handleCloseAssignmentModal} onCreate={handleCreateAssignment} />}
         </>
     );
 };

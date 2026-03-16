@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { PostResponse, CommentResponse } from '@/types/subject/FeedTypes';
 import {
   fetchSubjectPosts,
@@ -24,6 +24,7 @@ export interface UseSubjectFeed {
   error: string | null;
   publishPost: (post: { PostType?: string; Content?: string; File?: File }) => Promise<void>;
   addComment: (postId: string, text: string) => Promise<void>;
+  refreshFeed: () => Promise<void>;
 }
 
 /**
@@ -47,46 +48,48 @@ export function useSubjectFeed(subjectId: string): UseSubjectFeed {
     error: null,
   });
 
-  useEffect(() => {
-    let isMounted = true;
-
-    async function fetchFeed() {
-      setState(prev => ({ ...prev, loading: true, error: null }));
-
-      try {
-        const postsData: PostResponse[] = await fetchSubjectPosts(subjectId);
-        const commentsResults = await Promise.all(
-          postsData.map(async (post) => {
-            const comments = await fetchPostComments(post.id);
-            return { postId: post.id, comments };
-          })
-        );
-        if (!isMounted) return;
-        const grouped: Record<string, CommentResponse[]> = {};
-        commentsResults.forEach(r => { grouped[r.postId] = r.comments; });
-        setState({
-          posts: postsData,
-          comments: grouped,
-          loading: false,
-          error: null,
-        });
-      } catch {
-        if (!isMounted) return;
-        setState({
-          posts: [],
-          comments: {},
-          loading: false,
-          error: 'Ошибка загрузки ленты',
-        });
-      }
+  const isMounted = useRef(true);
+  const fetchFeed = useCallback(async () => {
+    setState(prev => ({ ...prev, loading: true, error: null }));
+    try {
+      const postsData: PostResponse[] = await fetchSubjectPosts(subjectId);
+      const commentsResults = await Promise.all(
+        postsData.map(async (post) => {
+          const comments = await fetchPostComments(post.id);
+          return { postId: post.id, comments };
+        })
+      );
+      if (!isMounted.current) return;
+      const grouped: Record<string, CommentResponse[]> = {};
+      commentsResults.forEach(r => { grouped[r.postId] = r.comments; });
+      setState({
+        posts: postsData,
+        comments: grouped,
+        loading: false,
+        error: null,
+      });
+    } catch {
+      if (!isMounted.current) return;
+      setState({
+        posts: [],
+        comments: {},
+        loading: false,
+        error: 'Ошибка загрузки ленты',
+      });
     }
-
-    void fetchFeed();
-
-    return () => {
-      isMounted = false;
-    };
   }, [subjectId]);
+
+  useEffect(() => {
+    isMounted.current = true;
+    Promise.resolve().then(fetchFeed);
+    return () => {
+      isMounted.current = false;
+    };
+  }, [subjectId, fetchFeed]);
+
+  const refreshFeed = async () => {
+    await fetchFeed();
+  };
 
   /**
    * Publishes a new post to the subject feed.
@@ -136,5 +139,6 @@ export function useSubjectFeed(subjectId: string): UseSubjectFeed {
     error: state.error,
     publishPost,
     addComment,
+    refreshFeed,
   };
 }
