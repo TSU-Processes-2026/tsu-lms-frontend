@@ -115,3 +115,21 @@ export async function addPostComment(
   if (!res.ok) throw new Error('Network error');
   return await res.json();
 }
+
+/**
+ * Downloads the file attached to a post by its postId using the /api/posts/{postId}/file endpoint.
+ *
+ * @param {string} postId - The unique identifier of the post.
+ * @returns {Promise<Blob>} - Returns a promise that resolves to the file Blob.
+ * @throws {Error} - Throws an error if the request fails or the file is not found.
+ */
+export async function downloadPostFile(postId: string): Promise<Blob> {
+  const res = await fetch(`${BASE_URL}/posts/${postId}/file`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
+    },
+  });
+  if (!res.ok) throw new Error('Failed to download file');
+  return await res.blob();
+}

@@ -4,6 +4,7 @@ import { MaterialPostResponse } from '@/types/subject/FeedTypes';
 import CommentSection from './CommentSection';
 import { formatPostDate } from '@/utils/formatPostDate';
 import { formatFileSize } from '@/utils/formatFileSize';
+import { useSubjectView } from '@/hooks/subject/useSubjectView';
 
 /**
  * MaterialPostCard component displays a material post with comments and comment composer.
@@ -18,6 +19,12 @@ type MaterialPostCardProps = {
 };
 
 const MaterialPostCard: React.FC<MaterialPostCardProps> = ({ post }) => {
+  const { handleDownloadFile } = useSubjectView();
+
+  const handleDownload = async () => {
+    await handleDownloadFile(post.id, post.fileName);
+  };
+
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-slate-100 overflow-hidden hover:shadow-xl transition-all">
       <div className="p-6">
@@ -40,7 +47,7 @@ const MaterialPostCard: React.FC<MaterialPostCardProps> = ({ post }) => {
               <p className="text-xs text-slate-400 mt-1">{formatFileSize(post.fileSize)}</p>
             </div>
           </div>
-          <a href={post.downloadUrl} download className="p-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all"><Download size={18} /></a>
+          <button onClick={handleDownload} className="p-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all"><Download size={18} /></button>
         </div>
       </div>
       <CommentSection postId={post.id} />

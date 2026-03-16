@@ -7,7 +7,7 @@ import { UserResponse } from '@/types/user/UserResponse';
 import { PostResponse } from '@/types/subject/FeedTypes';
 import { useProfile } from '@/hooks/profile/useProfile';
 import { CommentItem } from "@/components/ui/CommentSection.tsx";
-import { addPostComment } from '@/api/subject/subjectView';
+import { addPostComment, downloadPostFile } from '@/api/subject/subjectView';
 
 /**
  * useSubjectView hook return type.
@@ -41,6 +41,7 @@ import { addPostComment } from '@/api/subject/subjectView';
  * @property {() => void} handleRemoveFile - Handler for removing selected file.
  * @property {string | null} publishError - Error message for publishing post.
  * @property {(error: string | null) => void} setPublishError - Setter for publish error.
+ * @property {() => void} handleDownloadFile - Handler for downloading a file.
  */
 export type UseSubjectViewResult = {
   showModal: boolean;
@@ -79,6 +80,15 @@ export type UseSubjectViewResult = {
   handleRemoveFile: () => void;
   publishError: string | null;
   setPublishError: (error: string | null) => void;
+  /**
+   * Downloads a file for a material post and triggers browser download.
+   *
+   * @param {string} postId - The ID of the post to download file from.
+   * @param {string} fileName - The name for the downloaded file.
+   * @throws {Error} If download fails.
+   * @returns {Promise<void>} Promise resolving when download is complete.
+   */
+  handleDownloadFile: (postId: string, fileName: string) => Promise<void>;
 };
 
 /**
@@ -228,6 +238,30 @@ export function useSubjectView(): UseSubjectViewResult {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  /**
+   * Downloads a file for a material post and triggers browser download.
+   *
+   * @param {string} postId - The ID of the post to download file from.
+   * @param {string} fileName - The name for the downloaded file.
+   * @throws {Error} If download fails.
+   * @returns {Promise<void>} Promise resolving when download is complete.
+   */
+  const handleDownloadFile = async (postId: string, fileName: string): Promise<void> => {
+    try {
+      const blob = await downloadPostFile(postId);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      alert('Не удалось скачать файл');
+    }
+  };
+
   return {
     showModal,
     showAssignmentModal,
@@ -258,5 +292,6 @@ export function useSubjectView(): UseSubjectViewResult {
     handleRemoveFile,
     publishError,
     setPublishError,
+    handleDownloadFile,
   };
 }
