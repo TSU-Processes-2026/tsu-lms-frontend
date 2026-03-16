@@ -4,10 +4,9 @@
  * @param comments Initial array of comments.
  * @returns JSX.Element Comment section with comments and input.
  */
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { User as UserIcon, Send } from 'lucide-react';
 import { useSubjectView } from "@/hooks/subject/useSubjectView.ts";
-import { fetchPostComments } from '@/api/subject/subjectView';
 
 export interface CommentItem {
   id: string;
@@ -32,52 +31,23 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
   const {
     composerText,
     setComposerText,
-    handleComment,
+    addComment,
+    fetchComments,
+    commentsByPostId,
+    loadingByPostId,
+    errorByPostId,
   } = useSubjectView();
 
-  const [comments, setComments] = useState<CommentItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let isMounted = true;
-    const loadComments = async () => {
-      setLoading(true);
-      try {
-        const data = await fetchPostComments(postId);
-        if (!isMounted) return;
-        setComments(
-          data.map((c) => ({
-            id: c.id,
-            author: c.authorId,
-            text: c.text,
-            date: c.createdAt,
-          }))
-        );
-        setLoading(false);
-      } catch (e) {
-        console.error(e);
-        if (!isMounted) return;
-        setError('Ошибка загрузки комментариев');
-        setLoading(false);
-      }
-    };
-    void loadComments();
-    return () => { isMounted = false; };
+  React.useEffect(() => {
+    fetchComments(postId);
   }, [postId]);
 
-  const addComment = async () => {
-    await handleComment(postId);
-    setComments([
-      ...comments,
-      {
-        id: Date.now().toString(),
-        author: 'Вы',
-        text: composerText,
-        date: new Date().toISOString(),
-      },
-    ]);
-    setComposerText('');
+  const loading = loadingByPostId[postId] ?? false;
+  const error = errorByPostId[postId] ?? null;
+  const comments = commentsByPostId[postId] ?? [];
+
+  const handleAddComment = async () => {
+    await addComment(postId);
   };
 
   return (
@@ -102,10 +72,10 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
         </div>
         <div className="flex-1 relative">
           <input value={composerText} onChange={e => setComposerText(e.target.value)}
-            onKeyDown={async e => e.key === 'Enter' && await addComment()}
+            onKeyDown={async e => e.key === 'Enter' && await handleAddComment()}
             placeholder="Написать комментарий..."
             className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-3 pr-12 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none shadow-sm transition-all" />
-          <button onClick={async () => await addComment()}
+          <button onClick={async () => await handleAddComment()}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-500 hover:text-blue-700 transition-all">
             <Send size={18} />
           </button>
