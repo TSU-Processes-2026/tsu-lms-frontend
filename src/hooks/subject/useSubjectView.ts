@@ -7,7 +7,7 @@ import { PostResponse, CommentResponse } from '@/types/subject/FeedTypes';
 import { useProfile } from '@/hooks/profile/useProfile';
 import { CommentItem } from "@/components/ui/CommentSection.tsx";
 import { addPostComment, downloadPostFile, fetchPostComments } from '@/api/subject/subjectView';
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 /**
  * useSubjectView hook return type.
@@ -149,7 +149,7 @@ export function useSubjectView(): UseSubjectViewResult {
    * @returns {Promise<void>} Promise resolving when comments are loaded.
    * @throws {Error} If loading fails.
    */
-  const fetchComments = async (postId: string): Promise<void> => {
+  const fetchComments = React.useCallback(async (postId: string): Promise<void> => {
     setLoadingByPostId((prev: Record<string, boolean>) => ({ ...prev, [postId]: true }));
     setErrorByPostId((prev: Record<string, string | null>) => ({ ...prev, [postId]: null }));
     try {
@@ -168,7 +168,7 @@ export function useSubjectView(): UseSubjectViewResult {
       setErrorByPostId((prev: Record<string, string | null>) => ({ ...prev, [postId]: 'Ошибка загрузки комментариев' }));
       setLoadingByPostId((prev: Record<string, boolean>) => ({ ...prev, [postId]: false }));
     }
-  };
+  }, []);
 
   /**
    * Adds a new comment to a post and updates state.

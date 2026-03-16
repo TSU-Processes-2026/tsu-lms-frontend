@@ -39,8 +39,8 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
   } = useSubjectView();
 
   React.useEffect(() => {
-    fetchComments(postId);
-  }, [postId]);
+    void fetchComments(postId);
+  }, [fetchComments, postId]);
 
   const loading = loadingByPostId[postId] ?? false;
   const error = errorByPostId[postId] ?? null;
