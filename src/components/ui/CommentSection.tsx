@@ -36,6 +36,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
     commentsByPostId,
     loadingByPostId,
     errorByPostId,
+    getAuthorUsername,
   } = useSubjectView();
 
   React.useEffect(() => {
@@ -58,10 +59,10 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
       {comments.map(c => (
         <div key={c.id} className="flex gap-3">
           <div className="w-9 h-9 rounded-full bg-linear-to-br from-slate-200 to-slate-300 shadow-sm flex items-center justify-center text-xs font-bold shrink-0 text-slate-600">
-            {c.avatar || (c.author && c.author.length > 0 ? c.author[0] : '?')}
+            {c.avatar || (getAuthorUsername(c.author) && getAuthorUsername(c.author).length > 0 ? getAuthorUsername(c.author)[0] : '?')}
           </div>
           <div className="flex-1 bg-white p-3 rounded-2xl shadow-sm">
-            <span className="font-bold text-slate-800 text-sm mr-2">{c.author}</span>
+            <span className="font-bold text-slate-800 text-sm mr-2">{getAuthorUsername(c.author)}</span>
             <span className="text-slate-600 text-sm">{c.text}</span>
           </div>
         </div>
