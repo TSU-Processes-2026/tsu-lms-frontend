@@ -3,7 +3,7 @@ import { useSubjectFeed, UseSubjectFeed } from '@/hooks/subject/useSubjectFeed';
 import { useSubjects, Participant, ExtendedSubject } from '@/hooks/subject/useSubjects';
 import { Subject } from '@/types/subject/Subject';
 import { UserResponse } from '@/types/user/UserResponse';
-import { PostResponse, CommentResponse } from '@/types/subject/FeedTypes';
+import { PostResponse, CommentResponse, AssignmentResponse } from '@/types/subject/FeedTypes';
 import { useProfile } from '@/hooks/profile/useProfile';
 import { CommentItem } from "@/components/ui/CommentSection.tsx";
 import { addPostComment, downloadPostFile, fetchPostComments } from '@/api/subject/subjectView';
@@ -117,6 +117,14 @@ export type UseSubjectViewResult = {
   publishError: string | null;
   setPublishError: (error: string | null) => void;
   getShowEditButton: (post: PostResponse, userId: string, userRole: string) => boolean;
+  /**
+   * Handles opening assignment test for a given assignment object.
+   *
+   * @param {AssignmentResponse} assignment - Assignment object to open.
+   * @throws {Error} If opening fails.
+   * @returns {void}
+   */
+  handleOpenAssignment: (assignment: AssignmentResponse) => void;
 };
 
 /**
@@ -132,6 +140,17 @@ export type UseSubjectViewResult = {
  * @throws {Error} If fetching subject data fails.
  */
 export function useSubjectView(): UseSubjectViewResult {
+      /**
+       * Handles opening assignment test for a given assignment object.
+       *
+       * @param {AssignmentResponse} assignment - Assignment object to open.
+       * @throws {Error} If opening fails.
+       * @returns {void}
+       */
+      const handleOpenAssignment = (assignment: AssignmentResponse): void => {
+        console.log('Открытие теста для задания:', assignment); // TODO: Открытие теста для задания
+        handleShowAssignmentModal();
+      };
   const { profile } = useProfile();
 
   const [file, setFile] = useState<File | null>(null);
@@ -336,6 +355,7 @@ export function useSubjectView(): UseSubjectViewResult {
   };
 
   return {
+    handleOpenAssignment,
     showModal,
     showAssignmentModal,
     activeTab,

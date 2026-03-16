@@ -1,8 +1,9 @@
-import React from 'react';
+import React, {JSX} from 'react';
 import { ClipboardCheck, HelpCircle } from 'lucide-react';
 import { AssignmentPostResponse, AssignmentResponse } from '@/types/subject/FeedTypes';
 import CommentSection from './CommentSection';
 import { formatPostDate } from '@/utils/formatPostDate';
+import { useSubjectView } from '@/hooks/subject/useSubjectView';
 
 /**
  * AssignmentPostCardData extends AssignmentPostResponse with authorUsername.
@@ -14,15 +15,22 @@ type AssignmentPostCardData = AssignmentPostResponse & { authorUsername: string 
  * AssignmentPostCardProps defines the properties for AssignmentPostCard component.
  * @property post Assignment post object returned from API, extended with authorUsername.
  * @property assignment Assignment object returned from API if available.
- * @property onOpenAssignment Callback for opening assignment.
  */
 type AssignmentPostCardProps = {
   post: AssignmentPostCardData;
   assignment?: AssignmentResponse;
-  onOpenAssignment: (assignment: AssignmentResponse) => void;
 };
 
-const AssignmentPostCard: React.FC<AssignmentPostCardProps> = ({ post, assignment, onOpenAssignment }) => {
+/**
+ * AssignmentPostCard component displays assignment post and handles opening assignment test.
+ * Business logic for opening assignment is delegated to useSubjectView hook.
+ *
+ * @param {AssignmentPostCardProps} props - Assignment post and assignment data.
+ * @returns {JSX.Element} Assignment post card UI.
+ */
+const AssignmentPostCard: React.FC<AssignmentPostCardProps> = ({ post, assignment }: AssignmentPostCardProps): JSX.Element => {
+  const { handleOpenAssignment } = useSubjectView();
+
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-slate-100 overflow-hidden hover:shadow-xl transition-all">
       <div className="p-6">
@@ -47,7 +55,7 @@ const AssignmentPostCard: React.FC<AssignmentPostCardProps> = ({ post, assignmen
                 <p className="font-bold text-slate-800 text-sm">{assignment.questions.length} вопросов</p>
               </div>
             </div>
-            <button onClick={() => onOpenAssignment(assignment)}
+            <button onClick={() => handleOpenAssignment(assignment)}
               className="bg-linear-to-r from-purple-600 to-purple-700 text-white px-5 py-2 rounded-xl font-bold text-sm shadow-md hover:-translate-y-0.5 transition-all">
               Пройти тест
             </button>
