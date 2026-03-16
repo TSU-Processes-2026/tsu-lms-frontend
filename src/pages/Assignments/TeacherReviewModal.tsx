@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { UserIcon, X, Trash2, PenLine, MessageSquare, Send, Save } from 'lucide-react';
 import { Assignment, Submission, Comment } from '../../types/assignments/assignments';
+import { PROD_URL } from '@/constants/config/config';
 
 interface Props {
     submission: Submission;
@@ -23,12 +24,12 @@ export const TeacherReviewModal: React.FC<Props> = ({
     const [comment, setComment] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
-    const API_BASE = 'http://http://89.23.105.66:14823/';
+    const API_BASE = PROD_URL;
 
     const handleGrade = async () => {
         setSubmitting(true);
         try {
-            const res = await fetch(`${API_BASE}/api/submissions/${submission.id}/grade`, {
+            const res = await fetch(`${API_BASE}/submissions/${submission.id}/grade`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -52,7 +53,7 @@ export const TeacherReviewModal: React.FC<Props> = ({
     const handleComment = async () => {
         if (!comment.trim()) return;
         try {
-            const res = await fetch(`${API_BASE}/api/comments`, {
+            const res = await fetch(`${API_BASE}/comments`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -29,7 +29,7 @@ export const AssignmentsPage: React.FC<Props> = ({
     onOpenSolutionsList,
 }) => {
     const [filter] = useState<AssignmentFilter>('all');
-    const isTeacher = role === 'teacher';
+    const isTeacher = role.toLocaleLowerCase() === 'teacher';
     const userId = 'u1';
 
     const filtered = assignments.filter((a) => {

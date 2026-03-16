@@ -319,8 +319,14 @@ export const AssignmentsContainer: React.FC = () => {
                     token={localStorage.getItem('accessToken') || ''}
                     role={role}
                     onOpenAssignment={(a) => setSelectedAssignment(a)}
-                    onOpenSolution={(s) => setSelectedSubmission(s)}
-                    onOpenSolutionsList={(a) => setShowSolutionsList(a)}
+                    onOpenSolution={(s) => {
+                        console.log('Открыть решение');
+                        setSelectedSubmission(s);
+                    }}
+                    onOpenSolutionsList={(a) => {
+                        console.log('Открыть список решений');
+                        setShowSolutionsList(a);
+                    }}
                 />
             )}
 
