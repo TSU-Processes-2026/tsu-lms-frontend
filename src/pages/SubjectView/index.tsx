@@ -22,9 +22,11 @@ const SubjectView = () => {
         activeTab,
         handleShowModal,
         handleCloseModal,
+        handleShowAssignmentModal,
         handleCloseAssignmentModal,
         setActiveTab,
         feed,
+        subjectId,
         subjectCode,
         subjectParticipants,
         userRole,
@@ -42,6 +44,7 @@ const SubjectView = () => {
         setPublishError,
         getAuthorUsername,
         getShowEditButton,
+        handleCreateAssignment,
     } = useSubjectView();
 
     return (
@@ -103,7 +106,7 @@ const SubjectView = () => {
                                     />
                                     <button
                                         className="px-4 py-2 hover:bg-purple-50 rounded-xl text-purple-600 flex items-center gap-2 text-sm font-semibold transition-all"
-                                        onClick={handleCloseAssignmentModal}
+                                        onClick={handleShowAssignmentModal}
                                     >
                                         <ClipboardCheck size={18} /> Задание
                                     </button>
@@ -224,7 +227,7 @@ const SubjectView = () => {
                 )}
             </div>
             {showModal && <StudentsModal onClose={handleCloseModal} />}
-            {showAssignmentModal && <CreateAssignmentModal onClose={handleCloseAssignmentModal} />}
+            {showAssignmentModal && <CreateAssignmentModal subjectId={subjectId ?? ''} onClose={handleCloseAssignmentModal} onCreate={handleCreateAssignment} />}
         </>
     );
 };
