@@ -444,7 +444,7 @@ export const AssignmentsContainer: React.FC = () => {
         const assignment = assignments.find((a) => a.id === submission.assignmentId) || null;
         if (!assignment) return;
         const role = subjectRoles[assignment.subjectId] ?? 'student';
-        if (role === 'teacher') {
+        if (role === 'teacher' || submission.authorId !== profile.id) {
             setShowSolutionsList(assignment);
             setReviewing(submission);
             return;
@@ -452,6 +452,15 @@ export const AssignmentsContainer: React.FC = () => {
         setSelectedAssignment(assignment);
         setSelectedSubmission(submission);
     };
+
+    useEffect(() => {
+        const openId = localStorage.getItem('openAssignmentId');
+        if (!openId) return;
+        const assignment = assignments.find((a) => a.id === openId);
+        if (!assignment) return;
+        localStorage.removeItem('openAssignmentId');
+        openAssignment(assignment);
+    }, [assignments, submissions, profile.id]);
 
     return (
         <div className='p-4 bg-slate-50 min-h-screen'>
