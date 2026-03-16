@@ -19,6 +19,7 @@ import { NotFoundPage } from '@/pages/ErrorPages/NotFoundPage.tsx';
 import { ForbiddenPage } from '@/pages/ErrorPages/ForbiddenPage.tsx';
 import { HomePage } from '@/pages/HomePage';
 import { Dashboard } from '@/pages/Dashboard';
+import { AssignmentsContainer } from '@/pages/Assignments/AssignmentsContainer';
 
 export const router = createBrowserRouter([
     {
@@ -57,7 +58,7 @@ export const router = createBrowserRouter([
                     },
                     {
                         path: '/assignments',
-                        element: <div>Страница с решениями</div>,
+                        element: <AssignmentsContainer />,
                     },
                 ],
             },
