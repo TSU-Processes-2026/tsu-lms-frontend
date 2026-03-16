@@ -200,7 +200,6 @@ const SubjectView = () => {
                                                 assignmentData: assignmentPost.assignmentData,
                                                 questions: assignmentPost.questions,
                                             }}
-                                            onOpenAssignment={() => {}} //TODO: добавить открытие теста
                                         />
                                     );
                                 }
