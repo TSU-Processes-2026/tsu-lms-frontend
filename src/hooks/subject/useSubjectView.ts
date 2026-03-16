@@ -42,6 +42,7 @@ import { addPostComment, downloadPostFile } from '@/api/subject/subjectView';
  * @property {string | null} publishError - Error message for publishing post.
  * @property {(error: string | null) => void} setPublishError - Setter for publish error.
  * @property {() => void} handleDownloadFile - Handler for downloading a file.
+ * @property {(authorId: string) => string} getAuthorUsername - Gets the username by authorId.
  */
 export type UseSubjectViewResult = {
   showModal: boolean;
@@ -89,6 +90,15 @@ export type UseSubjectViewResult = {
    * @returns {Promise<void>} Promise resolving when download is complete.
    */
   handleDownloadFile: (postId: string, fileName: string) => Promise<void>;
+  /**
+   * Returns the username for a given authorId for the current subject.
+   *
+   * @param {string} authorId - The userId of the author.
+   * @returns {string} Username if found, otherwise authorId.
+   *
+   * @throws {Error} If participants data is unavailable.
+   */
+  getAuthorUsername: (authorId: string) => string;
 };
 
 /**
@@ -262,6 +272,20 @@ export function useSubjectView(): UseSubjectViewResult {
     }
   };
 
+  /**
+   * Returns the username for a given authorId for the current subject.
+   *
+   * @param {string} authorId - The userId of the author.
+   * @returns {string} Username if found, otherwise authorId.
+   *
+   * @throws {Error} If participants data is unavailable.
+   */
+  const getAuthorUsername = (authorId: string): string => {
+    if (!subjectId || !participants[subjectId]) return authorId;
+    const found = participants[subjectId].find((p: { userId: string; username: string }) => p.userId === authorId);
+    return found ? found.username : authorId;
+  };
+
   return {
     showModal,
     showAssignmentModal,
@@ -293,5 +317,6 @@ export function useSubjectView(): UseSubjectViewResult {
     publishError,
     setPublishError,
     handleDownloadFile,
+    getAuthorUsername,
   };
 }

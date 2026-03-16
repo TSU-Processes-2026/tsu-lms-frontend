@@ -40,15 +40,9 @@ const SubjectView = () => {
         handleRemoveFile,
         publishError,
         setPublishError,
-        participants,
-        subjectId,
+        getAuthorUsername,
     } = useSubjectView();
 
-    const getAuthorUsername = (authorId: string): string => {
-        if (!subjectId || !participants[subjectId]) return authorId;
-        const found = participants[subjectId].find((p: { userId: string; username: string }) => p.userId === authorId);
-        return found ? found.username : authorId;
-    };
 
     return (
         <>
