@@ -304,6 +304,7 @@ export function useSubjectView(): UseSubjectViewResult {
    * @param {File | null} file - Optional file for the post.
    * @returns {Promise<void>} Promise resolving when post is published.
    * @throws {Error} If publishing fails.
+   */
   const handlePublish = async (postType: string, content: string, file?: File | null): Promise<void> => {
     setFileLoading(true);
     setPublishError(null);
@@ -311,6 +312,7 @@ export function useSubjectView(): UseSubjectViewResult {
       if (!subjectId) throw new Error('SubjectId is required');
       await feed.publishPost({
         PostType: postType,
+        Content: content,
         File: file || undefined,
       });
       setFile(null);
