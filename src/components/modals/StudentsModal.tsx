@@ -1,28 +1,9 @@
 import React, {JSX, useEffect, useState} from 'react';
 import { Crown, Shield, User as UserIcon } from 'lucide-react';
-import { fetchSubjectParticipants } from '@/api/subject/subjectsPage';
+import { fetchSubjectParticipants, updateParticipantRole } from '@/api/subject/subjectsPage';
 import { Subject } from '@/types/subject/Subject';
 import { Participant } from '@/hooks/subject/useSubjects';
 
-/**
- * Modal window for displaying subject participants and invitation code.
- *
- * @param {object} props - Component props.
- * @param {() => void} props.onClose - Callback for closing the modal.
- * @param {string} props.subjectId - Subject identifier (UUID).
- * @returns {JSX.Element} Modal with participants and subject info.
- * @throws {Error} If loading participants fails.
- */
-/**
- * Modal window for displaying subject participants and invitation code.
- *
- * @param {object} props - Component props.
- * @param {() => void} props.onClose - Callback for closing the modal.
- * @param {string} props.subjectId - Subject identifier (UUID).
- * @param {Subject | null} props.selectedSubject - Subject object for displaying info.
- * @returns {JSX.Element} Modal with participants and subject info.
- * @throws {Error} If loading participants fails.
- */
 /**
  * Modal window for displaying subject participants and invitation code.
  *
@@ -38,6 +19,8 @@ const StudentsModal = ({ onClose, subjectId, selectedSubject, currentUserId }: {
     const [participants, setParticipants] = useState<Participant[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [roleChangeLoading, setRoleChangeLoading] = useState<string | null>(null); // userId
+    const [roleChangeError, setRoleChangeError] = useState<string | null>(null);
 
     useEffect(() => {
         if (!subjectId || subjectId === '' || subjectId === 'undefined') {
@@ -63,6 +46,29 @@ const StudentsModal = ({ onClose, subjectId, selectedSubject, currentUserId }: {
         }
         loadData();
     }, [subjectId]);
+
+    const currentUser = participants.find(p => p.userId === currentUserId);
+    const currentUserRole = currentUser?.role;
+
+    /**
+     * Handles participant role change.
+     * @param {string} userId - Participant userId.
+     * @param {string} newRole - New role ('admin', 'teacher', 'student').
+     * @returns {Promise<void>} Updates participant role and refreshes list.
+     */
+    const handleRoleChange = async (userId: string, newRole: 'admin' | 'teacher' | 'student') => {
+        setRoleChangeLoading(userId);
+        setRoleChangeError(null);
+        try {
+            await updateParticipantRole(subjectId, userId, { role: newRole });
+            const updated = await fetchSubjectParticipants(subjectId);
+            setParticipants(updated);
+        } catch (err: unknown) {
+            setRoleChangeError(err instanceof Error ? err.message : 'Ошибка изменения роли');
+        } finally {
+            setRoleChangeLoading(null);
+        }
+    };
 
     const roleBadge: Record<string, React.ReactNode> = {
         admin: (
@@ -124,6 +130,8 @@ const StudentsModal = ({ onClose, subjectId, selectedSubject, currentUserId }: {
                             participants.map((participant) => {
                                 const role = participant.role ? participant.role.toLowerCase() : 'student';
                                 const isSelf = participant.userId === currentUserId;
+                                // Можно менять роль только если текущий пользователь admin/teacher и не сам себя
+                                const canChange = (currentUserRole === 'admin' || currentUserRole === 'teacher') && !isSelf;
                                 return (
                                     <div key={participant.userId} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-white hover:shadow-sm transition-all">
                                         <div className="flex items-center gap-4">
@@ -139,11 +147,22 @@ const StudentsModal = ({ onClose, subjectId, selectedSubject, currentUserId }: {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2 shrink-0">
-                                            <select className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500" value={role} disabled>
+                                            <select
+                                                className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
+                                                value={role}
+                                                disabled={!canChange || roleChangeLoading === participant.userId}
+                                                onChange={e => handleRoleChange(participant.userId, e.target.value as 'admin' | 'teacher' | 'student')}
+                                            >
                                                 <option value="student">Студент</option>
                                                 <option value="teacher">Преподаватель</option>
                                                 <option value="admin">Админ</option>
                                             </select>
+                                            {roleChangeLoading === participant.userId && (
+                                                <span className="text-blue-500 text-xs ml-2">Изменение...</span>
+                                            )}
+                                            {roleChangeError && roleChangeLoading === participant.userId && (
+                                                <span className="text-red-500 text-xs ml-2">{roleChangeError}</span>
+                                            )}
                                             <button className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all" disabled></button>
                                         </div>
                                     </div>
