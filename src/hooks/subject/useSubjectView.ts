@@ -57,7 +57,14 @@ export type UseSubjectViewResult = {
   setComposerText: (text: string) => void;
   comments: CommentItem[];
   handleComment: (postId: string) => Promise<void>;
-  handlePublish: () => Promise<void>;
+  /**
+   * Handler for publishing a post from the composer.
+   * @param {string} postType - Type of the post ('announcement' | 'material').
+   * @param {string} composerText - Content of the post.
+   * @param {File | null} file - Optional file for material post.
+   * @returns {Promise<void>} Promise resolving when post is published.
+   */
+  handlePublish: (postType: 'Announcement' | 'Material', composerText: string, file: File | null) => Promise<void>;
 };
 
 /**
@@ -137,13 +144,25 @@ export function useSubjectView(): UseSubjectViewResult {
    * Handler for publishing a post from the composer.
    * Calls feed.publishPost and resets composerText.
    * Ignores empty input.
+   * @param {string} postType - Type of the post ('announcement' | 'material').
+   * @param {string} composerText - Content of the post.
+   * @param {File | null} file - Optional file for material post.
    * @throws Does not throw.
    * @returns void
    */
-  const handlePublish = async () => {
-    if (!composerText.trim()) return;
+  const handlePublish = async (
+    postType: 'Announcement' | 'Material',
+    composerText: string,
+    file: File | null
+  ) => {
+    if (postType === 'Material' && !file) {
+        throw new Error('Для публикации материала необходимо выбрать файл');
+    }
+    if (postType === 'Announcement' && !composerText.trim()) {
+        throw new Error('Для публикации объявления необходимо ввести описание');
+    }
     try {
-      await feed.publishPost({ PostType: 'announcement', Content: composerText });
+      await feed.publishPost({ PostType: postType, Content: composerText, File: file ?? undefined });
       setComposerText('');
     } catch {
       // Ошибка публикации поста
