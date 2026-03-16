@@ -22,6 +22,7 @@ export function useCreateAssignmentModal(subjectId: string, onCreate: (a: { id: 
   const [questions, setQuestions] = useState<QuestionType[]>([
     { id: "q1", type: "single", text: "", options: ["", "", "", ""], correct: 0 }
   ]);
+  const [error, setError] = useState<string | null>(null);
 
   const addQuestion = (): void => {
     setQuestions([...questions, { id: "q" + (questions.length + 1), type: "single", text: "", options: ["", "", "", ""], correct: 0 }]);
@@ -45,10 +46,17 @@ export function useCreateAssignmentModal(subjectId: string, onCreate: (a: { id: 
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    onCreate({
-      id: "a" + Date.now(), title,
-      questions, subjectId, type: "test", status: "not_started", subject: "Предмет"
-    });
+    setError(null);
+    (async () => {
+      try {
+        onCreate({
+          id: "a" + Date.now(), title,
+          questions, subjectId, type: "test", status: "not_started", subject: "Предмет"
+        });
+      } catch {
+        setError('Ошибка создания теста');
+      }
+    })();
   };
 
   return {
@@ -60,6 +68,6 @@ export function useCreateAssignmentModal(subjectId: string, onCreate: (a: { id: 
     updateQuestion,
     updateOption,
     handleSubmit,
+    error,
   };
 }
-

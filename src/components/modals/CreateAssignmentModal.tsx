@@ -23,6 +23,7 @@ const CreateAssignmentModal: React.FC<{ subjectId: string; onClose: () => void; 
     updateQuestion,
     updateOption,
     handleSubmit,
+    error,
   } = useCreateAssignmentModal(subjectId, onCreate);
 
   return (
@@ -41,6 +42,9 @@ const CreateAssignmentModal: React.FC<{ subjectId: string; onClose: () => void; 
         </div>
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8">
+          {error && (
+            <div className="text-red-500 text-sm mb-4">{error}</div>
+          )}
           <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">

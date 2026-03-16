@@ -131,6 +131,7 @@ export type UseSubjectViewResult = {
    * @param assignment - assignment object from modal form
    */
   handleCreateAssignment: (assignment: { id: string; title: string; questions: import('@/hooks/subject/useCreateAssignmentModal').QuestionType[]; subjectId: string; type: string; status: string; subject: string }) => Promise<void>;
+  refreshFeed: () => Promise<void>;
 };
 
 /**
@@ -363,8 +364,13 @@ export function useSubjectView(): UseSubjectViewResult {
   /**
    * Handles creation of assignment and assignment post.
    * Calls publishAssignmentPost and createAssignment, updates feed.
-   * @param assignment - assignment object from modal form
+   * @param type
    */
+    const mapQuestionType = (type: 'single' | 'multiple' | 'input'): import('@/types/subject/AssignmentCreate').AssignmentQuestionType => {
+        if (type === 'single') return 'SingleChoice';
+        if (type === 'multiple') return 'MultipleChoice';
+        return 'Text';
+    };
     const handleCreateAssignment = async (assignment: { id: string; title: string; questions: import('@/hooks/subject/useCreateAssignmentModal').QuestionType[]; subjectId: string; type: string; status: string; subject: string }) => {
         if (!subjectId) return;
         setPublishError(null);
@@ -372,18 +378,14 @@ export function useSubjectView(): UseSubjectViewResult {
             const upsertAssignment: import('@/types/subject/AssignmentCreate').UpsertAssignmentRequest = {
                 content: assignment.title,
                 questions: assignment.questions.map(q => ({
-                    questionType: q.type,
+                    questionType: mapQuestionType(q.type),
                     questionData: q.text,
                     options: q.options ? q.options.map((opt: string) => ({ text: opt })) : undefined,
                 }))
             };
             await import('@/api/subject/subjectView').then(api => api.createAssignment(subjectId, upsertAssignment));
-            await import('@/api/subject/subjectView').then(api => api.publishAssignmentPost(subjectId, {
-                Content: assignment.title,
-                AssignmentData: JSON.stringify(upsertAssignment),
-            }));
-            await feed.publishPost({ PostType: 'Assignment', Content: assignment.title });
             handleCloseAssignmentModal();
+            await feed.refreshFeed();
         } catch {
             setPublishError('Ошибка создания теста');
         }
@@ -427,5 +429,6 @@ export function useSubjectView(): UseSubjectViewResult {
     setPublishError,
     getShowEditButton,
     handleCreateAssignment,
+    refreshFeed: feed.refreshFeed,
   };
 }
