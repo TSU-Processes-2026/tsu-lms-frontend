@@ -1,6 +1,6 @@
 import { DEV_URL, PROD_URL, MOCK_URL } from '@/constants/config/config';
 import { ACCESS_TOKEN } from '@/constants/auth/auth';
-import { Participant, Assignment, Submission } from '@/hooks/subject/useSubjects';
+import { Participant, Assignment, Submission, UpdateParticipantRoleRequest } from '@/hooks/subject/useSubjects';
 import { Subject } from '@/types/subject/Subject';
 
 const BASE_URL = DEV_URL || PROD_URL || MOCK_URL;
@@ -148,3 +148,33 @@ export async function fetchAssignmentSubmissions(
   return await res.json();
 }
 
+/**
+ * Updates the role of a participant in a subject.
+ *
+ * @param {string} subjectId - Subject identifier (UUID).
+ * @param {string} userId - User identifier (UUID).
+ * @param {UpdateParticipantRoleRequest} request - Object containing the new role.
+ * @returns {Promise<Participant>} Updated participant object.
+ * @throws {Error} If the request fails or user is unauthorized.
+ */
+export async function updateParticipantRole(
+  subjectId: string,
+  userId: string,
+  request: UpdateParticipantRoleRequest
+): Promise<Participant> {
+  const url = `${BASE_URL}/subjects/${subjectId}/participants/${userId}`;
+  const res = await fetch(url, {
+    method: 'PATCH',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(request),
+  });
+  if (!res.ok) {
+    let err;
+    if (res.status === 401) err = new Error('Unauthorized');
+    else if (res.status === 403) err = new Error('Forbidden');
+    else if (res.status === 404) err = new Error('Not found');
+    else err = new Error('Failed to update participant role');
+    throw err;
+  }
+  return await res.json();
+}

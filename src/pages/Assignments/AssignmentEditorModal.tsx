@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
-import { Assignment, Question } from '../../types/assignments/assignments';
+import { Assignment, Question, Option } from '../../types/assignments/assignments';
 import { makeApiPayloadFromAssignment, mapApiAssignment } from './assignmentApi';
 
 interface Props {
@@ -11,11 +11,16 @@ interface Props {
     onSave: (assignment: Assignment) => void;
 }
 
-const defaultQuestion = (): Question => ({
+const newOption = (): Option => ({
     id: Math.random().toString(36).slice(2),
     text: '',
-    type: 'single',
-    options: [''],
+});
+
+const defaultQuestion = (): Question => ({
+    id: Math.random().toString(36).slice(2),
+    questionType: 'SingleChoice',
+    questionData: '',
+    options: [newOption()],
 });
 
 export const AssignmentEditorModal: React.FC<Props> = ({
@@ -25,8 +30,10 @@ export const AssignmentEditorModal: React.FC<Props> = ({
     onClose,
     onSave,
 }) => {
-    const [title, setTitle] = useState(assignment?.title || '');
-    const [description, setDescription] = useState(assignment?.description || '');
+    const [title, setTitle] = useState(assignment?.content.split('\n')[0] || '');
+    const [description, setDescription] = useState(
+        assignment?.content.split('\n').slice(1).join('\n') || '',
+    );
     const [questions, setQuestions] = useState<Question[]>(
         assignment?.questions ?? [defaultQuestion()],
     );
@@ -35,13 +42,13 @@ export const AssignmentEditorModal: React.FC<Props> = ({
 
     useEffect(() => {
         if (assignment) {
-            setTitle(assignment.title);
-            setDescription(assignment.description);
+            setTitle(assignment.content.split('\n')[0] || '');
+            setDescription(assignment.content.split('\n').slice(1).join('\n') || '');
             setQuestions(assignment.questions.length ? assignment.questions : [defaultQuestion()]);
         }
     }, [assignment]);
 
-    const canSave = title.trim().length > 0 && description.trim().length > 0;
+    const canSave = title.trim().length > 0;
 
     const handleSave = async () => {
         if (!canSave) return;
@@ -49,8 +56,8 @@ export const AssignmentEditorModal: React.FC<Props> = ({
         setError(null);
 
         const payload = makeApiPayloadFromAssignment({
-            title: title.trim(),
-            description: description.trim(),
+            content: `${title.trim()}\n${description.trim()}`.trim(),
+            assignmentData: null,
             questions,
         });
 
@@ -102,7 +109,8 @@ export const AssignmentEditorModal: React.FC<Props> = ({
             prev.map((q, i) => {
                 if (i !== qIdx) return q;
                 const options = q.options ? [...q.options] : [];
-                options[optIdx] = value;
+                const target = options[optIdx];
+                options[optIdx] = { ...target, text: value };
                 return { ...q, options };
             }),
         );
@@ -110,7 +118,9 @@ export const AssignmentEditorModal: React.FC<Props> = ({
 
     const addOption = (qIdx: number) => {
         setQuestions((prev) =>
-            prev.map((q, i) => (i !== qIdx ? q : { ...q, options: [...(q.options ?? []), ''] })),
+            prev.map((q, i) =>
+                i !== qIdx ? q : { ...q, options: [...(q.options ?? []), newOption()] },
+            ),
         );
     };
 
@@ -187,10 +197,10 @@ export const AssignmentEditorModal: React.FC<Props> = ({
                                                     Текст вопроса
                                                 </label>
                                                 <input
-                                                    value={q.text}
+                                                    value={q.questionData}
                                                     onChange={(e) =>
                                                         updateQuestion(qIdx, {
-                                                            text: e.target.value,
+                                                            questionData: e.target.value,
                                                         })
                                                     }
                                                     className='mt-2 w-full rounded-2xl border border-slate-200 p-3 focus:outline-none focus:border-blue-500'
@@ -212,99 +222,85 @@ export const AssignmentEditorModal: React.FC<Props> = ({
                                                     Тип
                                                 </label>
                                                 <select
-                                                    value={q.type}
+                                                    value={q.questionType}
                                                     onChange={(e) =>
                                                         updateQuestion(qIdx, {
-                                                            type: e.target
-                                                                .value as Question['type'],
+                                                            questionType: e.target
+                                                                .value as Question['questionType'],
                                                         })
                                                     }
                                                     className='mt-2 w-full rounded-2xl border border-slate-200 p-3 focus:outline-none focus:border-blue-500'
                                                 >
-                                                    <option value='single'>Один вариант</option>
-                                                    <option value='multiple'>
-                                                        Несколько вариантов
-                                                    </option>
-                                                    <option value='input'>Текст</option>
-                                                    <option value='file'>Файл</option>
+                                                    <option value='SingleChoice'>Один вариант</option>
+                                                    <option value='MultipleChoice'>Несколько вариантов</option>
+                                                    <option value='Text'>Текст</option>
+                                                    <option value='File'>Файл</option>
                                                 </select>
                                             </div>
-
-                                            {(q.type === 'single' || q.type === 'multiple') && (
-                                                <div>
-                                                    <div className='flex items-center justify-between'>
-                                                        <label className='block text-sm font-medium text-slate-700'>
-                                                            Варианты ответа
-                                                        </label>
-                                                        <button
-                                                            type='button'
-                                                            onClick={() => addOption(qIdx)}
-                                                            className='text-sm text-blue-600 hover:underline'
-                                                        >
-                                                            + Добавить вариант
-                                                        </button>
-                                                    </div>
-                                                    <div className='mt-2 space-y-2'>
-                                                        {(q.options ?? []).map((opt, optIdx) => (
-                                                            <div
-                                                                key={optIdx}
-                                                                className='flex items-center gap-2'
-                                                            >
-                                                                <input
-                                                                    value={
-                                                                        typeof opt === 'string'
-                                                                            ? opt
-                                                                            : opt.text
-                                                                    }
-                                                                    onChange={(e) =>
-                                                                        updateOption(
-                                                                            qIdx,
-                                                                            optIdx,
-                                                                            e.target.value,
-                                                                        )
-                                                                    }
-                                                                    className='flex-1 rounded-2xl border border-slate-200 p-3 focus:outline-none focus:border-blue-500'
-                                                                    placeholder='Текст варианта'
-                                                                />
-                                                                <button
-                                                                    type='button'
-                                                                    onClick={() =>
-                                                                        removeOption(qIdx, optIdx)
-                                                                    }
-                                                                    className='text-sm text-red-600 hover:underline'
-                                                                >
-                                                                    ✕
-                                                                </button>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
                                         </div>
+
+                                        {(q.questionType === 'SingleChoice' ||
+                                            q.questionType === 'MultipleChoice') && (
+                                            <div className='mt-4'>
+                                                <label className='block text-sm font-medium text-slate-700'>
+                                                    Варианты ответа
+                                                </label>
+                                                <div className='space-y-2 mt-2'>
+                                                    {(q.options ?? []).map((opt, optIdx) => (
+                                                        <div key={opt.id} className='flex gap-2'>
+                                                            <input
+                                                                value={opt.text}
+                                                                onChange={(e) =>
+                                                                    updateOption(
+                                                                        qIdx,
+                                                                        optIdx,
+                                                                        e.target.value,
+                                                                    )
+                                                                }
+                                                                className='flex-1 rounded-2xl border border-slate-200 p-3 focus:outline-none focus:border-blue-500'
+                                                            />
+                                                            <button
+                                                                type='button'
+                                                                onClick={() => removeOption(qIdx, optIdx)}
+                                                                className='text-sm text-red-600 hover:underline'
+                                                            >
+                                                                Удалить
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                    <button
+                                                        type='button'
+                                                        onClick={() => addOption(qIdx)}
+                                                        className='text-sm text-blue-600 hover:underline'
+                                                    >
+                                                        + Добавить вариант
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>
                         </div>
 
-                        {error && <p className='text-red-600'>{error}</p>}
-                    </div>
-                </div>
+                        {error && <p className='text-sm text-red-500'>{error}</p>}
 
-                <div className='p-8 border-t bg-slate-50 flex justify-end gap-4'>
-                    <button
-                        onClick={onClose}
-                        className='px-6 py-3 rounded-xl bg-slate-200 hover:bg-slate-300'
-                        disabled={loading}
-                    >
-                        Отмена
-                    </button>
-                    <button
-                        onClick={handleSave}
-                        className='px-6 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50'
-                        disabled={!canSave || loading}
-                    >
-                        {loading ? 'Сохраняем...' : 'Сохранить'}
-                    </button>
+                        <div className='flex justify-end gap-3'>
+                            <button
+                                onClick={onClose}
+                                className='px-6 py-3 rounded-xl font-semibold text-slate-600 hover:bg-slate-100 transition-all'
+                            >
+                                Отмена
+                            </button>
+                            <button
+                                onClick={handleSave}
+                                disabled={!canSave || loading}
+                                className='px-6 py-3 rounded-xl font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-all disabled:opacity-50'
+                            >
+                                {loading ? 'Сохранение...' : 'Сохранить'}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

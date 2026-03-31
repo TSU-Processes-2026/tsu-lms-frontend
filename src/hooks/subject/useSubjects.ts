@@ -24,6 +24,15 @@ export interface Participant {
 }
 
 /**
+ * UpdateParticipantRoleRequest interface for updating participant role.
+ *
+ * @property {string} role - New role for the participant ('admin', 'teacher', 'student').
+ */
+export interface UpdateParticipantRoleRequest {
+    role: 'admin' | 'teacher' | 'student';
+}
+
+/**
  * ExtendedSubject interface for SubjectCard.
  *
  * @property {string} code - Subject code (UUID).

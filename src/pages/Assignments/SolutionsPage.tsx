@@ -1,4 +1,3 @@
-// src/pages/Assignments/SolutionsListPage.tsx
 import React from 'react';
 import { ChevronLeft, Clock, CheckCircle, HelpCircle, UserIcon, Users, Edit } from 'lucide-react';
 import { Assignment, Submission } from '../../types/assignments/assignments';
@@ -14,10 +13,8 @@ export const SolutionsListPage: React.FC<Props> = ({ assignment, solutions, onRe
     const pending = solutions.filter((s) => s.status === 'RequiresReview');
     const graded = solutions.filter((s) => s.status === 'Graded');
 
-    // Парсим title из content (первая строка)
     const title = assignment.content.split('\n')[0] || 'Задание';
 
-    // Парсим maxScore из assignmentData (JSON строка)
     let maxScore = 100;
     try {
         const data = assignment.assignmentData ? JSON.parse(assignment.assignmentData) : {};
@@ -36,7 +33,6 @@ export const SolutionsListPage: React.FC<Props> = ({ assignment, solutions, onRe
                 <ChevronLeft size={18} /> Назад к заданиям
             </button>
 
-            {/* Заголовок задания + статистика */}
             <div className='bg-white rounded-3xl border border-slate-100 shadow-lg overflow-hidden mb-6'>
                 <div className='p-6 border-b border-slate-100 bg-slate-50/50'>
                     <div className='flex items-start gap-4'>
@@ -65,7 +61,6 @@ export const SolutionsListPage: React.FC<Props> = ({ assignment, solutions, onRe
                 </div>
             </div>
 
-            {/* Ожидают проверки */}
             {pending.length > 0 && (
                 <div className='mb-6'>
                     <h3 className='text-sm font-bold text-amber-700 uppercase tracking-wider mb-3 flex items-center gap-2'>
@@ -93,17 +88,8 @@ export const SolutionsListPage: React.FC<Props> = ({ assignment, solutions, onRe
                                         </p>
                                     </div>
                                 </div>
-                                // В SolutionsListPage, кнопка "Проверить": // В
-                                SolutionsListPage.tsx, кнопка "Проверить":
                                 <button
-                                    onClick={() => {
-                                        console.log('🔘 Клик на Проверить:', {
-                                            submissionId: sol.id,
-                                            authorName: sol.authorName,
-                                            status: sol.status,
-                                        });
-                                        onReview(sol);
-                                    }}
+                                    onClick={() => onReview(sol)}
                                     className='bg-gradient-to-r from-amber-500 to-amber-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-md hover:-translate-y-0.5 transition-all text-sm'
                                 >
                                     Проверить
@@ -114,7 +100,6 @@ export const SolutionsListPage: React.FC<Props> = ({ assignment, solutions, onRe
                 </div>
             )}
 
-            {/* Проверено */}
             {graded.length > 0 && (
                 <div>
                     <h3 className='text-sm font-bold text-emerald-700 uppercase tracking-wider mb-3 flex items-center gap-2'>

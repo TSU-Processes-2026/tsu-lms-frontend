@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useSubjectFeed, UseSubjectFeed } from '@/hooks/subject/useSubjectFeed';
 import { useSubjects, Participant, ExtendedSubject } from '@/hooks/subject/useSubjects';
 import { Subject } from '@/types/subject/Subject';
@@ -147,16 +147,10 @@ export type UseSubjectViewResult = {
  * @throws {Error} If fetching subject data fails.
  */
 export function useSubjectView(): UseSubjectViewResult {
-      /**
-       * Handles opening assignment test for a given assignment object.
-       *
-       * @param {AssignmentResponse} assignment - Assignment object to open.
-       * @throws {Error} If opening fails.
-       * @returns {void}
-       */
+      const navigate = useNavigate();
       const handleOpenAssignment = (assignment: AssignmentResponse): void => {
-        console.log('Открытие теста для задания:', assignment); // TODO: Открытие теста для задания
-        handleShowAssignmentModal();
+        localStorage.setItem('openAssignmentId', assignment.id);
+        navigate('/assignments');
       };
   const { profile } = useProfile();
 
@@ -176,7 +170,7 @@ export function useSubjectView(): UseSubjectViewResult {
 
   const { subjectId } = useParams();
   const feed = useSubjectFeed(subjectId ?? '');
-  const { selectedSubject, participants } = useSubjects();
+  const { selectedSubject, participants, subjects, selectSubject } = useSubjects();
   const subjectCode = selectedSubject && 'code' in selectedSubject ? selectedSubject.code : '';
   const subjectParticipants = subjectId && participants[subjectId] ? participants[subjectId].length : 0;
 
@@ -390,6 +384,15 @@ export function useSubjectView(): UseSubjectViewResult {
             setPublishError('Ошибка создания теста');
         }
     };
+
+  React.useEffect(() => {
+    if (subjectId && (!selectedSubject || selectedSubject.id !== subjectId) && subjects && subjects.length > 0 && selectSubject) {
+      const found = subjects.find(s => s.id === subjectId);
+      if (found) {
+        selectSubject(found);
+      }
+    }
+  }, [subjectId, selectedSubject, subjects, selectSubject]);
 
   return {
     handleOpenAssignment,

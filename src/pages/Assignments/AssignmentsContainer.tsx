@@ -1,72 +1,33 @@
-// src/pages/Assignments/AssignmentsContainer.tsx
 import React, { useState, useCallback, useEffect } from 'react';
 import { AssignmentsPage } from './AssignmentsPage';
 import { AssignmentModal } from './AssignmentModal';
 import { SolutionsListPage } from './SolutionsPage';
 import { TeacherReviewModal } from './TeacherReviewModal';
-import {
-    Assignment,
-    Submission,
-    Role,
-    Question,
-    SubmissionCreateRequest,
-    AnswerTypeEnum,
-} from '../../types/assignments/assignments';
+import { Assignment, Submission, Role, Question, Grade } from '../../types/assignments/assignments';
 import { useProfile } from '@/hooks/profile/useProfile';
-import { PROD_URL } from '@/constants/config/config';
+import { DEV_URL, MOCK_URL, PROD_URL } from '@/constants/config/config';
+import { ACCESS_TOKEN } from '@/constants/auth/auth';
+import { transformAnswersToApi } from '@/utils/answerTransformer';
+import { ApiGrade, ApiSubmission, mapSubmission } from '@/utils/submissionMapper';
 
-// === Преобразование ответов в формат API (согласно OpenAPI) ===
-const transformAnswersToApi = (
-    questions: Question[],
-    userAnswers: Record<string, any>,
-): SubmissionCreateRequest => {
-    return {
-        answers: questions.map((q) => {
-            const value = userAnswers[q.id];
+interface Participant {
+    userId: string;
+    username: string;
+    role?: string;
+}
 
-            switch (q.questionType) {
-                case 'SingleChoice':
-                    return {
-                        id: crypto.randomUUID(),
-                        assignmentQuestionId: q.id,
-                        answerType: 0 as AnswerTypeEnum,
-                        selectedOptionId: value || null,
-                        selectedOptionIds: null,
-                        text: null,
-                    };
-                case 'MultipleChoice':
-                    return {
-                        id: crypto.randomUUID(),
-                        assignmentQuestionId: q.id,
-                        answerType: 1 as AnswerTypeEnum,
-                        selectedOptionId: null,
-                        selectedOptionIds: Array.isArray(value) ? value : [],
-                        text: null,
-                    };
-                default: // Text, ShortText, Essay, File
-                    return {
-                        id: crypto.randomUUID(),
-                        assignmentQuestionId: q.id,
-                        answerType: 2 as AnswerTypeEnum,
-                        selectedOptionId: null,
-                        selectedOptionIds: null,
-                        text: typeof value === 'string' ? value : '',
-                    };
-            }
-        }),
-    };
-};
-
-// === Основной компонент ===
 export const AssignmentsContainer: React.FC = () => {
-    const { profile } = useProfile();
-    const [role, setRole] = useState<Role>('student');
+    const { profile, getCurrentUser } = useProfile();
     const [online, setOnline] = useState<boolean | null>(null);
     const [subjects, setSubjects] = useState<
         Array<{ id: string; title: string; description: string }>
     >([]);
     const [assignments, setAssignments] = useState<Assignment[]>([]);
     const [submissions, setSubmissions] = useState<Submission[]>([]);
+    const [subjectRoles, setSubjectRoles] = useState<Record<string, Role>>({});
+    const [participantsBySubject, setParticipantsBySubject] = useState<
+        Record<string, Participant[]>
+    >({});
 
     const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
     const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
@@ -75,185 +36,264 @@ export const AssignmentsContainer: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
-    const API_BASE = PROD_URL;
+    const API_BASE = DEV_URL || PROD_URL || MOCK_URL;
 
-    // === Загрузка всех данных ===
+    useEffect(() => {
+        getCurrentUser();
+    }, []);
+
+    const fetchGrade = async (
+        submissionId: string,
+        headers: HeadersInit,
+    ): Promise<ApiGrade | null> => {
+        const res = await fetch(`${API_BASE}/submissions/${submissionId}/grade`, { headers });
+        if (res.status === 404) return null;
+        if (!res.ok) return null;
+        return (await res.json()) as ApiGrade;
+    };
+
+    const getRoleForSubject = (subjectId: string, participants: Participant[]): Role => {
+        const current = participants.find((p) => p.userId === profile.id);
+        const roleValue = current?.role?.toLowerCase();
+        if (roleValue === 'teacher' || roleValue === 'admin') return 'teacher';
+        return 'student';
+    };
+
     const loadData = useCallback(async () => {
-        const accessToken = localStorage.getItem('accessToken');
+        const accessToken = localStorage.getItem(ACCESS_TOKEN);
+        if (!accessToken) {
+            setOnline(false);
+            return;
+        }
         setLoading(true);
+        const headers = { Authorization: `Bearer ${accessToken}` };
 
         try {
-            // 1. Загружаем предметы
-            const subjRes = await fetch(`${API_BASE}/subjects?limit=100`, {
-                headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
-            });
-
+            const subjRes = await fetch(`${API_BASE}/subjects?limit=100&offset=0`, { headers });
             if (!subjRes.ok) {
                 setOnline(false);
                 return;
             }
-
             setOnline(true);
             const subjectsData = await subjRes.json();
             setSubjects(subjectsData);
 
-            // 2. Загружаем задания и сабмишены
+            const nextParticipants: Record<string, Participant[]> = {};
+            const nextRoles: Record<string, Role> = {};
+
+            for (const subject of subjectsData) {
+                const partRes = await fetch(
+                    `${API_BASE}/subjects/${subject.id}/participants?limit=200&offset=0`,
+                    { headers },
+                );
+                if (partRes.ok) {
+                    const participants = await partRes.json();
+                    nextParticipants[subject.id] = participants;
+                    nextRoles[subject.id] = getRoleForSubject(subject.id, participants);
+                } else {
+                    nextParticipants[subject.id] = [];
+                    nextRoles[subject.id] = 'student';
+                }
+            }
+
+            setParticipantsBySubject(nextParticipants);
+            setSubjectRoles(nextRoles);
+
             let allAssignments: Assignment[] = [];
             let allSubmissions: Submission[] = [];
 
             for (const subject of subjectsData) {
-                // Задания по предмету: GET /api/subjects/{id}/assignments
                 const assRes = await fetch(
                     `${API_BASE}/subjects/${subject.id}/assignments?limit=50&offset=0`,
-                    { headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {} },
+                    { headers },
                 );
 
-                if (assRes.ok) {
-                    const assignmentsData: Assignment[] = await assRes.json();
-                    allAssignments = allAssignments.concat(assignmentsData);
+                if (!assRes.ok) continue;
 
-                    // ✅ Сабмишены по КАЖДОМУ заданию: GET /api/assignments/{id}/submissions
-                    // (НЕТ эндпоинта /api/subjects/{id}/submissions!)
-                    for (const assignment of assignmentsData) {
-                        const subRes = await fetch(
-                            `${API_BASE}/assignments/${assignment.id}/submissions?limit=100&offset=0&isTeacher=${role === 'teacher'}`,
-                            {
-                                headers: accessToken
-                                    ? { Authorization: `Bearer ${accessToken}` }
-                                    : {},
-                            },
-                        );
-                        if (subRes.ok) {
-                            const subData: Submission[] = await subRes.json();
-                            allSubmissions = allSubmissions.concat(subData);
-                        }
-                    }
+                const assignmentsData: Assignment[] = await assRes.json();
+                const normalizedAssignments = assignmentsData.map((assignment) => ({
+                    ...assignment,
+                    questions: assignment.questions ?? [],
+                }));
+                allAssignments = allAssignments.concat(normalizedAssignments);
+
+                const role = nextRoles[subject.id] ?? 'student';
+                const isTeacher = role === 'teacher';
+                const nameMap = new Map(
+                    (nextParticipants[subject.id] ?? []).map((p: Participant) => [
+                        p.userId,
+                        p.username,
+                    ]),
+                );
+
+                for (const assignment of normalizedAssignments) {
+                    const subRes = await fetch(
+                        `${API_BASE}/assignments/${assignment.id}/submissions?limit=100&offset=0&isTeacher=${isTeacher}`,
+                        { headers },
+                    );
+                    if (!subRes.ok) continue;
+
+                    const submissionsData: ApiSubmission[] = await subRes.json();
+                    const grades = await Promise.all(
+                        submissionsData.map((s) => fetchGrade(s.id, headers)),
+                    );
+
+                    submissionsData.forEach((s, idx) => {
+                        allSubmissions.push(mapSubmission(s, grades[idx], nameMap.get(s.authorId)));
+                    });
                 }
             }
 
             setAssignments(allAssignments);
             setSubmissions(allSubmissions);
-        } catch (err) {
-            console.error('Ошибка загрузки:', err);
+        } catch {
             setOnline(false);
         } finally {
             setLoading(false);
         }
-    }, [role]);
+    }, [API_BASE, profile.id]);
 
-    // Загрузка при монтировании
     useEffect(() => {
-        loadData();
-    }, [loadData]);
+        if (profile.id) {
+            loadData();
+        }
+    }, [profile.id, loadData]);
 
-    // === Обновление списка сабмишенов после отправки/оценки ===
     const refreshSubmissions = useCallback(async () => {
-        const accessToken = localStorage.getItem('accessToken');
+        const accessToken = localStorage.getItem(ACCESS_TOKEN);
         if (!accessToken) return;
 
+        const headers = { Authorization: `Bearer ${accessToken}` };
         try {
             let updated: Submission[] = [];
 
-            for (const subject of subjects) {
-                // Сначала получаем задания по предмету
-                const assRes = await fetch(
-                    `${API_BASE}/subjects/${subject.id}/assignments?limit=50&offset=0`,
-                    { headers: { Authorization: `Bearer ${accessToken}` } },
+            for (const assignment of assignments) {
+                const role = subjectRoles[assignment.subjectId] ?? 'student';
+                const isTeacher = role === 'teacher';
+                const subRes = await fetch(
+                    `${API_BASE}/assignments/${assignment.id}/submissions?limit=100&offset=0&isTeacher=${isTeacher}`,
+                    { headers },
+                );
+                if (!subRes.ok) continue;
+
+                const submissionsData: ApiSubmission[] = await subRes.json();
+                const grades = await Promise.all(
+                    submissionsData.map((s) => fetchGrade(s.id, headers)),
+                );
+                const nameMap = new Map(
+                    (participantsBySubject[assignment.subjectId] ?? []).map((p: Participant) => [
+                        p.userId,
+                        p.username,
+                    ]),
                 );
 
-                if (assRes.ok) {
-                    const assignmentsData = await assRes.json();
-
-                    // Затем сабмишены по каждому заданию
-                    for (const assignment of assignmentsData) {
-                        const subRes = await fetch(
-                            `${API_BASE}/assignments/${assignment.id}/submissions?limit=100&offset=0&isTeacher=${role === 'teacher'}`,
-                            { headers: { Authorization: `Bearer ${accessToken}` } },
-                        );
-                        if (subRes.ok) {
-                            const data = await subRes.json();
-                            updated = updated.concat(data);
-                        }
-                    }
-                }
+                submissionsData.forEach((s, idx) => {
+                    updated.push(mapSubmission(s, grades[idx], nameMap.get(s.authorId)));
+                });
             }
+
             setSubmissions(updated);
-        } catch (err) {
-            console.error('Ошибка обновления сабмишенов:', err);
+        } catch {
+            return;
         }
-    }, [subjects, role]);
+    }, [API_BASE, assignments, subjectRoles, participantsBySubject]);
 
-    // === Отправка работы на сервер ===
-    const submitAssignment = useCallback(
-        async (
-            assignmentId: string,
-            questions: Question[],
-            answers: Record<string, any>,
-        ): Promise<boolean> => {
-            const accessToken = localStorage.getItem('accessToken');
-            if (!accessToken) {
-                alert('Требуется авторизация');
-                return false;
+    const upsertDraftSubmission = useCallback(
+        async (assignmentId: string, questions: Question[], answers: Record<string, any>) => {
+            const accessToken = localStorage.getItem(ACCESS_TOKEN);
+            if (!accessToken) throw new Error('Требуется авторизация');
+
+            const headers = {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${accessToken}`,
+            };
+
+            const payload = transformAnswersToApi(questions, answers);
+            const existing = submissions.find(
+                (s) => s.assignmentId === assignmentId && s.authorId === profile.id,
+            );
+
+            const response = existing
+                ? await fetch(`${API_BASE}/submissions/${existing.id}`, {
+                      method: 'PATCH',
+                      headers,
+                      body: JSON.stringify(payload),
+                  })
+                : await fetch(
+                      `${API_BASE}/assignments/${assignmentId}/submissions?isStudent=true`,
+                      {
+                          method: 'POST',
+                          headers,
+                          body: JSON.stringify(payload),
+                      },
+                  );
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({}));
+                throw new Error(error.detail || `Ошибка ${response.status}`);
             }
 
+            return (await response.json()) as ApiSubmission;
+        },
+        [API_BASE, submissions, profile.id],
+    );
+
+    const submitAssignment = useCallback(
+        async (assignmentId: string, questions: Question[], answers: Record<string, any>) => {
             setSubmitting(true);
-
             try {
-                // Преобразуем ответы в формат API (согласно OpenAPI)
-                const payload: SubmissionCreateRequest = transformAnswersToApi(questions, answers);
+                const draft = await upsertDraftSubmission(assignmentId, questions, answers);
+                const accessToken = localStorage.getItem(ACCESS_TOKEN);
+                if (!accessToken) throw new Error('Требуется авторизация');
 
-                console.log('📤 Отправка сабмишена:', {
-                    url: `${API_BASE}/assignments/${assignmentId}/submissions?isStudent=true`,
-                    payload,
+                const submitRes = await fetch(`${API_BASE}/submissions/${draft.id}/submit`, {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${accessToken}` },
                 });
 
-                // POST /api/assignments/{id}/submissions?isStudent=true
-                const response = await fetch(
-                    `${API_BASE}/assignments/${assignmentId}/submissions?isStudent=true`,
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            Authorization: `Bearer ${accessToken}`,
-                        },
-                        body: JSON.stringify(payload),
-                    },
-                );
-
-                if (!response.ok) {
-                    const error = await response.json().catch(() => ({}));
-                    throw new Error(error.detail || `Ошибка ${response.status}`);
+                if (!submitRes.ok) {
+                    const error = await submitRes.json().catch(() => ({}));
+                    throw new Error(error.detail || `Ошибка ${submitRes.status}`);
                 }
 
-                // Обновляем список сабмишенов
                 await refreshSubmissions();
                 return true;
             } catch (err) {
-                console.error('❌ Ошибка отправки:', err);
                 alert('Не удалось отправить: ' + (err as Error).message);
                 return false;
             } finally {
                 setSubmitting(false);
             }
         },
-        [refreshSubmissions],
+        [API_BASE, upsertDraftSubmission, refreshSubmissions],
     );
 
-    // === Отправка оценки учителем ===
-    const submitGrade = useCallback(
-        async (submissionId: string, score: number, verdictText: string): Promise<boolean> => {
-            const accessToken = localStorage.getItem('accessToken');
+    const saveDraft = useCallback(
+        async (assignmentId: string, questions: Question[], answers: Record<string, any>) => {
+            setSubmitting(true);
+            try {
+                await upsertDraftSubmission(assignmentId, questions, answers);
+                await refreshSubmissions();
+                return true;
+            } catch (err) {
+                alert('Не удалось сохранить: ' + (err as Error).message);
+                return false;
+            } finally {
+                setSubmitting(false);
+            }
+        },
+        [upsertDraftSubmission, refreshSubmissions],
+    );
+
+    const withdrawSubmission = useCallback(
+        async (submissionId: string) => {
+            const accessToken = localStorage.getItem(ACCESS_TOKEN);
             if (!accessToken) return false;
 
             try {
-                // POST /api/submissions/{id}/grade
-                const response = await fetch(`${API_BASE}/submissions/${submissionId}/grade`, {
+                const response = await fetch(`${API_BASE}/submissions/${submissionId}/withdraw`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${accessToken}`,
-                    },
-                    body: JSON.stringify({ score, verdictText }),
+                    headers: { Authorization: `Bearer ${accessToken}` },
                 });
 
                 if (!response.ok) {
@@ -264,15 +304,138 @@ export const AssignmentsContainer: React.FC = () => {
                 await refreshSubmissions();
                 return true;
             } catch (err) {
-                console.error('Ошибка оценки:', err);
-                alert('Не удалось сохранить оценку');
+                alert('Не удалось отменить отправку: ' + (err as Error).message);
                 return false;
             }
         },
-        [refreshSubmissions],
+        [API_BASE, refreshSubmissions],
     );
 
-    // === Закрытие всех модалок ===
+    const createGrade = useCallback(
+        async (submissionId: string, score: number, verdictText: string): Promise<Grade | null> => {
+            const accessToken = localStorage.getItem(ACCESS_TOKEN);
+            if (!accessToken) return null;
+
+            const response = await fetch(`${API_BASE}/submissions/${submissionId}/grade`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({ score, verdictText }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({}));
+                throw new Error(error.detail || `Ошибка ${response.status}`);
+            }
+
+            await refreshSubmissions();
+            const payload = (await response.json()) as ApiGrade;
+            return {
+                id: payload.id,
+                submissionId: payload.submissionId,
+                score: payload.score,
+                verdictText: payload.verdictText,
+                gradedAt: payload.verdictedAt,
+            };
+        },
+        [API_BASE, refreshSubmissions],
+    );
+
+    const updateGrade = useCallback(
+        async (submissionId: string, score: number, verdictText: string): Promise<Grade | null> => {
+            const accessToken = localStorage.getItem(ACCESS_TOKEN);
+            if (!accessToken) return null;
+
+            const response = await fetch(`${API_BASE}/submissions/${submissionId}/grade`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({ score, verdictText }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({}));
+                throw new Error(error.detail || `Ошибка ${response.status}`);
+            }
+
+            await refreshSubmissions();
+            const payload = (await response.json()) as ApiGrade;
+            return {
+                id: payload.id,
+                submissionId: payload.submissionId,
+                score: payload.score,
+                verdictText: payload.verdictText,
+                gradedAt: payload.verdictedAt,
+            };
+        },
+        [API_BASE, refreshSubmissions],
+    );
+
+    const deleteGrade = useCallback(
+        async (submissionId: string): Promise<boolean> => {
+            const accessToken = localStorage.getItem(ACCESS_TOKEN);
+            if (!accessToken) return false;
+
+            const response = await fetch(`${API_BASE}/submissions/${submissionId}/grade`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${accessToken}` },
+            });
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({}));
+                throw new Error(error.detail || `Ошибка ${response.status}`);
+            }
+
+            await refreshSubmissions();
+            return true;
+        },
+        [API_BASE, refreshSubmissions],
+    );
+
+    const loadSubmissionComments = useCallback(
+        async (submissionId: string) => {
+            const accessToken = localStorage.getItem(ACCESS_TOKEN);
+            if (!accessToken) return [];
+
+            const response = await fetch(
+                `${API_BASE}/comments?targetType=Submission&targetId=${submissionId}&limit=100&offset=0`,
+                { headers: { Authorization: `Bearer ${accessToken}` } },
+            );
+
+            if (!response.ok) return [];
+            return await response.json();
+        },
+        [API_BASE],
+    );
+
+    const addSubmissionComment = useCallback(
+        async (submissionId: string, text: string) => {
+            const accessToken = localStorage.getItem(ACCESS_TOKEN);
+            if (!accessToken) return null;
+
+            const response = await fetch(`${API_BASE}/comments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({ targetType: 'Submission', targetId: submissionId, text }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({}));
+                throw new Error(error.detail || `Ошибка ${response.status}`);
+            }
+
+            return await response.json();
+        },
+        [API_BASE],
+    );
+
     const closeAll = () => {
         setSelectedAssignment(null);
         setSelectedSubmission(null);
@@ -280,64 +443,68 @@ export const AssignmentsContainer: React.FC = () => {
         setReviewing(null);
     };
 
+    const openAssignment = (assignment: Assignment) => {
+        const mySubmission = submissions.find(
+            (s) => s.assignmentId === assignment.id && s.authorId === profile.id,
+        );
+        setSelectedAssignment(assignment);
+        setSelectedSubmission(mySubmission || null);
+    };
+
+    const openSubmission = (submission: Submission) => {
+        const assignment = assignments.find((a) => a.id === submission.assignmentId) || null;
+        if (!assignment) return;
+        const role = subjectRoles[assignment.subjectId] ?? 'student';
+        if (role === 'teacher' || submission.authorId !== profile.id) {
+            setShowSolutionsList(assignment);
+            setReviewing(submission);
+            return;
+        }
+        setSelectedAssignment(assignment);
+        setSelectedSubmission(submission);
+    };
+
+    useEffect(() => {
+        const openId = localStorage.getItem('openAssignmentId');
+        if (!openId) return;
+        const assignment = assignments.find((a) => a.id === openId);
+        if (!assignment) return;
+        localStorage.removeItem('openAssignmentId');
+        openAssignment(assignment);
+    }, [assignments, submissions, profile.id]);
+
     return (
         <div className='p-4 bg-slate-50 min-h-screen'>
-            {/* Переключатель роли (для тестов) */}
             <div className='mb-6 flex justify-end gap-2'>
                 <span className='text-xs text-slate-400 self-center mr-2'>
                     {online === true ? '🌐 Режим API' : '⏳ Проверка соединения...'}
                 </span>
-                <button
-                    className={`px-4 py-2 text-sm font-bold rounded-xl transition-all ${
-                        role === 'teacher'
-                            ? 'bg-slate-900 text-white'
-                            : 'bg-slate-200 text-slate-700'
-                    }`}
-                    onClick={() => setRole('teacher')}
-                >
-                    Учитель
-                </button>
-                <button
-                    className={`px-4 py-2 text-sm font-bold rounded-xl transition-all ${
-                        role === 'student'
-                            ? 'bg-slate-900 text-white'
-                            : 'bg-slate-200 text-slate-700'
-                    }`}
-                    onClick={() => setRole('student')}
-                >
-                    Ученик
-                </button>
             </div>
 
-            {/* Загрузка */}
             {loading ? (
                 <div className='p-10 text-center text-slate-500'>Загрузка данных...</div>
             ) : (
                 <AssignmentsPage
                     assignments={assignments}
                     submissions={submissions}
-                    token={localStorage.getItem('accessToken') || ''}
-                    role={role}
-                    onOpenAssignment={(a) => setSelectedAssignment(a)}
-                    onOpenSolution={(s) => {
-                        console.log('Открыть решение');
-                        setSelectedSubmission(s);
-                    }}
-                    onOpenSolutionsList={(a) => {
-                        console.log('Открыть список решений');
-                        setShowSolutionsList(a);
-                    }}
+                    currentUserId={profile.id}
+                    subjectRoles={subjectRoles}
+                    onOpenAssignment={openAssignment}
+                    onOpenSolution={openSubmission}
+                    onOpenSolutionsList={(a) => setShowSolutionsList(a)}
                 />
             )}
 
-            {/* Модалка задания / прохождения теста */}
             {selectedAssignment && (
                 <AssignmentModal
                     assignment={selectedAssignment}
                     submission={selectedSubmission || undefined}
-                    token={localStorage.getItem('accessToken') || ''}
                     isSubmitting={submitting}
                     onClose={closeAll}
+                    onSaveDraft={async (questions, answers) => {
+                        const success = await saveDraft(selectedAssignment.id, questions, answers);
+                        if (success) closeAll();
+                    }}
                     onSubmit={async (questions, answers) => {
                         const success = await submitAssignment(
                             selectedAssignment.id,
@@ -346,11 +513,13 @@ export const AssignmentsContainer: React.FC = () => {
                         );
                         if (success) closeAll();
                     }}
-                    onSubmissionUpdated={refreshSubmissions}
+                    onWithdraw={async (submissionId) => {
+                        const success = await withdrawSubmission(submissionId);
+                        if (success) closeAll();
+                    }}
                 />
             )}
 
-            {/* Список работ для учителя */}
             {showSolutionsList && (
                 <SolutionsListPage
                     assignment={showSolutionsList}
@@ -360,15 +529,16 @@ export const AssignmentsContainer: React.FC = () => {
                 />
             )}
 
-            {/* Модалка проверки работы учителем */}
             {reviewing && showSolutionsList && (
                 <TeacherReviewModal
                     assignment={showSolutionsList}
                     submission={reviewing}
-                    token={localStorage.getItem('accessToken') || ''}
                     onClose={closeAll}
-                    onGradeUpdated={refreshSubmissions}
-                    onGradeSubmit={submitGrade}
+                    onGradeCreate={createGrade}
+                    onGradeUpdate={updateGrade}
+                    onGradeDelete={deleteGrade}
+                    onLoadComments={loadSubmissionComments}
+                    onAddComment={addSubmissionComment}
                 />
             )}
         </div>
