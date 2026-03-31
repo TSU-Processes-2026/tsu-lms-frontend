@@ -19,11 +19,15 @@ interface Participant {
 export const AssignmentsContainer: React.FC = () => {
     const { profile, getCurrentUser } = useProfile();
     const [online, setOnline] = useState<boolean | null>(null);
-    const [subjects, setSubjects] = useState<Array<{ id: string; title: string; description: string }>>([]);
+    const [subjects, setSubjects] = useState<
+        Array<{ id: string; title: string; description: string }>
+    >([]);
     const [assignments, setAssignments] = useState<Assignment[]>([]);
     const [submissions, setSubmissions] = useState<Submission[]>([]);
     const [subjectRoles, setSubjectRoles] = useState<Record<string, Role>>({});
-    const [participantsBySubject, setParticipantsBySubject] = useState<Record<string, Participant[]>>({});
+    const [participantsBySubject, setParticipantsBySubject] = useState<
+        Record<string, Participant[]>
+    >({});
 
     const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
     const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
@@ -38,7 +42,10 @@ export const AssignmentsContainer: React.FC = () => {
         getCurrentUser();
     }, []);
 
-    const fetchGrade = async (submissionId: string, headers: HeadersInit): Promise<ApiGrade | null> => {
+    const fetchGrade = async (
+        submissionId: string,
+        headers: HeadersInit,
+    ): Promise<ApiGrade | null> => {
         const res = await fetch(`${API_BASE}/submissions/${submissionId}/grade`, { headers });
         if (res.status === 404) return null;
         if (!res.ok) return null;
@@ -113,7 +120,10 @@ export const AssignmentsContainer: React.FC = () => {
                 const role = nextRoles[subject.id] ?? 'student';
                 const isTeacher = role === 'teacher';
                 const nameMap = new Map(
-                    (nextParticipants[subject.id] ?? []).map((p: Participant) => [p.userId, p.username]),
+                    (nextParticipants[subject.id] ?? []).map((p: Participant) => [
+                        p.userId,
+                        p.username,
+                    ]),
                 );
 
                 for (const assignment of normalizedAssignments) {
@@ -129,9 +139,7 @@ export const AssignmentsContainer: React.FC = () => {
                     );
 
                     submissionsData.forEach((s, idx) => {
-                        allSubmissions.push(
-                            mapSubmission(s, grades[idx], nameMap.get(s.authorId)),
-                        );
+                        allSubmissions.push(mapSubmission(s, grades[idx], nameMap.get(s.authorId)));
                     });
                 }
             }
@@ -211,11 +219,14 @@ export const AssignmentsContainer: React.FC = () => {
                       headers,
                       body: JSON.stringify(payload),
                   })
-                : await fetch(`${API_BASE}/assignments/${assignmentId}/submissions?isStudent=true`, {
-                      method: 'POST',
-                      headers,
-                      body: JSON.stringify(payload),
-                  });
+                : await fetch(
+                      `${API_BASE}/assignments/${assignmentId}/submissions?isStudent=true`,
+                      {
+                          method: 'POST',
+                          headers,
+                          body: JSON.stringify(payload),
+                      },
+                  );
 
             if (!response.ok) {
                 const error = await response.json().catch(() => ({}));
@@ -495,7 +506,11 @@ export const AssignmentsContainer: React.FC = () => {
                         if (success) closeAll();
                     }}
                     onSubmit={async (questions, answers) => {
-                        const success = await submitAssignment(selectedAssignment.id, questions, answers);
+                        const success = await submitAssignment(
+                            selectedAssignment.id,
+                            questions,
+                            answers,
+                        );
                         if (success) closeAll();
                     }}
                     onWithdraw={async (submissionId) => {

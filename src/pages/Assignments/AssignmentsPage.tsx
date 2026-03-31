@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import { HelpCircle } from 'lucide-react';
-import { Assignment, AssignmentFilter, Submission, Role } from '../../types/assignments/assignments';
+import {
+    Assignment,
+    AssignmentFilter,
+    Submission,
+    Role,
+} from '../../types/assignments/assignments';
 import ReactMarkdown from 'react-markdown';
 
 interface Props {

@@ -6,8 +6,16 @@ interface Props {
     submission: Submission;
     assignment: Assignment;
     onClose: () => void;
-    onGradeCreate: (submissionId: string, score: number, verdictText: string) => Promise<Grade | null>;
-    onGradeUpdate: (submissionId: string, score: number, verdictText: string) => Promise<Grade | null>;
+    onGradeCreate: (
+        submissionId: string,
+        score: number,
+        verdictText: string,
+    ) => Promise<Grade | null>;
+    onGradeUpdate: (
+        submissionId: string,
+        score: number,
+        verdictText: string,
+    ) => Promise<Grade | null>;
     onGradeDelete: (submissionId: string) => Promise<boolean>;
     onLoadComments: (submissionId: string) => Promise<Comment[]>;
     onAddComment: (submissionId: string, text: string) => Promise<Comment | null>;
@@ -101,7 +109,9 @@ export const TeacherReviewModal: React.FC<Props> = ({
                             <p className='text-sm text-slate-500'>
                                 {title} • Сдано:{' '}
                                 {new Date(submission.createdAt).toLocaleDateString()}
-                                {submission.grade && submission.grade.score !== undefined && ' • Оценено'}
+                                {submission.grade &&
+                                    submission.grade.score !== undefined &&
+                                    ' • Оценено'}
                             </p>
                         </div>
                     </div>
@@ -142,7 +152,8 @@ export const TeacherReviewModal: React.FC<Props> = ({
                                     {q.questionType === 'SingleChoice' && (
                                         <p className='text-slate-600'>
                                             <span className='font-semibold'>Ответ:</span>{' '}
-                                            {q.options?.find((opt) => opt.id === studentAnswer)?.text ||
+                                            {q.options?.find((opt) => opt.id === studentAnswer)
+                                                ?.text ||
                                                 studentAnswer ||
                                                 '—'}
                                         </p>
@@ -154,7 +165,8 @@ export const TeacherReviewModal: React.FC<Props> = ({
                                             {(Array.isArray(studentAnswer) ? studentAnswer : [])
                                                 .map(
                                                     (id) =>
-                                                        q.options?.find((opt) => opt.id === id)?.text,
+                                                        q.options?.find((opt) => opt.id === id)
+                                                            ?.text,
                                                 )
                                                 .filter(Boolean)
                                                 .join(', ') || '—'}
@@ -306,7 +318,8 @@ export const TeacherReviewModal: React.FC<Props> = ({
                             </>
                         ) : (
                             <>
-                                <Save size={18} /> {submission.grade ? 'Обновить оценку' : 'Сохранить оценку'}
+                                <Save size={18} />{' '}
+                                {submission.grade ? 'Обновить оценку' : 'Сохранить оценку'}
                             </>
                         )}
                     </button>
