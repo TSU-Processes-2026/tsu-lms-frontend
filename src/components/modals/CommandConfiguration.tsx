@@ -1,6 +1,7 @@
 import { useCommandConfig } from '@/hooks/command/useCommandConfig';
 import { Plus, X } from 'lucide-react';
 import { Switch } from '../ui/Switch';
+import { useState } from 'react';
 
 interface ModalProps {
     onClose: () => void;
@@ -11,11 +12,17 @@ export const CommandConfiguration = ({ onClose }: ModalProps) => {
         selectedMode,
         commandsCount,
         studentsInCommand,
+        minBound,
+        maxBound,
+        segregationType,
         enableCommander,
         errorMessage,
         handleSubmit,
         setMode,
         setCommandsCount,
+        setMinBound,
+        setMaxBound,
+        setType,
         setEnableCommander,
         setStudentsNumber,
     } = useCommandConfig(onClose);
@@ -62,7 +69,28 @@ export const CommandConfiguration = ({ onClose }: ModalProps) => {
                             <option value='teacher'>Назначить самому</option>
                         </select>
                     </div>
-                    <div className='flex flex-row items-center justify-between gap-4'>
+                    <div>
+                        <label className='block text-sm font-semibold text-slate-700 mb-2'>
+                            Выберите тип разбиения
+                        </label>
+                        <select
+                            value={segregationType}
+                            onChange={(e) => setType(e.target.value)}
+                            className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all appearance-none cursor-pointer'
+                            style={{
+                                backgroundImage: `url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
+                                backgroundPosition: 'right 1rem center',
+                                backgroundRepeat: 'no-repeat',
+                                backgroundSize: '1.5em 1.5em',
+                                paddingRight: '2.5rem',
+                            }}
+                        >
+                            <option value='commands'>По командам</option>
+                            <option value='students_count'>По количеству студентов</option>
+                            <option value='students_range'>По диапазону</option>
+                        </select>
+                    </div>
+                    {segregationType === 'commands' && (
                         <div>
                             <label className='block text-sm font-semibold text-slate-700 mb-2'>
                                 Количество команд
@@ -74,6 +102,8 @@ export const CommandConfiguration = ({ onClose }: ModalProps) => {
                                 className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all'
                             />
                         </div>
+                    )}
+                    {segregationType === 'students_count' && (
                         <div>
                             <label className='block text-sm font-semibold text-slate-700 mb-2'>
                                 Студентов в команде
@@ -85,32 +115,34 @@ export const CommandConfiguration = ({ onClose }: ModalProps) => {
                                 className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all'
                             />
                         </div>
-                    </div>
-                    <div className='w-full flex flex-col items-start justify-between'>
-                        <label className='block text-sm font-semibold text-slate-700 mb-2'>
-                            Диапазон студентов в команде
-                        </label>
-                        <div className='flex flex-row items-center justify-between gap-4'>
-                            <div>
-                                <input
-                                    type='number'
-                                    value={commandsCount}
-                                    placeholder='От'
-                                    onChange={(e) => setCommandsCount(e.target.value)}
-                                    className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all'
-                                />
-                            </div>
-                            <div>
-                                <input
-                                    type='number'
-                                    value={studentsInCommand}
-                                    placeholder='До'
-                                    onChange={(e) => setStudentsNumber(e.target.value)}
-                                    className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all'
-                                />
+                    )}
+                    {segregationType === 'students_range' && (
+                        <div className='w-full flex flex-col items-start justify-between'>
+                            <label className='block text-sm font-semibold text-slate-700 mb-2'>
+                                Диапазон студентов в команде
+                            </label>
+                            <div className='flex flex-row items-center justify-between gap-4'>
+                                <div>
+                                    <input
+                                        type='number'
+                                        value={minBound}
+                                        placeholder='От'
+                                        onChange={(e) => setMinBound(e.target.value)}
+                                        className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all'
+                                    />
+                                </div>
+                                <div>
+                                    <input
+                                        type='number'
+                                        value={maxBound}
+                                        placeholder='До'
+                                        onChange={(e) => setMaxBound(e.target.value)}
+                                        className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all'
+                                    />
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    )}
                     <div className='flex flex-row items-end justify-between gap-4'>
                         <Switch
                             checked={enableCommander}
