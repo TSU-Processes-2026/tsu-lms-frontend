@@ -4,10 +4,11 @@ import { Switch } from '../ui/Switch';
 import { useParams } from 'react-router-dom';
 
 interface ModalProps {
+    participantsCount: number;
     onClose: () => void;
 }
 
-export const CommandConfiguration = ({ onClose }: ModalProps) => {
+export const CommandConfiguration = ({ participantsCount, onClose }: ModalProps) => {
     const { id } = useParams();
     const currentSubjectId = id || '';
     const {
@@ -23,7 +24,7 @@ export const CommandConfiguration = ({ onClose }: ModalProps) => {
         setMaxBound,
         handleTeamSize,
         setTeamsCount,
-    } = useCommandConfig(currentSubjectId, onClose);
+    } = useCommandConfig(currentSubjectId, participantsCount, onClose);
 
     return (
         <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm'>

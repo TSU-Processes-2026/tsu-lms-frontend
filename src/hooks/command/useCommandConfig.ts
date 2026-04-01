@@ -8,7 +8,11 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useValidateCommandConfig } from './useValidateCommandConfig';
 
-export const useCommandConfig = (subjectId: string, onClose: () => void) => {
+export const useCommandConfig = (
+    subjectId: string,
+    participantsCount: number,
+    onClose: () => void,
+) => {
     const currentSubjectId = subjectId;
     const [distributionMode, setMode] = useState<string>('');
     const [fixedTeamsCount, setTeamsCount] = useState<number | string>(0);
@@ -44,7 +48,7 @@ export const useCommandConfig = (subjectId: string, onClose: () => void) => {
         e.preventDefault();
         try {
             const params: CommandConfig = getConfig();
-            const error: string | null = validateParams(24);
+            const error: string | null = validateParams(participantsCount);
             if (error) {
                 return setErrorMessage(error);
             }

@@ -16,7 +16,7 @@ import { CommandCard } from '@/components/ui/CommandCard';
 import { useCommandModal } from '@/hooks/command/useCommandModal';
 import CommandParticipantsModal from '@/components/modals/ShowCommadParticipants';
 import { useState } from 'react';
-import { Team } from '@/types/command/Team';
+import { useTeams } from '@/hooks/command/useTeams';
 
 interface MaterialPostCardData extends MaterialPostResponse {
     authorUsername: string;
@@ -25,24 +25,6 @@ interface MaterialPostCardData extends MaterialPostResponse {
 interface AssignmentPostCardData extends AssignmentPostResponse {
     authorUsername: string;
 }
-
-const commandsMock: Team[] = [
-    {
-        id: '1',
-        subjectId: '1',
-        memberIds: ['123', '123', '123', '123'],
-    },
-    {
-        id: '2',
-        subjectId: '2',
-        memberIds: ['123', '123', '123', '123', '123', '123'],
-    },
-    {
-        id: '3',
-        subjectId: '3',
-        memberIds: ['123', '123', '123', '123', '123', '123'],
-    },
-];
 
 const SubjectView = () => {
     const {
@@ -60,6 +42,7 @@ const SubjectView = () => {
         subjectParticipants,
         showCommandConfig,
         userRole,
+        participants,
         profile,
         handleEditPost,
         composerText,
@@ -79,7 +62,7 @@ const SubjectView = () => {
         selectedSubject,
     } = useSubjectView();
 
-    const [selectedCommand, setSelectedCommand] = useState<string>('');
+    const [selectedCommand, setSelectedCommand] = useState<string>('1');
     const {
         showCommandParticipants,
         handleCloseCommandParticipants,
@@ -90,6 +73,12 @@ const SubjectView = () => {
         setSelectedCommand(id);
         handleShowCommandParticipants();
     };
+
+    const loadedParticipants = participants;
+    const count = (loadedParticipants[subjectId] && loadedParticipants[subjectId].length) || 0;
+
+    const { teams, mapParticipantsWithTeamIds } = useTeams(subjectId, loadedParticipants);
+    const teamMembers = mapParticipantsWithTeamIds(selectedCommand);
 
     return (
         <>
@@ -321,15 +310,21 @@ const SubjectView = () => {
                             />
                         </div>
 
-                        <ul className='grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mt-4'>
-                            {commandsMock.map((item, index) => (
-                                <CommandCard
-                                    index={index}
-                                    participants={item.memberIds}
-                                    onClick={() => handleSelectCommand(item.id)}
-                                />
-                            ))}
-                        </ul>
+                        {teams && teams.length > 0 ? (
+                            <ul className='grid sm:grid-cols-1 md:grid-col </ul>s-2 lg:grid-cols-2 gap-4 mt-4'>
+                                {teams.map((item, index) => (
+                                    <CommandCard
+                                        index={index}
+                                        participants={item.memberIds}
+                                        onClick={() => handleSelectCommand(item.id)}
+                                    />
+                                ))}
+                            </ul>
+                        ) : (
+                            <div className='my-4 font-medium text-2xl w-full h-48 text-center text-gray-500 flex flex-col items-center justify-center bg-white rounded-2xl shadow-md border border-slate-100'>
+                                <p>Команды еще не сформированы</p>
+                            </div>
+                        )}
                     </>
                 )}
             </div>
@@ -342,8 +337,9 @@ const SubjectView = () => {
             )}
             {showCommandParticipants && (
                 <CommandParticipantsModal
-                    commandNumber={0}
+                    commandNumber={Number.parseInt(selectedCommand)}
                     onClose={handleCloseCommandParticipants}
+                    members={teamMembers}
                     currentUserId={''}
                     commandId={selectedCommand}
                 />
@@ -357,6 +353,7 @@ const SubjectView = () => {
             )}
             {showCommandConfig && (
                 <CommandConfiguration
+                    participantsCount={count}
                     onClose={() => {
                         setShowConfig(false);
                     }}

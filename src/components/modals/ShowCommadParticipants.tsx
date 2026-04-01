@@ -1,4 +1,4 @@
-import { fetchCommandParticipants } from '@/api/command/command';
+import { Participant } from '@/hooks/subject/useSubjects';
 import { CommandParticipant } from '@/types/command/CommandParticipant';
 import { Crown, UserIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 interface CommandParticipantsModalProps {
     commandNumber: number;
     onClose: () => void;
+    members: Participant[];
     currentUserId: string;
     commandId: string;
 }
@@ -13,33 +14,10 @@ interface CommandParticipantsModalProps {
 const CommandParticipantsModal = ({
     onClose,
     commandNumber,
+    members,
     currentUserId,
     commandId,
 }: CommandParticipantsModalProps) => {
-    const [participants, setParticipants] = useState<CommandParticipant[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-
-    useEffect(() => {
-        async function loadData() {
-            setLoading(true);
-            setError(null);
-            try {
-                const participantsData = await fetchCommandParticipants(commandId);
-                setParticipants(participantsData);
-            } catch (err: unknown) {
-                if (err instanceof Error) {
-                    setError(err.message || 'Ошибка загрузки данных');
-                } else {
-                    setError('Ошибка загрузки данных');
-                }
-            } finally {
-                setLoading(false);
-            }
-        }
-        loadData();
-    }, [commandId]);
-
     const roleBadge: Record<string, React.ReactNode> = {
         captain: (
             <span className='px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-xs font-bold flex items-center gap-1'>
@@ -52,33 +30,6 @@ const CommandParticipantsModal = ({
             </span>
         ),
     };
-
-    if (loading) {
-        return (
-            <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm'>
-                <div className='bg-white w-full max-w-2xl rounded-3xl shadow-2xl flex flex-col items-center justify-center p-10'>
-                    <span className='text-lg text-slate-600'>Загрузка...</span>
-                </div>
-            </div>
-        );
-    }
-    if (error) {
-        return (
-            <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm'>
-                <div className='bg-white w-full max-w-2xl rounded-3xl shadow-2xl flex flex-col items-center justify-center p-10'>
-                    <span className='text-lg text-red-600'>
-                        {error || 'Информация о составе недоступна'}
-                    </span>
-                    <button
-                        className='mt-6 px-6 py-2 bg-blue-600 text-white rounded-xl font-bold'
-                        onClick={onClose}
-                    >
-                        Закрыть
-                    </button>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm'>
@@ -96,10 +47,10 @@ const CommandParticipantsModal = ({
                 </div>
                 <div className='flex-1 overflow-y-auto p-8'>
                     <div className='space-y-3'>
-                        {participants.length === 0 ? (
+                        {members.length === 0 ? (
                             <div className='text-slate-400 text-center'>Нет участников</div>
                         ) : (
-                            participants.map((participant) => {
+                            members.map((participant) => {
                                 const role = participant.role
                                     ? participant.role.toLowerCase()
                                     : 'student';

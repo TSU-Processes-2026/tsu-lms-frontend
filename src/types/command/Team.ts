@@ -18,12 +18,15 @@ interface Members {
     memberIds: string[];
 }
 
-export interface RandomDistributionResponse extends DistributedTeam {
+export interface RandomDistributionResponse extends DistributedTeam, ValidationDetails {
     subjectId: string;
+    suggestedParameters: SuggestedParameters;
+}
+
+export interface ValidationDetails {
     isValid: boolean;
     errors: string[];
     warnings: string[];
-    suggestedParameters: SuggestedParameters;
 }
 
 export interface DistributedTeam {

@@ -35,31 +35,12 @@ export const saveConfigParams = async (
     }
 };
 
-export const fetchCommandParticipants = async (
-    commandId: string,
-): Promise<CommandParticipant[]> => {
-    const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
-    console.log(commandId);
-    try {
-        const response: CommandParticipant[] = await axios.get(
-            `${BASE_URL}/commands/${commandId}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            },
-        );
-        return response;
-    } catch (error) {
-        console.log(error);
-        throw error;
-    }
-};
-
-export const fetchSubjectTeams = async (subjectId: string): Promise<AxiosResponse<Team>> => {
+export const fetchSubjectTeams = async (
+    subjectId: string | undefined,
+): Promise<AxiosResponse<Team[]>> => {
     const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
     try {
-        const response: AxiosResponse<Team> = await axios.get(
+        const response: AxiosResponse<Team[]> = await axios.get(
             `${BASE_URL}/subject/${subjectId}/teams`,
             {
                 headers: {
@@ -74,7 +55,7 @@ export const fetchSubjectTeams = async (subjectId: string): Promise<AxiosRespons
 };
 
 export const createTeamManually = async (
-    subjectId: string,
+    subjectId: string | undefined,
     members: string[],
 ): Promise<AxiosResponse<TeamCreationResponse>> => {
     const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
@@ -95,8 +76,8 @@ export const createTeamManually = async (
 };
 
 export const updateTeamMembers = async (
-    subjectId: string,
-    teamId: string,
+    subjectId: string | undefined,
+    teamId: string | undefined,
     members: string[],
 ): Promise<AxiosResponse<TeamCreationResponse>> => {
     const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
@@ -117,7 +98,7 @@ export const updateTeamMembers = async (
 };
 
 export const fetchUnassignedStudents = async (
-    subjectId: string,
+    subjectId: string | undefined,
 ): Promise<AxiosResponse<UnAssignedStudents>> => {
     const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
     try {
@@ -136,7 +117,7 @@ export const fetchUnassignedStudents = async (
 };
 
 export const previewRandomTeamDistribution = async (
-    subjectId: string,
+    subjectId: string | undefined,
 ): Promise<AxiosResponse<RandomDistributionResponse>> => {
     const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
     try {
@@ -155,7 +136,7 @@ export const previewRandomTeamDistribution = async (
 };
 
 export const validateManualDistribution = async (
-    subjectId: string,
+    subjectId: string | undefined,
 ): Promise<AxiosResponse<DistributedTeam>> => {
     const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
     try {
@@ -174,7 +155,7 @@ export const validateManualDistribution = async (
 };
 
 export const distributeWithManual = async (
-    subjectId: string,
+    subjectId: string | undefined,
 ): Promise<AxiosResponse<DistributedTeam>> => {
     const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
     try {
@@ -193,7 +174,7 @@ export const distributeWithManual = async (
 };
 
 export const confirmTeamDistribution = async (
-    subjectId: string,
+    subjectId: string | undefined,
 ): Promise<AxiosResponse<ConfirmationResponse>> => {
     const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
     try {
