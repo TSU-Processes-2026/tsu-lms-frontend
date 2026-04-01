@@ -1,31 +1,29 @@
 import { useCommandConfig } from '@/hooks/command/useCommandConfig';
 import { Plus, X } from 'lucide-react';
 import { Switch } from '../ui/Switch';
-import { useState } from 'react';
+import { useParams } from 'react-router-dom';
 
 interface ModalProps {
     onClose: () => void;
 }
 
 export const CommandConfiguration = ({ onClose }: ModalProps) => {
+    const { id } = useParams();
+    const currentSubjectId = id || '';
     const {
-        selectedMode,
-        commandsCount,
-        studentsInCommand,
-        minBound,
-        maxBound,
-        segregationType,
-        enableCommander,
+        distributionMode,
+        fixedTeamSize,
+        fixedTeamsCount,
+        minTeamSize,
+        maxTeamSize,
         errorMessage,
         handleSubmit,
-        setMode,
-        setCommandsCount,
+        handleDistributionMode,
         setMinBound,
         setMaxBound,
-        setType,
-        setEnableCommander,
-        setStudentsNumber,
-    } = useCommandConfig(onClose);
+        handleTeamSize,
+        setTeamsCount,
+    } = useCommandConfig(currentSubjectId, onClose);
 
     return (
         <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm'>
@@ -52,8 +50,8 @@ export const CommandConfiguration = ({ onClose }: ModalProps) => {
                             Выберите режим
                         </label>
                         <select
-                            value={selectedMode}
-                            onChange={(e) => setMode(e.target.value)}
+                            value={distributionMode}
+                            onChange={(e) => handleDistributionMode(e)}
                             className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all appearance-none cursor-pointer'
                             style={{
                                 backgroundImage: `url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
@@ -63,60 +61,37 @@ export const CommandConfiguration = ({ onClose }: ModalProps) => {
                                 paddingRight: '2.5rem',
                             }}
                         >
-                            <option value='draft'>Шаблон</option>
-                            <option value='random'>Случайное</option>
-                            <option value='students'>По выбору студентов</option>
-                            <option value='teacher'>Назначить самому</option>
+                            <option value='Manual'>Ручное</option>
+                            <option value='Random'>Случайное</option>
                         </select>
                     </div>
                     <div>
                         <label className='block text-sm font-semibold text-slate-700 mb-2'>
-                            Выберите тип разбиения
+                            Количество команд
                         </label>
-                        <select
-                            value={segregationType}
-                            onChange={(e) => setType(e.target.value)}
-                            className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all appearance-none cursor-pointer'
-                            style={{
-                                backgroundImage: `url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
-                                backgroundPosition: 'right 1rem center',
-                                backgroundRepeat: 'no-repeat',
-                                backgroundSize: '1.5em 1.5em',
-                                paddingRight: '2.5rem',
-                            }}
-                        >
-                            <option value='commands'>По командам</option>
-                            <option value='students_count'>По количеству студентов</option>
-                            <option value='students_range'>По диапазону</option>
-                        </select>
+                        <input
+                            type='number'
+                            value={fixedTeamsCount}
+                            onChange={(e) => setTeamsCount(e.target.value)}
+                            className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all'
+                        />
                     </div>
-                    {segregationType === 'commands' && (
-                        <div>
-                            <label className='block text-sm font-semibold text-slate-700 mb-2'>
-                                Количество команд
-                            </label>
-                            <input
-                                type='number'
-                                value={commandsCount}
-                                onChange={(e) => setCommandsCount(e.target.value)}
-                                className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all'
-                            />
-                        </div>
-                    )}
-                    {segregationType === 'students_count' && (
+                    {Number.parseInt(fixedTeamsCount.toString()) > 0 && (
                         <div>
                             <label className='block text-sm font-semibold text-slate-700 mb-2'>
                                 Студентов в команде
                             </label>
                             <input
                                 type='number'
-                                value={studentsInCommand}
-                                onChange={(e) => setStudentsNumber(e.target.value)}
+                                value={fixedTeamSize}
+                                onChange={(e) => handleTeamSize(e.target.value)}
                                 className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all'
                             />
                         </div>
                     )}
-                    {segregationType === 'students_range' && (
+                    {Number.parseInt(fixedTeamsCount.toString()) *
+                        Number.parseInt(fixedTeamSize.toString()) >
+                        0 && (
                         <div className='w-full flex flex-col items-start justify-between'>
                             <label className='block text-sm font-semibold text-slate-700 mb-2'>
                                 Диапазон студентов в команде
@@ -125,7 +100,7 @@ export const CommandConfiguration = ({ onClose }: ModalProps) => {
                                 <div>
                                     <input
                                         type='number'
-                                        value={minBound}
+                                        value={minTeamSize}
                                         placeholder='От'
                                         onChange={(e) => setMinBound(e.target.value)}
                                         className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all'
@@ -134,7 +109,7 @@ export const CommandConfiguration = ({ onClose }: ModalProps) => {
                                 <div>
                                     <input
                                         type='number'
-                                        value={maxBound}
+                                        value={maxTeamSize}
                                         placeholder='До'
                                         onChange={(e) => setMaxBound(e.target.value)}
                                         className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all'
@@ -143,16 +118,7 @@ export const CommandConfiguration = ({ onClose }: ModalProps) => {
                             </div>
                         </div>
                     )}
-                    <div className='flex flex-row items-end justify-between gap-4'>
-                        <Switch
-                            checked={enableCommander}
-                            onChange={setEnableCommander}
-                            colorSelected={true}
-                            labelOnSelected='Назначение капитана включено'
-                            labelOnDisabled='Назначение капитана отключено'
-                            labelPosition='right'
-                        />
-                    </div>
+
                     {errorMessage && (
                         <div className='p-4 bg-red-50 border-b-red-50 rounded-xl border border-red-100'>
                             <p className='text-xs text-red-700 font-semibold mb-1'>❌ Ошибка</p>
@@ -177,7 +143,7 @@ export const CommandConfiguration = ({ onClose }: ModalProps) => {
                         </button>
                         <button
                             type='submit'
-                            className='flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-300/50 hover:-translate-y-0.5 transition-all'
+                            className='flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-300/150 hover:-translate-y-0.5 transition-all'
                         >
                             Сохранить
                         </button>

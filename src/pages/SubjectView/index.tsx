@@ -1,7 +1,7 @@
 import { useSubjectView } from '@/hooks/subject/useSubjectView';
 import StudentsModal from '@/components/modals/StudentsModal';
 import CreateAssignmentModal from '@/components/modals/CreateAssignmentModal';
-import { User as UserIcon, Upload, ClipboardCheck, Users } from 'lucide-react';
+import { User as UserIcon, Upload, ClipboardCheck, Users, Settings } from 'lucide-react';
 import AnnouncementPostCard from '@/components/ui/AnnouncementPostCard';
 import MaterialPostCard from '@/components/ui/MaterialPostCard';
 import AssignmentPostCard from '@/components/ui/AssignmentPostCard';
@@ -11,8 +11,13 @@ import {
     MaterialPostResponse,
     AssignmentPostResponse,
 } from '@/types/subject/FeedTypes';
-import { useState } from 'react';
 import { CommandConfiguration } from '@/components/modals/CommandConfiguration';
+import { CommandCard } from '@/components/ui/CommandCard';
+import { useCommandModal } from '@/hooks/command/useCommandModal';
+import CommandParticipantsModal from '@/components/modals/ShowCommadParticipants';
+import { useState } from 'react';
+import { CommandParticipant } from '@/types/command/CommandParticipant';
+import { Team } from '@/types/command/Team';
 
 interface MaterialPostCardData extends MaterialPostResponse {
     authorUsername: string;
@@ -21,6 +26,29 @@ interface MaterialPostCardData extends MaterialPostResponse {
 interface AssignmentPostCardData extends AssignmentPostResponse {
     authorUsername: string;
 }
+
+interface Command {
+    id: string;
+    participants: CommandParticipant[];
+}
+
+const commandsMock: Team[] = [
+    {
+        id: '1',
+        subjectId: '1',
+        memberIds: ['123', '123', '123', '123'],
+    },
+    {
+        id: '2',
+        subjectId: '2',
+        memberIds: ['123', '123', '123', '123', '123', '123'],
+    },
+    {
+        id: '3',
+        subjectId: '3',
+        memberIds: ['123', '123', '123', '123', '123', '123'],
+    },
+];
 
 const SubjectView = () => {
     const {
@@ -36,6 +64,7 @@ const SubjectView = () => {
         subjectId,
         subjectCode,
         subjectParticipants,
+        showCommandConfig,
         userRole,
         profile,
         handleEditPost,
@@ -49,13 +78,24 @@ const SubjectView = () => {
         handleRemoveFile,
         publishError,
         setPublishError,
+        setShowConfig,
         getAuthorUsername,
         getShowEditButton,
         handleCreateAssignment,
         selectedSubject,
     } = useSubjectView();
 
-    const [showCommandConfig, setShowConfig] = useState<boolean>(false);
+    const [selectedCommand, setSelectedCommand] = useState<string>('');
+    const {
+        showCommandParticipants,
+        handleCloseCommandParticipants,
+        handleShowCommandParticipants,
+    } = useCommandModal();
+
+    const handleSelectCommand = (id: string) => {
+        setSelectedCommand(id);
+        handleShowCommandParticipants();
+    };
 
     return (
         <>
@@ -273,26 +313,30 @@ const SubjectView = () => {
                     </div>
                 )}
                 {activeTab === 'commands' && (
-                    <div className='bg-white/80 backdrop-blur-sm rounded-3xl p-10 shadow-lg border border-slate-100 text-center'>
-                        <div className='w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6'>
-                            <Users size={36} className='text-blue-500' />
+                    <>
+                        <div className='flex flex-row items-center justify-between'>
+                            <h3 className='text-3xl font-bold text-slate-800 mb-2'>
+                                Список команд
+                            </h3>
+                            <Settings
+                                size={40}
+                                className='bg-linear-to-r from-blue-600 to-blue-700 text-white p-2 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all'
+                                onClick={() => {
+                                    setShowConfig(true);
+                                }}
+                            />
                         </div>
-                        <h4 className='text-xl font-bold text-slate-800 mb-2'>
-                            Участники предмета
-                        </h4>
-                        <p className='text-slate-500 mb-2'>
-                            Всего участников:{' '}
-                            <span className='font-bold text-slate-700'>{subjectParticipants}</span>
-                        </p>
-                        <button
-                            className='bg-linear-to-r from-blue-600 to-blue-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all'
-                            onClick={() => {
-                                setShowConfig(true);
-                            }}
-                        >
-                            Изменить параметры конфигурации
-                        </button>
-                    </div>
+
+                        <ul className='grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mt-4'>
+                            {commandsMock.map((item, index) => (
+                                <CommandCard
+                                    index={index}
+                                    participants={item.memberIds}
+                                    onClick={() => handleSelectCommand(item.id)}
+                                />
+                            ))}
+                        </ul>
+                    </>
                 )}
             </div>
             {showModal && (
@@ -300,6 +344,14 @@ const SubjectView = () => {
                     onClose={handleCloseModal}
                     subjectId={subjectId ?? ''}
                     selectedSubject={selectedSubject ?? null}
+                />
+            )}
+            {showCommandParticipants && (
+                <CommandParticipantsModal
+                    commandNumber={0}
+                    onClose={handleCloseCommandParticipants}
+                    currentUserId={''}
+                    commandId={selectedCommand}
                 />
             )}
             {showAssignmentModal && (

@@ -90,6 +90,13 @@ server.post('/api/auth/login', (req, res) => {
     res.status(200).jsonp(response);
 });
 
+server.get('/api/commands/:id', async (req, res) => {
+    const { id } = req.params;
+    const response = database.get('commands').find({ id }).value();
+    console.log(response);
+    return response;
+});
+
 server.get('/api/users/me', async (req, res) => {
     const auth = req.headers.authorization;
     const accessToken = auth.split(' ')[1];
@@ -359,7 +366,9 @@ function joinMockSubject(subjectId, userId) {
 server.get('/api/subjects', (req, res) => {
     const { limit = 20, offset = 0, mockError, mockEmpty } = req.query;
     if (mockError === '401') {
-        return res.status(401).jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
+        return res
+            .status(401)
+            .jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
     }
     const empty = mockEmpty === 'true';
     const subjects = getMockSubjects(Number(limit), Number(offset), empty);
@@ -370,7 +379,9 @@ server.get('/api/subjects/:subjectId', (req, res) => {
     const { subjectId } = req.params;
     const { mockError } = req.query;
     if (mockError === '401') {
-        return res.status(401).jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
+        return res
+            .status(401)
+            .jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
     }
     if (mockError === '404') {
         return res.status(404).jsonp(getProblemDetails(404, 'Not Found', 'Subject not found'));
@@ -386,10 +397,16 @@ server.get('/api/subjects/:subjectId/participants', (req, res) => {
     const { subjectId } = req.params;
     const { limit = 5, offset = 0, mockError } = req.query;
     if (mockError === '401') {
-        return res.status(401).jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
+        return res
+            .status(401)
+            .jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
     }
     if (mockError === '403') {
-        return res.status(403).jsonp(getProblemDetails(403, 'Forbidden', 'User is not a participant of this subject'));
+        return res
+            .status(403)
+            .jsonp(
+                getProblemDetails(403, 'Forbidden', 'User is not a participant of this subject'),
+            );
     }
     const participants = getMockParticipants(subjectId, Number(limit), Number(offset));
     res.status(200).jsonp(participants);
@@ -399,10 +416,16 @@ server.get('/api/subjects/:subjectId/assignments', (req, res) => {
     const { subjectId } = req.params;
     const { mockError } = req.query;
     if (mockError === '401') {
-        return res.status(401).jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
+        return res
+            .status(401)
+            .jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
     }
     if (mockError === '403') {
-        return res.status(403).jsonp(getProblemDetails(403, 'Forbidden', 'User is not a participant of this subject'));
+        return res
+            .status(403)
+            .jsonp(
+                getProblemDetails(403, 'Forbidden', 'User is not a participant of this subject'),
+            );
     }
     const assignments = getMockAssignments(subjectId);
     res.status(200).jsonp(assignments);
@@ -412,10 +435,14 @@ server.get('/api/assignments/:assignmentId/submissions', (req, res) => {
     const { assignmentId } = req.params;
     const { mockError } = req.query;
     if (mockError === '401') {
-        return res.status(401).jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
+        return res
+            .status(401)
+            .jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
     }
     if (mockError === '403') {
-        return res.status(403).jsonp(getProblemDetails(403, 'Forbidden', 'Only teachers can view submissions'));
+        return res
+            .status(403)
+            .jsonp(getProblemDetails(403, 'Forbidden', 'Only teachers can view submissions'));
     }
     const submissions = getMockSubmissions(assignmentId);
     res.status(200).jsonp(submissions);
@@ -425,10 +452,14 @@ server.get('/api/submissions/:submissionId/grade', (req, res) => {
     const { submissionId } = req.params;
     const { mockError } = req.query;
     if (mockError === '401') {
-        return res.status(401).jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
+        return res
+            .status(401)
+            .jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
     }
     if (mockError === '403') {
-        return res.status(403).jsonp(getProblemDetails(403, 'Forbidden', 'Only author or teacher can view grade'));
+        return res
+            .status(403)
+            .jsonp(getProblemDetails(403, 'Forbidden', 'Only author or teacher can view grade'));
     }
     const grade = getMockGrade(submissionId);
     if (!grade) {
@@ -445,14 +476,20 @@ server.get('/api/subjects/:subjectId/posts', (req, res) => {
     const { subjectId } = req.params;
     const { limit = 20, offset = 0, postType, mockError } = req.query;
     if (mockError === '401') {
-        return res.status(401).jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
+        return res
+            .status(401)
+            .jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
     }
     if (mockError === '403') {
-        return res.status(403).jsonp(getProblemDetails(403, 'Forbidden', 'User is not a participant of this subject'));
+        return res
+            .status(403)
+            .jsonp(
+                getProblemDetails(403, 'Forbidden', 'User is not a participant of this subject'),
+            );
     }
     let posts = getMockPosts(subjectId, Number(limit), Number(offset));
     if (postType) {
-        posts = posts.filter(p => p.postType === postType);
+        posts = posts.filter((p) => p.postType === postType);
     }
     res.status(200).jsonp(posts);
 });
@@ -461,10 +498,16 @@ server.post('/api/subjects/:subjectId/posts', (req, res) => {
     const { subjectId } = req.params;
     const { mockError } = req.query;
     if (mockError === '401') {
-        return res.status(401).jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
+        return res
+            .status(401)
+            .jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
     }
     if (mockError === '403') {
-        return res.status(403).jsonp(getProblemDetails(403, 'Forbidden', 'User is not a participant of this subject'));
+        return res
+            .status(403)
+            .jsonp(
+                getProblemDetails(403, 'Forbidden', 'User is not a participant of this subject'),
+            );
     }
     const postData = req.body;
     if (!postData || !postData.content) {
@@ -481,10 +524,14 @@ server.post('/api/subjects/:subjectId/posts', (req, res) => {
 server.get('/api/comments', (req, res) => {
     const { targetId, targetType = 'post', limit = 20, offset = 0, mockError } = req.query;
     if (mockError === '401') {
-        return res.status(401).jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
+        return res
+            .status(401)
+            .jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
     }
     if (mockError === '403') {
-        return res.status(403).jsonp(getProblemDetails(403, 'Forbidden', 'User is not allowed to view comments'));
+        return res
+            .status(403)
+            .jsonp(getProblemDetails(403, 'Forbidden', 'User is not allowed to view comments'));
     }
     if (!targetId) {
         return res.status(400).jsonp(getProblemDetails(400, 'Bad request', 'targetId is required'));
@@ -496,14 +543,20 @@ server.get('/api/comments', (req, res) => {
 server.post('/api/comments', (req, res) => {
     const { mockError } = req.query;
     if (mockError === '401') {
-        return res.status(401).jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
+        return res
+            .status(401)
+            .jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
     }
     if (mockError === '403') {
-        return res.status(403).jsonp(getProblemDetails(403, 'Forbidden', 'User is not allowed to comment'));
+        return res
+            .status(403)
+            .jsonp(getProblemDetails(403, 'Forbidden', 'User is not allowed to comment'));
     }
     const commentData = req.body;
     if (!commentData || !commentData.targetId || !commentData.text) {
-        return res.status(400).jsonp(getProblemDetails(400, 'Bad request', 'targetId and text are required'));
+        return res
+            .status(400)
+            .jsonp(getProblemDetails(400, 'Bad request', 'targetId and text are required'));
     }
     const newComment = createMockComment(commentData);
     res.status(201).jsonp(newComment);
@@ -517,14 +570,20 @@ server.post('/api/subjects/:subjectId/participants', (req, res) => {
     const { subjectId } = req.params;
     const { mockError } = req.query;
     if (mockError === '401') {
-        return res.status(401).jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
+        return res
+            .status(401)
+            .jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
     }
     if (mockError === '403') {
-        return res.status(403).jsonp(getProblemDetails(403, 'Forbidden', 'User is not allowed to add participants'));
+        return res
+            .status(403)
+            .jsonp(getProblemDetails(403, 'Forbidden', 'User is not allowed to add participants'));
     }
     const participantData = req.body;
     if (!participantData || !participantData.userId || !participantData.role) {
-        return res.status(400).jsonp(getProblemDetails(400, 'Bad request', 'userId and role are required'));
+        return res
+            .status(400)
+            .jsonp(getProblemDetails(400, 'Bad request', 'userId and role are required'));
     }
     const newParticipant = addMockParticipant(subjectId, participantData);
     res.status(201).jsonp(newParticipant);
@@ -534,10 +593,20 @@ server.patch('/api/subjects/:subjectId/participants/:userId', (req, res) => {
     const { subjectId, userId } = req.params;
     const { mockError } = req.query;
     if (mockError === '401') {
-        return res.status(401).jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
+        return res
+            .status(401)
+            .jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
     }
     if (mockError === '403') {
-        return res.status(403).jsonp(getProblemDetails(403, 'Forbidden', 'User is not allowed to update participant role'));
+        return res
+            .status(403)
+            .jsonp(
+                getProblemDetails(
+                    403,
+                    'Forbidden',
+                    'User is not allowed to update participant role',
+                ),
+            );
     }
     const { role } = req.body;
     if (!role) {
@@ -554,10 +623,16 @@ server.delete('/api/subjects/:subjectId/participants/:userId', (req, res) => {
     const { subjectId, userId } = req.params;
     const { mockError } = req.query;
     if (mockError === '401') {
-        return res.status(401).jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
+        return res
+            .status(401)
+            .jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
     }
     if (mockError === '403') {
-        return res.status(403).jsonp(getProblemDetails(403, 'Forbidden', 'User is not allowed to remove participant'));
+        return res
+            .status(403)
+            .jsonp(
+                getProblemDetails(403, 'Forbidden', 'User is not allowed to remove participant'),
+            );
     }
     const removed = removeMockParticipant(subjectId, userId);
     if (!removed) {
@@ -570,7 +645,9 @@ server.post('/api/subjects/:subjectId/join', (req, res) => {
     const { subjectId } = req.params;
     const { userId, mockError } = req.body;
     if (mockError === '401') {
-        return res.status(401).jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
+        return res
+            .status(401)
+            .jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
     }
     if (!userId) {
         return res.status(400).jsonp(getProblemDetails(400, 'Bad request', 'userId is required'));
@@ -587,10 +664,16 @@ server.post('/api/subjects/:subjectId/assignments', (req, res) => {
     const { subjectId } = req.params;
     const { mockError } = req.query;
     if (mockError === '401') {
-        return res.status(401).jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
+        return res
+            .status(401)
+            .jsonp(getProblemDetails(401, 'Unauthorized', 'Authorization is required'));
     }
     if (mockError === '403') {
-        return res.status(403).jsonp(getProblemDetails(403, 'Forbidden', 'User is not allowed to create assignments'));
+        return res
+            .status(403)
+            .jsonp(
+                getProblemDetails(403, 'Forbidden', 'User is not allowed to create assignments'),
+            );
     }
     const assignmentData = req.body;
     if (!assignmentData || !assignmentData.content) {
@@ -627,6 +710,8 @@ server.listen(PORT, () => {
     console.log(`  POST http://localhost:${PORT}/api/comments`);
     console.log(`  GET  http://localhost:${PORT}/api/comments`);
     console.log(`  POST http://localhost:${PORT}/api/subjects/:subjectId/participants`);
-    console.log(`  PUT  http://localhost:${PORT}/api/subjects/:subjectId/participants/:userId/role`);
+    console.log(
+        `  PUT  http://localhost:${PORT}/api/subjects/:subjectId/participants/:userId/role`,
+    );
     console.log(`  DELETE http://localhost:${PORT}/api/subjects/:subjectId/participants/:userId`);
 });

@@ -8,41 +8,47 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useValidateCommandConfig } from './useValidateCommandConfig';
 
-export const useCommandConfig = (onClose: () => void) => {
-    const [selectedMode, setMode] = useState<string>('');
-    const [commandsCount, setCommandsCount] = useState<number | string>(0);
-    const [studentsInCommand, setStudentsNumber] = useState<number | string>(0);
-    const [minBound, setMinBound] = useState<number | string>(0);
-    const [maxBound, setMaxBound] = useState<number | string>(0);
-    const [enableCommander, setEnableCommander] = useState<boolean>(true);
+export const useCommandConfig = (subjectId: string, onClose: () => void) => {
+    const currentSubjectId = subjectId;
+    const [distributionMode, setMode] = useState<string>('');
+    const [fixedTeamsCount, setTeamsCount] = useState<number | string>(0);
+    const [fixedTeamSize, setTeamSize] = useState<number | string>(0);
+    const [minTeamSize, setMinBound] = useState<number | string>(1);
+    const [maxTeamSize, setMaxBound] = useState<number | string>(1);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [segregationType, setType] = useState<'commands' | 'students_count' | 'students_range'>(
-        'commands',
-    );
+
     const navigate = useNavigate();
-    const getForm = (): CommandConfig => {
+    const getConfig = (): CommandConfig => {
         const form: CommandConfig = {
-            mode: selectedMode,
-            commandCount: formatToInt(commandsCount),
-            studentsCount: formatToInt(studentsInCommand),
-            minBound: formatToInt(minBound),
-            maxBound: formatToInt(maxBound),
-            segregationType: segregationType,
-            enableCommander: enableCommander,
+            distributionMode: distributionMode,
+            fixedTeamsCount: formatToInt(fixedTeamsCount),
+            fixedTeamSize: formatToInt(fixedTeamSize),
+            minTeamSize: formatToInt(minTeamSize),
+            maxTeamSize: formatToInt(maxTeamSize),
         };
         return form;
     };
-    const { validateParams } = useValidateCommandConfig(getForm());
+    const { validateParams } = useValidateCommandConfig(getConfig());
+
+    const handleDistributionMode = (e: React.ChangeEvent<HTMLSelectElement, HTMLSelectElement>) => {
+        setMode(e.target.value);
+        setErrorMessage(null);
+    };
+
+    const handleTeamSize = (value: string) => {
+        setTeamSize(value);
+        setMaxBound(value);
+    };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         try {
-            const params: CommandConfig = getForm();
+            const params: CommandConfig = getConfig();
             const error: string | null = validateParams(24);
             if (error) {
                 return setErrorMessage(error);
             }
-            await saveConfigParams(params);
+            await saveConfigParams(currentSubjectId, params);
             resetConfigParams();
             onClose();
         } catch (error) {
@@ -64,27 +70,23 @@ export const useCommandConfig = (onClose: () => void) => {
 
     const resetConfigParams = (): void => {
         setMode('');
-        setCommandsCount(0);
-        setStudentsNumber(0);
+        setTeamsCount(0);
+        setTeamSize(0);
         setErrorMessage(null);
     };
 
     return {
-        selectedMode,
-        commandsCount,
-        studentsInCommand,
-        minBound,
-        maxBound,
-        enableCommander,
-        segregationType,
+        distributionMode,
+        fixedTeamsCount,
+        fixedTeamSize,
+        minTeamSize,
+        maxTeamSize,
         errorMessage,
-        setMode,
-        setCommandsCount,
-        setStudentsNumber,
+        handleDistributionMode,
+        setTeamsCount,
+        handleTeamSize,
         setMinBound,
         setMaxBound,
-        setType,
-        setEnableCommander,
         handleSubmit,
     };
 };

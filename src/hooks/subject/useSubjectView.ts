@@ -45,6 +45,7 @@ import React, { useState } from 'react';
 export type UseSubjectViewResult = {
     showModal: boolean;
     showAssignmentModal: boolean;
+    showCommandConfig: boolean;
     activeTab: 'feed' | 'students' | 'commands';
     handleShowModal: () => void;
     handleCloseModal: () => void;
@@ -61,6 +62,7 @@ export type UseSubjectViewResult = {
     profile: UserResponse;
     handleEditPost: (post: PostResponse) => void;
     composerText: string;
+    setShowConfig: (state: boolean) => void;
     setComposerText: (text: string) => void;
     /**
      * Downloads a file for a material post and triggers browser download.
@@ -167,6 +169,7 @@ export function useSubjectView(): UseSubjectViewResult {
     const fileInputRef: React.RefObject<HTMLInputElement | null> = React.createRef();
     const [publishError, setPublishError] = useState<string | null>(null);
 
+    const [showCommandConfig, setShowConfig] = useState<boolean>(false);
     const [showModal, setShowModal] = useState<boolean>(false);
     const [showAssignmentModal, setShowAssignmentModal] = useState<boolean>(false);
     const [activeTab, setActiveTab] = useState<'feed' | 'students' | 'commands'>('feed');
@@ -440,6 +443,7 @@ export function useSubjectView(): UseSubjectViewResult {
         handleOpenAssignment,
         showModal,
         showAssignmentModal,
+        showCommandConfig,
         activeTab,
         handleShowModal,
         handleCloseModal,
@@ -472,6 +476,7 @@ export function useSubjectView(): UseSubjectViewResult {
         handleRemoveFile,
         publishError,
         setPublishError,
+        setShowConfig,
         getShowEditButton,
         handleCreateAssignment,
         refreshFeed: feed.refreshFeed,

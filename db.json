@@ -54,6 +54,11 @@
       "id": "1773129600000-advprog",
       "title": "Advanced Programming",
       "description": "Deep dive into programming techniques"
+    },
+    {
+      "id": "1775019049114-rdwvuv4ot7a",
+      "title": "jjj",
+      "description": "jjj"
     }
   ],
   "participants": [
@@ -335,7 +340,16 @@
       "id": "subm-5",
       "assignmentId": "assgn-5",
       "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-      "answers": [],
+      "answers": [
+        {
+          "id": "46f30ec4-e75e-4472-9a13-7a84f0d7e869",
+          "assignmentQuestionId": "q-5",
+          "answerType": 2,
+          "selectedOptionId": null,
+          "selectedOptionIds": null,
+          "text": "h"
+        }
+      ],
       "status": "Draft",
       "submittedAt": null
     },
@@ -366,6 +380,22 @@
       ],
       "status": "Graded",
       "submittedAt": "2026-03-15T18:00:00.000Z"
+    },
+    {
+      "answers": [
+        {
+          "id": "1a0a3f80-f056-47da-a570-900a908e2221",
+          "assignmentQuestionId": "q-3",
+          "answerType": 1,
+          "selectedOptionId": null,
+          "selectedOptionIds": [
+            "opt-4"
+          ],
+          "text": null
+        }
+      ],
+      "assignmentId": "assgn-2",
+      "id": "F9UK7GR"
     }
   ],
   "grades": [
@@ -674,6 +704,83 @@
       "targetId": "post-1",
       "text": "авп",
       "createdAt": "2026-03-15T21:57:04.751Z"
+    }
+  ],
+  "commands": [
+    {
+      "id": "1",
+      "participants": [
+        {
+          "userId": "123",
+          "username": "1test",
+          "role": "student"
+        },
+        {
+          "userId": "124",
+          "username": "1test_2",
+          "role": "student"
+        },
+        {
+          "userId": "125",
+          "username": "1test_3",
+          "role": "student"
+        },
+        {
+          "userId": "126",
+          "username": "1test_4",
+          "role": "student"
+        },
+        {
+          "userId": "127",
+          "username": "1test_5",
+          "role": "captain"
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "participants": [
+        {
+          "userId": "123",
+          "username": "1test",
+          "role": "student"
+        },
+        {
+          "userId": "124",
+          "username": "2test_2",
+          "role": "student"
+        },
+        {
+          "userId": "127",
+          "username": "2test_5",
+          "role": "captain"
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "participants": [
+        {
+          "userId": "123",
+          "username": "3test",
+          "role": "student"
+        },
+        {
+          "userId": "124",
+          "username": "3test_2",
+          "role": "student"
+        },
+        {
+          "userId": "123",
+          "username": "4test_3",
+          "role": "student"
+        },
+        {
+          "userId": "124",
+          "username": "3test_4",
+          "role": "student"
+        }
+      ]
     }
   ]
 }
