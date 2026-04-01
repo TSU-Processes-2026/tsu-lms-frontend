@@ -1,4 +1,3 @@
-import { CommandParticipant } from '@/types/command/CommandParticipant';
 import { UserIcon, Users } from 'lucide-react';
 
 interface CommandCardProps {

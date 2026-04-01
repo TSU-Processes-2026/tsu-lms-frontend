@@ -16,7 +16,6 @@ import { CommandCard } from '@/components/ui/CommandCard';
 import { useCommandModal } from '@/hooks/command/useCommandModal';
 import CommandParticipantsModal from '@/components/modals/ShowCommadParticipants';
 import { useState } from 'react';
-import { CommandParticipant } from '@/types/command/CommandParticipant';
 import { Team } from '@/types/command/Team';
 
 interface MaterialPostCardData extends MaterialPostResponse {
@@ -25,11 +24,6 @@ interface MaterialPostCardData extends MaterialPostResponse {
 
 interface AssignmentPostCardData extends AssignmentPostResponse {
     authorUsername: string;
-}
-
-interface Command {
-    id: string;
-    participants: CommandParticipant[];
 }
 
 const commandsMock: Team[] = [
