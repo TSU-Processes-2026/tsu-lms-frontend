@@ -90,11 +90,38 @@ server.post('/api/auth/login', (req, res) => {
     res.status(200).jsonp(response);
 });
 
-server.get('/api/commands/:id', async (req, res) => {
-    const { id } = req.params;
-    const response = database.get('commands').find({ id }).value();
-    console.log(response);
-    return response;
+server.get('/api/subjects/:subjectId/teams', async (req, res) => {
+    try {
+        const { subjectId } = req.params;
+        const teams = database.get('teams').filter({ subjectId }).value();
+        res.status(200).json(teams);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+server.get('/api/subjects/:subjectId/teams/unassigned', async (req, res) => {
+    try {
+        const { subjectId } = req.params;
+        const teams = database.get('teams').filter({ subjectId }).value();
+        const participants = database.get('participants').filter({ subjectId }).value();
+        const unassignedStudents = participants.filter((student) => {
+            const isInAnyTeam = teams.some((team) =>
+                team.members.some((member) => member.userId === student.userId),
+            );
+            return student.role === 'Student' && !isInAnyTeam;
+        });
+        const response = {
+            subjectId: subjectId,
+            studentIds: [],
+            students: unassignedStudents,
+        };
+        res.status(200).json(response);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 server.get('/api/users/me', async (req, res) => {

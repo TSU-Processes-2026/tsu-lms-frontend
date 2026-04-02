@@ -1,13 +1,15 @@
+import { TeamMember } from '@/types/command/Team';
 import { UserIcon, Users } from 'lucide-react';
 
 interface CommandCardProps {
     index?: number;
-    participants: string[];
+    participants: TeamMember[];
     onClick: () => void;
 }
 
 export const CommandCard = ({ index = 0, participants, onClick }: CommandCardProps) => {
     const avatarLimit = 3;
+    console.log(participants);
     const badgeCount = participants.length > avatarLimit ? participants.length - avatarLimit : 0;
     return (
         <div
@@ -25,7 +27,6 @@ export const CommandCard = ({ index = 0, participants, onClick }: CommandCardPro
                     <p className='text-slate-500 mr-2'>Всего участников: </p>
                     {participants.slice(0, avatarLimit).map((index, participant) => (
                         <div
-                            key={index}
                             className='w-7 h-7 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center'
                             data-testid={`participant-icon-${participant}`}
                         >

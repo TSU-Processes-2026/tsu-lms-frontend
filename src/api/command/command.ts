@@ -66,8 +66,10 @@ export const fetchSubjectTeams = async (
                 },
             },
         );
+        console.log(response);
         return response;
     } catch (error) {
+        console.log(error);
         throw error;
     }
 };
@@ -89,6 +91,7 @@ export const createTeamManually = async (
         );
         return response;
     } catch (error) {
+        console.log(error);
         throw error;
     }
 };
@@ -111,6 +114,7 @@ export const updateTeamMembers = async (
         );
         return response;
     } catch (error) {
+        console.log(error);
         throw error;
     }
 };
@@ -128,8 +132,10 @@ export const fetchUnassignedStudents = async (
                 },
             },
         );
+        console.log(response.data);
         return response;
     } catch (error) {
+        console.log(error);
         throw error;
     }
 };
@@ -149,6 +155,7 @@ export const previewRandomTeamDistribution = async (
         );
         return response;
     } catch (error) {
+        console.log(error);
         throw error;
     }
 };

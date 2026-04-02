@@ -22,6 +22,11 @@
       "id": "1772748407938-rqnwuv6zbrh",
       "username": "ivanov_ivan4",
       "password": "password123"
+    },
+    {
+      "id": "1772738401938-rqnwuv6zbrh",
+      "username": "ivanov_ivan5",
+      "password": "password123"
     }
   ],
   "subjects": [
@@ -56,85 +61,118 @@
       "description": "Deep dive into programming techniques"
     },
     {
-      "id": "1775019049114-rdwvuv4ot7a",
-      "title": "jjj",
-      "description": "jjj"
+      "id": "1775112468230-qbjcvrhk8zn",
+      "title": "Test subject",
+      "description": "Test subject"
     }
   ],
   "participants": [
     {
       "subjectId": "1773129035372-dr012hhflxj",
       "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "username": "ivanov_ivan1",
       "role": "Student"
     },
     {
       "subjectId": "1773129035372-dr012hhflxj",
       "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+      "username": "ivanov_ivan2",
       "role": "Student"
     },
     {
       "subjectId": "1773129035372-dr012hhflxj",
       "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa3",
+      "username": "ivanov_ivan22",
       "role": "Teacher"
     },
     {
       "subjectId": "1773129101042-jiwhlih6mu",
       "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa1",
+      "username": "ivanov_ivan3",
       "role": "Student"
     },
     {
       "subjectId": "1773129101042-jiwhlih6mu",
       "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+      "username": "ivanov_ivan2",
       "role": "Teacher"
     },
     {
       "subjectId": "1773129500000-newsubj1",
       "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "username": "ivanov_ivan1",
       "role": "Student"
     },
     {
       "subjectId": "1773129500000-newsubj1",
       "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+      "username": "ivanov_ivan2",
       "role": "Student"
     },
     {
       "subjectId": "1773129500000-newsubj1",
       "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa1",
+      "username": "ivanov_ivan3",
       "role": "Student"
     },
     {
       "subjectId": "1773129500000-newsubj1",
       "userId": "1772748407938-rqnwuv6zbrh",
+      "username": "ivanov_ivan4",
       "role": "Student"
     },
     {
       "subjectId": "1773129500000-newsubj1",
+      "username": "extra-user-1",
       "userId": "extra-user-1",
       "role": "Student"
     },
     {
       "subjectId": "1773129500000-newsubj1",
+      "username": "extra-user-2",
       "userId": "extra-user-2",
       "role": "Student"
     },
     {
       "subjectId": "1773129500000-newsubj1",
+      "username": "extra-user-3",
       "userId": "extra-user-3",
       "role": "Student"
     },
     {
       "subjectId": "1773129600000-advprog",
       "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "username": "ivanov_ivan1",
       "role": "Student"
     },
     {
       "subjectId": "1773129600000-advprog",
       "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+      "username": "ivanov_ivan2",
+      "role": "Student"
+    },
+    {
+      "subjectId": "1773129600000-advprog",
+      "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa1",
+      "username": "ivanov_ivan3",
+      "role": "Student"
+    },
+    {
+      "subjectId": "1773129600000-advprog",
+      "userId": "1772748407938-rqnwuv6zbrh",
+      "username": "ivanov_ivan4",
+      "role": "Student"
+    },
+    {
+      "subjectId": "1773129600000-advprog",
+      "userId": "1772738401938-rqnwuv6zbrh",
+      "username": "ivanov_ivan5",
       "role": "Student"
     },
     {
       "subjectId": "1773129600000-advprog",
       "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa3",
+      "username": "ivanov_ivan22",
       "role": "Teacher"
     }
   ],
@@ -706,81 +744,53 @@
       "createdAt": "2026-03-15T21:57:04.751Z"
     }
   ],
-  "commands": [
+  "teams": [
     {
       "id": "1",
-      "participants": [
+      "subjectId": "1773129600000-advprog",
+      "memberIds": [],
+      "members": [
         {
-          "userId": "123",
-          "username": "1test",
-          "role": "student"
+          "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "username": "ivanov_ivan1"
         },
         {
-          "userId": "124",
-          "username": "1test_2",
-          "role": "student"
+          "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+          "username": "ivanov_ivan2"
         },
         {
-          "userId": "125",
-          "username": "1test_3",
-          "role": "student"
-        },
-        {
-          "userId": "126",
-          "username": "1test_4",
-          "role": "student"
-        },
-        {
-          "userId": "127",
-          "username": "1test_5",
-          "role": "captain"
+          "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa1",
+          "username": "ivanov_ivan3"
         }
       ]
     },
     {
       "id": "2",
-      "participants": [
+      "subjectId": "1773129600000-advprog",
+      "memberIds": [],
+      "members": [
         {
-          "userId": "123",
-          "username": "1test",
-          "role": "student"
+          "userId": "1772748407938-rqnwuv6zbrh",
+          "username": "ivanov_ivan4"
         },
         {
-          "userId": "124",
-          "username": "2test_2",
-          "role": "student"
-        },
-        {
-          "userId": "127",
-          "username": "2test_5",
-          "role": "captain"
+          "userId": "1772738401938-rqnwuv6zbrh",
+          "username": "ivanov_ivan5"
         }
       ]
-    },
+    }
+  ],
+  "settings": [
     {
-      "id": "3",
-      "participants": [
-        {
-          "userId": "123",
-          "username": "3test",
-          "role": "student"
-        },
-        {
-          "userId": "124",
-          "username": "3test_2",
-          "role": "student"
-        },
-        {
-          "userId": "123",
-          "username": "4test_3",
-          "role": "student"
-        },
-        {
-          "userId": "124",
-          "username": "3test_4",
-          "role": "student"
-        }
-      ]
+      "subjectId": "1773129600000-advprog",
+      "distributionMode": "Manual",
+      "fixedTeamsCount": "2",
+      "fixedTeamsSize": "3",
+      "minTeamSize": "1",
+      "maxTeamSize": "3",
+      "finalizedAt": "2026-04-01T06:04:22.129Z",
+      "isFinalized": true,
+      "warnings": []
     }
   ]
 }

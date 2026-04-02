@@ -1,7 +1,7 @@
 import { useSubjectView } from '@/hooks/subject/useSubjectView';
 import StudentsModal from '@/components/modals/StudentsModal';
 import CreateAssignmentModal from '@/components/modals/CreateAssignmentModal';
-import { User as UserIcon, Upload, ClipboardCheck, Users, Settings } from 'lucide-react';
+import { User as UserIcon, Upload, ClipboardCheck, Users, Settings, Plus } from 'lucide-react';
 import AnnouncementPostCard from '@/components/ui/AnnouncementPostCard';
 import MaterialPostCard from '@/components/ui/MaterialPostCard';
 import AssignmentPostCard from '@/components/ui/AssignmentPostCard';
@@ -16,7 +16,8 @@ import { CommandCard } from '@/components/ui/CommandCard';
 import { useCommandModal } from '@/hooks/command/useCommandModal';
 import CommandParticipantsModal from '@/components/modals/ShowCommadParticipants';
 import { useState } from 'react';
-import { useTeams } from '@/hooks/command/useTeams';
+import { useLoadTeams } from '@/hooks/command/useLoadTeams';
+import { CreateTeamManually } from '@/components/modals/CreateTeamManually';
 
 interface MaterialPostCardData extends MaterialPostResponse {
     authorUsername: string;
@@ -73,13 +74,14 @@ const SubjectView = () => {
         setSelectedCommand(id);
         handleShowCommandParticipants();
     };
+    const [showCreateTeamManuallyModal, setShowCreateTeamManually] = useState<boolean>(false);
 
     const loadedParticipants = participants;
-    const count = (loadedParticipants[subjectId] && loadedParticipants[subjectId].length) || 0;
-
-    const { teams, mapParticipantsWithTeamIds } = useTeams(subjectId, loadedParticipants);
-    const teamMembers = mapParticipantsWithTeamIds(selectedCommand);
-
+    const count =
+        (loadedParticipants[subjectId] &&
+            loadedParticipants[subjectId].filter((item) => item.role === 'student').length) ||
+        0;
+    const { teams, isLoading } = useLoadTeams(subjectId);
     return (
         <>
             <div className='max-w-4xl mx-auto'>
@@ -301,28 +303,41 @@ const SubjectView = () => {
                             <h3 className='text-3xl font-bold text-slate-800 mb-2'>
                                 Список команд
                             </h3>
-                            <Settings
-                                size={40}
-                                className='bg-linear-to-r from-blue-600 to-blue-700 text-white p-2 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all'
-                                onClick={() => {
-                                    setShowConfig(true);
-                                }}
-                            />
+                            <div className='flex flex-row items-center gap-2'>
+                                <Plus
+                                    size={40}
+                                    className='bg-linear-to-r from-green-600 to-green-700 text-white p-2 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all'
+                                    onClick={() => {
+                                        setShowCreateTeamManually(true);
+                                    }}
+                                />
+                                <Settings
+                                    size={40}
+                                    className='bg-linear-to-r from-blue-600 to-blue-700 text-white p-2 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all'
+                                    onClick={() => {
+                                        setShowConfig(true);
+                                    }}
+                                />
+                            </div>
                         </div>
-
-                        {teams && teams.length > 0 ? (
+                        {isLoading ? (
+                            <div className='my-4 font-medium text-2xl w-full h-48 text-center text-gray-500 flex flex-col items-center justify-center bg-white rounded-2xl shadow-md border border-slate-100'>
+                                <p className='font-normal text-lg'>Загрузка списка команд...</p>
+                            </div>
+                        ) : teams && teams.length > 0 ? (
                             <ul className='grid sm:grid-cols-1 md:grid-col </ul>s-2 lg:grid-cols-2 gap-4 mt-4'>
                                 {teams.map((item, index) => (
                                     <CommandCard
                                         index={index}
-                                        participants={item.memberIds}
+                                        key={item.id}
+                                        participants={item.members}
                                         onClick={() => handleSelectCommand(item.id)}
                                     />
                                 ))}
                             </ul>
                         ) : (
-                            <div className='my-4 font-medium text-2xl w-full h-48 text-center text-gray-500 flex flex-col items-center justify-center bg-white rounded-2xl shadow-md border border-slate-100'>
-                                <p>Команды еще не сформированы</p>
+                            <div className='my-4 font-medium text-xl w-full h-48 text-center text-gray-500 flex flex-col items-center justify-center bg-white rounded-2xl shadow-md border border-slate-100'>
+                                <p className='font-normal text-lg'>Команды еще не сформированы</p>
                             </div>
                         )}
                     </>
@@ -339,7 +354,7 @@ const SubjectView = () => {
                 <CommandParticipantsModal
                     commandNumber={Number.parseInt(selectedCommand)}
                     onClose={handleCloseCommandParticipants}
-                    members={teamMembers}
+                    teams={teams}
                     currentUserId={''}
                     commandId={selectedCommand}
                 />
@@ -357,6 +372,15 @@ const SubjectView = () => {
                     onClose={() => {
                         setShowConfig(false);
                     }}
+                />
+            )}
+            {showCreateTeamManuallyModal && (
+                <CreateTeamManually
+                    onClose={() => {
+                        setShowCreateTeamManually(false);
+                    }}
+                    subjectId={subjectId ?? ''}
+                    fixedTeamSize={8}
                 />
             )}
         </>

@@ -1,12 +1,13 @@
 import { Participant } from '@/hooks/subject/useSubjects';
 import { CommandParticipant } from '@/types/command/CommandParticipant';
+import { Team } from '@/types/command/Team';
 import { Crown, UserIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface CommandParticipantsModalProps {
     commandNumber: number;
     onClose: () => void;
-    members: Participant[];
+    teams: Team[];
     currentUserId: string;
     commandId: string;
 }
@@ -14,10 +15,11 @@ interface CommandParticipantsModalProps {
 const CommandParticipantsModal = ({
     onClose,
     commandNumber,
-    members,
+    teams,
     currentUserId,
     commandId,
 }: CommandParticipantsModalProps) => {
+    const members = teams.filter((item) => item.id == commandId)[0];
     const roleBadge: Record<string, React.ReactNode> = {
         captain: (
             <span className='px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-xs font-bold flex items-center gap-1'>
@@ -46,19 +48,15 @@ const CommandParticipantsModal = ({
                     ></button>
                 </div>
                 <div className='flex-1 overflow-y-auto p-8'>
+                    <div className='mb-5 p-4 bg-amber-100 rounded-2xl border border-amber-100 flex flex-row items-center gap-4'>
+                        ⚠️
+                        <p className='font-medium text-lg text-amber-700'> Капитан не выбран </p>
+                    </div>
                     <div className='space-y-3'>
-                        {members.length === 0 ? (
+                        {!members || members.members.length === 0 ? (
                             <div className='text-slate-400 text-center'>Нет участников</div>
                         ) : (
-                            members.map((participant) => {
-                                const role = participant.role
-                                    ? participant.role.toLowerCase()
-                                    : 'student';
-
-                                const isSelf = participant.userId === currentUserId;
-                                const validRole = ['captain', 'student'].includes(role)
-                                    ? role
-                                    : 'student';
+                            members.members.map((participant) => {
                                 return (
                                     <div
                                         key={participant.userId}
@@ -73,12 +71,6 @@ const CommandParticipantsModal = ({
                                                     <p className='font-bold text-slate-800'>
                                                         {participant.username}
                                                     </p>
-                                                    {roleBadge[validRole] || roleBadge['student']}
-                                                    {isSelf && (
-                                                        <span className='text-xs text-slate-400'>
-                                                            (вы)
-                                                        </span>
-                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -87,7 +79,6 @@ const CommandParticipantsModal = ({
                             })
                         )}
                     </div>
-                    <div className='mt-5 p-4 bg-amber-50 rounded-2xl border border-amber-100'></div>
                 </div>
                 <div className='px-8 py-5 border-t border-slate-100 flex justify-end bg-slate-50/50 shrink-0'>
                     <button

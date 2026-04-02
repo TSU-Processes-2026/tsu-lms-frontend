@@ -5,7 +5,7 @@ export interface Team {
     members: TeamMember[];
 }
 
-interface TeamMember {
+export interface TeamMember {
     userId: string;
     username: string;
 }
