@@ -1,14 +1,15 @@
 import { ACCESS_TOKEN } from '@/constants/auth/auth';
 import { DEV_URL, PROD_URL, MOCK_URL } from '@/constants/config/config';
-import { CommandConfig } from '@/types/command/CommandConfig';
-import { CommandParticipant } from '@/types/command/CommandParticipant';
+import { CommandConfig, TeamConfig } from '@/types/command/CommandConfig';
 import {
     ConfirmationResponse,
     DistributedTeam,
+    Members,
     RandomDistributionResponse,
     Team,
     TeamCreationResponse,
     UnAssignedStudents,
+    ValidationDetails,
 } from '@/types/command/Team';
 import axios, { AxiosResponse } from 'axios';
 
@@ -17,12 +18,29 @@ const BASE_URL = DEV_URL || PROD_URL || MOCK_URL;
 export const saveConfigParams = async (
     subjectId: string,
     params: CommandConfig,
-): Promise<AxiosResponse<any>> => {
+): Promise<AxiosResponse<TeamConfig>> => {
     const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
     try {
-        const response: AxiosResponse<any> = await axios.put(
-            `${BASE_URL}/subject/${subjectId}/teams/settings`,
+        const response: AxiosResponse<TeamConfig> = await axios.put(
+            `${BASE_URL}/subjects/${subjectId}/teams/settings`,
             params,
+            {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            },
+        );
+        return response;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const fetchConfig = async (subjectId: string): Promise<AxiosResponse<TeamConfig>> => {
+    const accessToken = localStorage.getItem(ACCESS_TOKEN);
+    try {
+        const response: AxiosResponse<TeamConfig> = await axios.get(
+            `${BASE_URL}/subjects/${subjectId}/teams/settings`,
             {
                 headers: {
                     Authorization: `Bearer ${accessToken}`,
@@ -41,7 +59,7 @@ export const fetchSubjectTeams = async (
     const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
     try {
         const response: AxiosResponse<Team[]> = await axios.get(
-            `${BASE_URL}/subject/${subjectId}/teams`,
+            `${BASE_URL}/subjects/${subjectId}/teams`,
             {
                 headers: {
                     Authorization: `Bearer ${accessToken}`,
@@ -56,12 +74,12 @@ export const fetchSubjectTeams = async (
 
 export const createTeamManually = async (
     subjectId: string | undefined,
-    members: string[],
+    members: Members,
 ): Promise<AxiosResponse<TeamCreationResponse>> => {
     const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
     try {
         const response: AxiosResponse<TeamCreationResponse> = await axios.post(
-            `${BASE_URL}/subject/${subjectId}/teams`,
+            `${BASE_URL}/subjects/${subjectId}/teams`,
             members,
             {
                 headers: {
@@ -78,12 +96,12 @@ export const createTeamManually = async (
 export const updateTeamMembers = async (
     subjectId: string | undefined,
     teamId: string | undefined,
-    members: string[],
+    members: Members,
 ): Promise<AxiosResponse<TeamCreationResponse>> => {
     const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
     try {
         const response: AxiosResponse<TeamCreationResponse> = await axios.put(
-            `${BASE_URL}/subject/${subjectId}/teams/${teamId}`,
+            `${BASE_URL}/subjects/${subjectId}/teams/${teamId}`,
             members,
             {
                 headers: {
@@ -103,7 +121,7 @@ export const fetchUnassignedStudents = async (
     const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
     try {
         const response: AxiosResponse<UnAssignedStudents> = await axios.get(
-            `${BASE_URL}/subject/${subjectId}/teams/unassigned`,
+            `${BASE_URL}/subjects/${subjectId}/teams/unassigned`,
             {
                 headers: {
                     Authorization: `Bearer ${accessToken}`,
@@ -122,7 +140,7 @@ export const previewRandomTeamDistribution = async (
     const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
     try {
         const response: AxiosResponse<RandomDistributionResponse> = await axios.post(
-            `${BASE_URL}/subject/${subjectId}/teams/random`,
+            `${BASE_URL}/subjects/${subjectId}/teams/random`,
             {
                 headers: {
                     Authorization: `Bearer ${accessToken}`,
@@ -137,11 +155,13 @@ export const previewRandomTeamDistribution = async (
 
 export const validateManualDistribution = async (
     subjectId: string | undefined,
-): Promise<AxiosResponse<DistributedTeam>> => {
+    teams: Members[],
+): Promise<AxiosResponse<ValidationDetails>> => {
     const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
     try {
-        const response: AxiosResponse<DistributedTeam> = await axios.post(
-            `${BASE_URL}/subject/${subjectId}/teams/validate`,
+        const response: AxiosResponse<ValidationDetails> = await axios.post(
+            `${BASE_URL}/subjects/${subjectId}/teams/validate`,
+            teams,
             {
                 headers: {
                     Authorization: `Bearer ${accessToken}`,
@@ -160,7 +180,7 @@ export const distributeWithManual = async (
     const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
     try {
         const response: AxiosResponse<DistributedTeam> = await axios.post(
-            `${BASE_URL}/subject/${subjectId}/teams/manual`,
+            `${BASE_URL}/subjects/${subjectId}/teams/manual`,
             {
                 headers: {
                     Authorization: `Bearer ${accessToken}`,
@@ -179,7 +199,7 @@ export const confirmTeamDistribution = async (
     const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
     try {
         const response: AxiosResponse<ConfirmationResponse> = await axios.post(
-            `${BASE_URL}/subject/${subjectId}/teams/finalize`,
+            `${BASE_URL}/subjects/${subjectId}/teams/finalize`,
             {
                 headers: {
                     Authorization: `Bearer ${accessToken}`,

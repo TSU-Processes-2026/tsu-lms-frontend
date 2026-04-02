@@ -4,7 +4,7 @@ import {
     INTERNAL_SERVER_ERROR_PAGE_URL,
     LOGIN_PAGE_URL,
 } from '@/constants/paths/paths';
-import { TeamCreationResponse } from '@/types/command/Team';
+import { Members, TeamCreationResponse } from '@/types/command/Team';
 import { AxiosResponse, isAxiosError } from 'axios';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -15,7 +15,7 @@ interface UseCreateTeamManually {
     errorMessage: string | null;
 }
 
-export function useCreateTeamManually(subjectId: string, members: string[]): UseCreateTeamManually {
+export function useCreateTeamManually(subjectId: string, members: Members): UseCreateTeamManually {
     const [teams, setTeams] = useState<TeamCreationResponse>({
         teams: [],
         warnings: [],

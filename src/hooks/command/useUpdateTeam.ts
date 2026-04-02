@@ -4,19 +4,20 @@ import {
     INTERNAL_SERVER_ERROR_PAGE_URL,
     LOGIN_PAGE_URL,
 } from '@/constants/paths/paths';
+import { Members } from '@/types/command/Team';
 import { isAxiosError } from 'axios';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export function useUpdateTeam(subjectId: string) {
     const [teamId, setTeamId] = useState<string | null>(null);
-    const [newMembers, setNewMembers] = useState<string[] | null>(null);
+    const [newMembers, setNewMembers] = useState<Members | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const navigate = useNavigate();
     const handleSelectTeamId = (selectedTeamId: string) => setTeamId(selectedTeamId);
-    const handleSelectTeamMembers = (memberIds: string[]) => {
+    const handleSelectTeamMembers = (memberIds: Members) => {
         setNewMembers(memberIds);
     };
     const handleUpdateTeam = async (): Promise<void> => {

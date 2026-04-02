@@ -2,6 +2,12 @@ export interface Team {
     id: string;
     subjectId: string;
     memberIds: string[];
+    members: TeamMember[];
+}
+
+interface TeamMember {
+    userId: string;
+    username: string;
 }
 
 export interface TeamCreationResponse {
@@ -12,14 +18,16 @@ export interface TeamCreationResponse {
 export interface UnAssignedStudents {
     subjectId: string;
     studentIds: string[];
+    students: TeamMember[];
 }
 
-interface Members {
+export interface Members {
     memberIds: string[];
 }
 
-export interface RandomDistributionResponse extends DistributedTeam, ValidationDetails {
+export interface RandomDistributionResponse extends ValidationDetails {
     subjectId: string;
+    teams: Members[];
     suggestedParameters: SuggestedParameters;
 }
 
@@ -30,7 +38,8 @@ export interface ValidationDetails {
 }
 
 export interface DistributedTeam {
-    teams: Members[];
+    teams: Team[];
+    warnings: string[];
 }
 
 interface SuggestedParameters {

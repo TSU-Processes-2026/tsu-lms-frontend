@@ -100,6 +100,7 @@ export function useManualDistribution(subjectId: string): UseManualDistribution 
     const [unassignedStudents, setUnassignedStudents] = useState<UnAssignedStudents>({
         subjectId: subjectId,
         studentIds: [],
+        students: [],
     });
     const [isLoading, setLoading] = useState<boolean>(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -115,6 +116,7 @@ export function useManualDistribution(subjectId: string): UseManualDistribution 
                     setUnassignedStudents({
                         subjectId: response.data.subjectId,
                         studentIds: response.data.studentIds,
+                        students: response.data.students,
                     });
                 }
             } catch (error) {
