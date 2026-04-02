@@ -101,6 +101,33 @@ server.get('/api/subjects/:subjectId/teams', async (req, res) => {
     }
 });
 
+server.post('/api/subjects/:subjectId/teams', async (req, res) => {
+    try {
+        const { memberIds } = req.body;
+        const { subjectId } = req.params;
+        const newId = `${Date.now()}-${Math.random().toString(36).substr(2)}`;
+        const allParticipants = database
+            .get('participants')
+            .filter((p) => p.subjectId === subjectId)
+            .value();
+
+        const members = allParticipants.filter((participant) =>
+            memberIds.includes(participant.userId),
+        );
+        const newTeam = {
+            id: newId,
+            subjectId: subjectId,
+            memberIds: memberIds,
+            members: members,
+        };
+        save('teams', newTeam);
+        res.status(201).json();
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 server.get('/api/subjects/:subjectId/teams/unassigned', async (req, res) => {
     try {
         const { subjectId } = req.params;

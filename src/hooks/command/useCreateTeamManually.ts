@@ -13,8 +13,10 @@ interface UseCreateTeamManually {
     teams: TeamCreationResponse;
     unassigned: UnAssignedStudents;
     isLoading: boolean;
+    isCreating: boolean;
     errorMessage: string | null;
-    processCreateRequest: (members: Members) => void;
+    setErrorMessage: (message: string | null) => void;
+    processCreateRequest: (members: Members) => Promise<boolean | void>;
 }
 
 export function useCreateTeamManually(subjectId: string): UseCreateTeamManually {
@@ -28,11 +30,14 @@ export function useCreateTeamManually(subjectId: string): UseCreateTeamManually 
         students: [],
     });
     const [isLoading, setLoading] = useState<boolean>(false);
+    const [isCreating, setIsCreating] = useState<boolean>(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const navigate = useNavigate();
 
-    const processCreateRequest = async (members: Members) => {
+    const processCreateRequest = async (members: Members): Promise<boolean | void> => {
+        console.log(members);
+        setIsCreating(true);
         try {
             const response: AxiosResponse<TeamCreationResponse> = await createTeamManually(
                 subjectId,
@@ -42,6 +47,7 @@ export function useCreateTeamManually(subjectId: string): UseCreateTeamManually 
                 teams: response.data.teams,
                 warnings: response.data.warnings,
             });
+            return true;
         } catch (error) {
             if (isAxiosError(error)) {
                 switch (error.status) {
@@ -73,7 +79,7 @@ export function useCreateTeamManually(subjectId: string): UseCreateTeamManually 
                 setErrorMessage('Не удалось обработать запрос');
             }
         } finally {
-            setLoading(false);
+            setIsCreating(false);
         }
     };
 
@@ -127,7 +133,9 @@ export function useCreateTeamManually(subjectId: string): UseCreateTeamManually 
         teams,
         unassigned,
         isLoading,
+        isCreating,
         errorMessage,
+        setErrorMessage,
         processCreateRequest,
     };
 }

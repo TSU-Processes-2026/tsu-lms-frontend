@@ -19,7 +19,15 @@ const CommandParticipantsModal = ({
     currentUserId,
     commandId,
 }: CommandParticipantsModalProps) => {
-    const members = teams.filter((item) => item.id == commandId)[0];
+    const members: Team =
+        teams !== undefined && teams.length > 0
+            ? teams.filter((item) => item.id == commandId)[0]
+            : {
+                  id: '',
+                  subjectId: '',
+                  memberIds: [],
+                  members: [],
+              };
     const roleBadge: Record<string, React.ReactNode> = {
         captain: (
             <span className='px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-xs font-bold flex items-center gap-1'>

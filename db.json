@@ -778,6 +778,123 @@
           "username": "ivanov_ivan5"
         }
       ]
+    },
+    {
+      "id": "1775125298865-7iyhprsb3k",
+      "subjectId": "1773129035372-dr012hhflxj",
+      "memberIds": [
+        "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+      ],
+      "members": [
+        {
+          "subjectId": "1773129035372-dr012hhflxj",
+          "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "username": "ivanov_ivan1",
+          "role": "Student"
+        }
+      ]
+    },
+    {
+      "id": "1775125310322-3ddrkns673",
+      "subjectId": "1773129035372-dr012hhflxj",
+      "memberIds": [
+        "3fa85f64-5717-4562-b3fc-2c963f66afa2"
+      ],
+      "members": [
+        {
+          "subjectId": "1773129035372-dr012hhflxj",
+          "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+          "username": "ivanov_ivan2",
+          "role": "Student"
+        }
+      ]
+    },
+    {
+      "id": "1775125351149-x4ypy49dcvl",
+      "subjectId": "1773129500000-newsubj1",
+      "memberIds": [
+        "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+        "3fa85f64-5717-4562-b3fc-2c963f66afa1",
+        "1772748407938-rqnwuv6zbrh"
+      ],
+      "members": [
+        {
+          "subjectId": "1773129500000-newsubj1",
+          "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "username": "ivanov_ivan1",
+          "role": "Student"
+        },
+        {
+          "subjectId": "1773129500000-newsubj1",
+          "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+          "username": "ivanov_ivan2",
+          "role": "Student"
+        },
+        {
+          "subjectId": "1773129500000-newsubj1",
+          "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa1",
+          "username": "ivanov_ivan3",
+          "role": "Student"
+        },
+        {
+          "subjectId": "1773129500000-newsubj1",
+          "userId": "1772748407938-rqnwuv6zbrh",
+          "username": "ivanov_ivan4",
+          "role": "Student"
+        }
+      ]
+    },
+    {
+      "id": "1775125353987-27vfqrcckjh",
+      "subjectId": "1773129500000-newsubj1",
+      "memberIds": [
+        "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+        "3fa85f64-5717-4562-b3fc-2c963f66afa1",
+        "1772748407938-rqnwuv6zbrh"
+      ],
+      "members": [
+        {
+          "subjectId": "1773129500000-newsubj1",
+          "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "username": "ivanov_ivan1",
+          "role": "Student"
+        },
+        {
+          "subjectId": "1773129500000-newsubj1",
+          "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+          "username": "ivanov_ivan2",
+          "role": "Student"
+        },
+        {
+          "subjectId": "1773129500000-newsubj1",
+          "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa1",
+          "username": "ivanov_ivan3",
+          "role": "Student"
+        },
+        {
+          "subjectId": "1773129500000-newsubj1",
+          "userId": "1772748407938-rqnwuv6zbrh",
+          "username": "ivanov_ivan4",
+          "role": "Student"
+        }
+      ]
+    },
+    {
+      "id": "1775125398921-09k2y7j5cfdq",
+      "subjectId": "1773129500000-newsubj1",
+      "memberIds": [
+        "extra-user-2"
+      ],
+      "members": [
+        {
+          "subjectId": "1773129500000-newsubj1",
+          "username": "extra-user-2",
+          "userId": "extra-user-2",
+          "role": "Student"
+        }
+      ]
     }
   ],
   "settings": [

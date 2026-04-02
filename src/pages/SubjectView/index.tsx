@@ -330,7 +330,7 @@ const SubjectView = () => {
                                     <CommandCard
                                         index={index}
                                         key={item.id}
-                                        participants={item.members}
+                                        participants={item.members || []}
                                         onClick={() => handleSelectCommand(item.id)}
                                     />
                                 ))}
@@ -347,6 +347,7 @@ const SubjectView = () => {
                 <StudentsModal
                     onClose={handleCloseModal}
                     subjectId={subjectId ?? ''}
+                    currentUserId={''}
                     selectedSubject={selectedSubject ?? null}
                 />
             )}

@@ -1,6 +1,5 @@
 import { useCommandConfig } from '@/hooks/command/useCommandConfig';
 import { Plus, X } from 'lucide-react';
-import { Switch } from '../ui/Switch';
 import { useParams } from 'react-router-dom';
 
 interface ModalProps {
@@ -12,18 +11,14 @@ export const CommandConfiguration = ({ participantsCount, onClose }: ModalProps)
     const { id } = useParams();
     const currentSubjectId = id || '';
     const {
-        distributionMode,
-        fixedTeamSize,
-        fixedTeamsCount,
-        minTeamSize,
-        maxTeamSize,
+        config,
         errorMessage,
         handleSubmit,
         handleDistributionMode,
-        setMinBound,
-        setMaxBound,
+        handleMinSize,
+        handleMaxSize,
         handleTeamSize,
-        setTeamsCount,
+        handleTeamsCount,
     } = useCommandConfig(currentSubjectId, participantsCount, onClose);
 
     return (
@@ -31,7 +26,7 @@ export const CommandConfiguration = ({ participantsCount, onClose }: ModalProps)
             <div className='bg-white w-full max-w-lg rounded-3xl shadow-2xl p-8'>
                 <div className='flex items-center justify-between mb-6'>
                     <div className='flex items-center gap-3'>
-                        <div className='w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-300/50'>
+                        <div className='w-10 h-10 bg-linear-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-300/50'>
                             <Plus className='text-white' size={20} />
                         </div>
                         <h3 className='text-xl font-bold text-slate-800'>
@@ -51,7 +46,7 @@ export const CommandConfiguration = ({ participantsCount, onClose }: ModalProps)
                             Выберите режим
                         </label>
                         <select
-                            value={distributionMode}
+                            value={config.distributionMode}
                             onChange={(e) => handleDistributionMode(e)}
                             className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all appearance-none cursor-pointer'
                             style={{
@@ -72,47 +67,57 @@ export const CommandConfiguration = ({ participantsCount, onClose }: ModalProps)
                         </label>
                         <input
                             type='number'
-                            value={fixedTeamsCount}
-                            onChange={(e) => setTeamsCount(e.target.value)}
+                            value={config.fixedTeamsCount}
+                            onChange={(e) => handleTeamsCount(e.target.value)}
+                            min={0}
                             className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all'
                         />
                     </div>
-                    {Number.parseInt(fixedTeamsCount.toString()) > 0 && (
+                    {Number.parseInt(config.fixedTeamsCount.toString()) > 0 && (
                         <div>
                             <label className='block text-sm font-semibold text-slate-700 mb-2'>
                                 Студентов в команде
                             </label>
                             <input
                                 type='number'
-                                value={fixedTeamSize}
+                                value={config.fixedTeamSize}
                                 onChange={(e) => handleTeamSize(e.target.value)}
+                                min={0}
                                 className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all'
                             />
                         </div>
                     )}
-                    {Number.parseInt(fixedTeamsCount.toString()) *
-                        Number.parseInt(fixedTeamSize.toString()) >
+                    {Number.parseInt(config.fixedTeamsCount.toString()) *
+                        Number.parseInt(config.fixedTeamSize.toString()) >
                         0 && (
                         <div className='w-full flex flex-col items-start justify-between'>
                             <label className='block text-sm font-semibold text-slate-700 mb-2'>
                                 Диапазон студентов в команде
                             </label>
                             <div className='flex flex-row items-center justify-between gap-4'>
-                                <div>
+                                <div className='flex flex-row items-center gap-4'>
+                                    <label className='block text-sm font-semibold text-slate-700 mb-2'>
+                                        От
+                                    </label>
                                     <input
                                         type='number'
-                                        value={minTeamSize}
+                                        value={config.minTeamSize}
                                         placeholder='От'
-                                        onChange={(e) => setMinBound(e.target.value)}
+                                        onChange={(e) => handleMinSize(e.target.value)}
+                                        min={1}
                                         className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all'
                                     />
                                 </div>
-                                <div>
+                                <div className='flex flex-row items-center gap-4'>
+                                    <label className='block text-sm font-semibold text-slate-700 mb-2'>
+                                        До
+                                    </label>
                                     <input
                                         type='number'
-                                        value={maxTeamSize}
+                                        value={config.maxTeamSize}
                                         placeholder='До'
-                                        onChange={(e) => setMaxBound(e.target.value)}
+                                        onChange={(e) => handleMaxSize(e.target.value)}
+                                        min={1}
                                         className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all'
                                     />
                                 </div>
@@ -144,7 +149,7 @@ export const CommandConfiguration = ({ participantsCount, onClose }: ModalProps)
                         </button>
                         <button
                             type='submit'
-                            className='flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-300/150 hover:-translate-y-0.5 transition-all'
+                            className='flex-1 bg-linear-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-300/150 hover:-translate-y-0.5 transition-all'
                         >
                             Сохранить
                         </button>

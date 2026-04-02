@@ -10,7 +10,8 @@ interface CommandCardProps {
 export const CommandCard = ({ index = 0, participants, onClick }: CommandCardProps) => {
     const avatarLimit = 3;
     console.log(participants);
-    const badgeCount = participants.length > avatarLimit ? participants.length - avatarLimit : 0;
+    const badgeCount =
+        participants && participants.length > avatarLimit ? participants.length - avatarLimit : 0;
     return (
         <div
             key={index}
@@ -25,14 +26,15 @@ export const CommandCard = ({ index = 0, participants, onClick }: CommandCardPro
             <div className='w-full flex flex-col py-4 px-2'>
                 <div className='flex -space-x-2'>
                     <p className='text-slate-500 mr-2'>Всего участников: </p>
-                    {participants.slice(0, avatarLimit).map((index, participant) => (
-                        <div
-                            className='w-7 h-7 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center'
-                            data-testid={`participant-icon-${participant}`}
-                        >
-                            <UserIcon size={12} className='text-slate-500' />
-                        </div>
-                    ))}
+                    {participants &&
+                        participants.slice(0, avatarLimit).map((index, participant) => (
+                            <div
+                                className='w-7 h-7 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center'
+                                data-testid={`participant-icon-${participant}`}
+                            >
+                                <UserIcon size={12} className='text-slate-500' />
+                            </div>
+                        ))}
                     {badgeCount > 0 && (
                         <div
                             className='w-7 h-7 rounded-full border-2 border-white bg-white flex items-center justify-center text-[10px] font-bold text-slate-600 shadow-sm'

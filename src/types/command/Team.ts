@@ -52,5 +52,5 @@ interface SuggestedParameters {
 
 export interface ConfirmationResponse {
     isFinalized: boolean;
-    finalizedAt: string;
+    finalizedAt: string | null;
 }
