@@ -5,8 +5,8 @@ import {
     LOGIN_PAGE_URL,
 } from '@/constants/paths/paths';
 import { BAD_REQUEST, UNAUTHORIZED_TOKEN, SERVER_ERROR } from '@/constants/response/errorMessages';
-import { CommandConfig, TeamConfig } from '@/types/command/CommandConfig';
-import { formatToInt } from '@/utils/stringParser';
+import { TeamConfig } from '@/types/command/CommandConfig';
+
 import { AxiosResponse, isAxiosError } from 'axios';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -29,20 +29,12 @@ export const useCommandConfig = (
         warnings: [],
     });
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [isSuccess, setIsSuccess] = useState<boolean>(false);
 
     const navigate = useNavigate();
-    const getConfig = (): CommandConfig => {
-        const form: CommandConfig = {
-            distributionMode: config.distributionMode,
-            fixedTeamsCount: formatToInt(config.fixedTeamsCount),
-            fixedTeamSize: formatToInt(config.fixedTeamSize),
-            minTeamSize: formatToInt(config.minTeamSize),
-            maxTeamSize: formatToInt(config.maxTeamSize),
-        };
-        return form;
-    };
-    const { validateParams } = useValidateCommandConfig(getConfig());
+
+    const { validateParams } = useValidateCommandConfig();
 
     const handleDistributionMode = (e: React.ChangeEvent<HTMLSelectElement, HTMLSelectElement>) => {
         setConfig((prev) => ({
@@ -87,17 +79,22 @@ export const useCommandConfig = (
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         try {
-            const params: CommandConfig = getConfig();
-            const error: string | null = validateParams(participantsCount);
+            const error: string | null = validateParams(participantsCount, config);
             if (error) {
                 return setErrorMessage(error);
             }
-            const response: AxiosResponse<TeamConfig> = await saveConfigParams(subjectId, params);
+            const response: AxiosResponse<TeamConfig> = await saveConfigParams(subjectId, {
+                distributionMode: config.distributionMode,
+                fixedTeamsCount: config.fixedTeamsCount,
+                fixedTeamSize: config.fixedTeamSize,
+                minTeamSize: config.minTeamSize,
+                maxTeamSize: config.maxTeamSize,
+            });
             setConfig((prev) => ({
                 ...prev,
                 ...response.data,
             }));
-            onClose();
+            setIsSuccess(true);
         } catch (error) {
             if (isAxiosError(error)) {
                 if (error.response?.status === 400) {
@@ -117,15 +114,22 @@ export const useCommandConfig = (
 
     useEffect(() => {
         let isMounted = true;
-        setIsLoading(true);
         const processRequest = async () => {
             try {
                 const response: AxiosResponse<TeamConfig> = await fetchConfig(subjectId);
                 if (isMounted) {
-                    setConfig((prev) => ({
-                        ...prev,
-                        ...response.data,
-                    }));
+                    console.log('Config: ', response.data);
+                    setConfig({
+                        subjectId: subjectId,
+                        distributionMode: response.data.distributionMode ?? 'Manual',
+                        fixedTeamsCount: Number(response.data.fixedTeamsCount) || 0,
+                        fixedTeamSize: Number(response.data.fixedTeamSize) || 0,
+                        minTeamSize: Number(response.data.minTeamSize) || 1,
+                        maxTeamSize: Number(response.data.maxTeamSize) || 1,
+                        warnings: response.data.warnings ?? [],
+                        isFinalized: Boolean(response.data.isFinalized) || false,
+                        finalizedAt: response.data.finalizedAt ?? null,
+                    });
                 }
             } catch (error) {
                 if (isAxiosError(error)) {
@@ -147,11 +151,11 @@ export const useCommandConfig = (
                         default: {
                             setConfig((prev) => ({
                                 ...prev,
-                                distributionMode: 'Random',
+                                distributionMode: 'Manual',
                                 fixedTeamsCount: 0,
                                 fixedTeamSize: 0,
-                                minTeamSize: 0,
-                                maxTeamSize: 0,
+                                minTeamSize: 1,
+                                maxTeamSize: 1,
                                 isFinalized: false,
                                 finalizedAt: null,
                                 warnings: [],
@@ -166,16 +170,21 @@ export const useCommandConfig = (
             }
         };
         processRequest();
-        console.log(config);
+
         return () => {
             isMounted = false;
         };
     }, [subjectId]);
 
+    useEffect(() => {
+        console.log('New config: ', config);
+    }, [config]);
+
     return {
         config,
         errorMessage,
         isLoading,
+        isSuccess,
         handleDistributionMode,
         handleTeamsCount,
         handleTeamSize,

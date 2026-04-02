@@ -1,4 +1,5 @@
 const jsonServer = require('json-server');
+const { isValid } = require('zod/v3');
 const server = jsonServer.create();
 const router = jsonServer.router('db.json');
 const middlewares = jsonServer.defaults();
@@ -27,6 +28,19 @@ const getUserProfile = async () => {
 
 const save = (table, value) => {
     database.get(table).push(value).write();
+};
+
+const rewrite = (table, value) => {
+    const existIndex = database
+        .get(table)
+        .findIndex((item) => item.id == value.id)
+        .value();
+
+    if (existIndex !== -1) {
+        database.get(table).splice(existIndex, 1, value).write();
+    } else {
+        database.get(table).push(value).write();
+    }
 };
 
 const getMockedAuthResponse = (userId) => {
@@ -95,6 +109,40 @@ server.get('/api/subjects/:subjectId/teams', async (req, res) => {
         const { subjectId } = req.params;
         const teams = database.get('teams').filter({ subjectId }).value();
         res.status(200).json(teams);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+server.get('/api/subjects/:subjectId/teams/settings', async (req, res) => {
+    try {
+        const { subjectId } = req.params;
+        const config = database.get('settings').filter({ subjectId }).value();
+        res.status(200).json(config);
+    } catch (error) {
+        console.error(error);
+        res.status(404).json({ error: 'Settings not found' });
+    }
+});
+
+server.put('/api/subjects/:subjectId/teams/settings', async (req, res) => {
+    try {
+        const { subjectId } = req.params;
+        const settings = req.body;
+        const newSettings = {
+            subjectId: subjectId,
+            isFinalized: false,
+            finalizedAt: null,
+            distributionMode: settings.distributionMode,
+            fixedTeamsCount: settings.fixedTeamsCount,
+            fixedTeamSize: settings.fixedTeamSize,
+            minTeamSize: settings.minTeamSize,
+            maxTeamSize: settings.maxTeamSize,
+            warnings: [],
+        };
+        rewrite('settings', newSettings);
+        res.status(200).json(newSettings);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Internal server error' });

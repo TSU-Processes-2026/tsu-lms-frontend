@@ -75,12 +75,7 @@ const SubjectView = () => {
         handleShowCommandParticipants();
     };
     const [showCreateTeamManuallyModal, setShowCreateTeamManually] = useState<boolean>(false);
-
-    const loadedParticipants = participants;
-    const count =
-        (loadedParticipants[subjectId] &&
-            loadedParticipants[subjectId].filter((item) => item.role === 'student').length) ||
-        0;
+    const count = subjectParticipants ?? 0;
     const { teams, isLoading } = useLoadTeams(subjectId);
     return (
         <>
@@ -370,6 +365,7 @@ const SubjectView = () => {
             {showCommandConfig && (
                 <CommandConfiguration
                     participantsCount={count}
+                    subjectId={subjectId ?? ''}
                     onClose={() => {
                         setShowConfig(false);
                     }}

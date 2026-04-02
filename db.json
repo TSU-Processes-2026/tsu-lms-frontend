@@ -900,13 +900,13 @@
   "settings": [
     {
       "subjectId": "1773129600000-advprog",
+      "isFinalized": false,
+      "finalizedAt": null,
       "distributionMode": "Manual",
-      "fixedTeamsCount": "2",
-      "fixedTeamsSize": "3",
-      "minTeamSize": "1",
-      "maxTeamSize": "3",
-      "finalizedAt": "2026-04-01T06:04:22.129Z",
-      "isFinalized": true,
+      "fixedTeamsCount": 5,
+      "fixedTeamSize": 1,
+      "minTeamSize": 1,
+      "maxTeamSize": 1,
       "warnings": []
     }
   ]
