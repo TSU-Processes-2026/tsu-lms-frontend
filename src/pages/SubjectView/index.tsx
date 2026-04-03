@@ -1,7 +1,15 @@
 import { useSubjectView } from '@/hooks/subject/useSubjectView';
 import StudentsModal from '@/components/modals/StudentsModal';
 import CreateAssignmentModal from '@/components/modals/CreateAssignmentModal';
-import { User as UserIcon, Upload, ClipboardCheck, Users, Settings, Plus } from 'lucide-react';
+import {
+    User as UserIcon,
+    Upload,
+    ClipboardCheck,
+    Users,
+    Settings,
+    Plus,
+    Dices,
+} from 'lucide-react';
 import AnnouncementPostCard from '@/components/ui/AnnouncementPostCard';
 import MaterialPostCard from '@/components/ui/MaterialPostCard';
 import AssignmentPostCard from '@/components/ui/AssignmentPostCard';
@@ -18,6 +26,7 @@ import CommandParticipantsModal from '@/components/modals/ShowCommadParticipants
 import { useState } from 'react';
 import { useLoadTeams } from '@/hooks/command/useLoadTeams';
 import { CreateTeamManually } from '@/components/modals/CreateTeamManually';
+import { useNavigate } from 'react-router-dom';
 
 interface MaterialPostCardData extends MaterialPostResponse {
     authorUsername: string;
@@ -76,6 +85,7 @@ const SubjectView = () => {
     };
     const [showCreateTeamManuallyModal, setShowCreateTeamManually] = useState<boolean>(false);
     const count = subjectParticipants ?? 0;
+    const navigate = useNavigate();
     const { teams, isLoading } = useLoadTeams(subjectId);
     return (
         <>
@@ -299,6 +309,13 @@ const SubjectView = () => {
                                 Список команд
                             </h3>
                             <div className='flex flex-row items-center gap-2'>
+                                <Dices
+                                    size={40}
+                                    className='bg-linear-to-r from-purple-600 to-purple-700 text-white p-2 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all'
+                                    onClick={() => {
+                                        navigate(`/subject/${subjectId}/teams/random`);
+                                    }}
+                                />
                                 <Plus
                                     size={40}
                                     className='bg-linear-to-r from-green-600 to-green-700 text-white p-2 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all'

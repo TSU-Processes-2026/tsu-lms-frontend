@@ -8,6 +8,7 @@ import {
     RandomDistributionResponse,
     Team,
     TeamCreationResponse,
+    TeamRequest,
     UnAssignedStudents,
     ValidationDetails,
 } from '@/types/command/Team';
@@ -183,11 +184,13 @@ export const validateManualDistribution = async (
 
 export const distributeWithManual = async (
     subjectId: string | undefined,
+    teams: TeamRequest,
 ): Promise<AxiosResponse<DistributedTeam>> => {
     const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
     try {
         const response: AxiosResponse<DistributedTeam> = await axios.post(
             `${BASE_URL}/subjects/${subjectId}/teams/manual`,
+            teams,
             {
                 headers: {
                     Authorization: `Bearer ${accessToken}`,

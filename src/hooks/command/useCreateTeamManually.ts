@@ -1,10 +1,19 @@
-import { createTeamManually, fetchUnassignedStudents } from '@/api/command/command';
+import {
+    createTeamManually,
+    distributeWithManual,
+    fetchUnassignedStudents,
+} from '@/api/command/command';
 import {
     FORBIDDEN_PAGE,
     INTERNAL_SERVER_ERROR_PAGE_URL,
     LOGIN_PAGE_URL,
 } from '@/constants/paths/paths';
-import { Members, TeamCreationResponse, UnAssignedStudents } from '@/types/command/Team';
+import {
+    Members,
+    TeamCreationResponse,
+    TeamRequest,
+    UnAssignedStudents,
+} from '@/types/command/Team';
 import { AxiosResponse, isAxiosError } from 'axios';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -137,5 +146,27 @@ export function useCreateTeamManually(subjectId: string): UseCreateTeamManually 
         errorMessage,
         setErrorMessage,
         processCreateRequest,
+    };
+}
+
+export function useSendAllTeamManually(subjectId: string) {
+    const [isLoading, setLoading] = useState<boolean>(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const sendAll = async (teams: TeamRequest): Promise<boolean> => {
+        setLoading(true);
+        try {
+            await distributeWithManual(subjectId, teams);
+            return true;
+        } catch (error) {
+            setErrorMessage('Не удалось выполнить запрос');
+            return false;
+        } finally {
+            setLoading(false);
+        }
+    };
+    return {
+        isLoading,
+        errorMessage,
+        sendAll,
     };
 }

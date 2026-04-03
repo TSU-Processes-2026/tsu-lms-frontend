@@ -5,6 +5,10 @@ export interface Team {
     members: TeamMember[];
 }
 
+export interface TeamRequest {
+    teams: Members;
+}
+
 export interface TeamMember {
     userId: string;
     username: string;
