@@ -1,8 +1,6 @@
-import { Participant } from '@/hooks/subject/useSubjects';
-import { CommandParticipant } from '@/types/command/CommandParticipant';
 import { Team } from '@/types/command/Team';
 import { Crown, UserIcon } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface CommandParticipantsModalProps {
     commandNumber: number;
@@ -39,6 +37,11 @@ const CommandParticipantsModal = ({
                 <UserIcon size={11} /> Студент
             </span>
         ),
+    };
+    const navigate = useNavigate();
+
+    const handleEditTeam = () => {
+        navigate(`/subject/${members.subjectId}/teams/${commandId}/edit`);
     };
 
     return (
@@ -88,12 +91,18 @@ const CommandParticipantsModal = ({
                         )}
                     </div>
                 </div>
-                <div className='px-8 py-5 border-t border-slate-100 flex justify-end bg-slate-50/50 shrink-0'>
+                <div className='px-8 py-5 border-t border-slate-100 flex justify-start gap-4 bg-slate-50/50 shrink-0'>
                     <button
-                        className='bg-linear-to-r from-blue-600 to-blue-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all'
+                        className='px-6 py-3 rounded-xl font-semibold text-slate-600 hover:bg-slate-100 transition-all border border-slate-200 w-full'
                         onClick={onClose}
                     >
                         Закрыть
+                    </button>
+                    <button
+                        className='bg-linear-to-r from-blue-600 to-blue-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all w-full'
+                        onClick={handleEditTeam}
+                    >
+                        Изменить состав команды
                     </button>
                 </div>
             </div>

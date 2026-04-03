@@ -20,11 +20,12 @@ export function useUpdateTeam(subjectId: string) {
     const handleSelectTeamMembers = (memberIds: Members) => {
         setNewMembers(memberIds);
     };
-    const handleUpdateTeam = async (): Promise<void> => {
-        if (!newMembers || !teamId) return;
+    const handleUpdateTeam = async (): Promise<boolean> => {
+        if (!newMembers || !teamId) return false;
         setIsLoading(true);
         try {
             await updateTeamMembers(subjectId, teamId, newMembers);
+            return true;
         } catch (error) {
             if (isAxiosError(error)) {
                 switch (error.status) {
@@ -55,6 +56,7 @@ export function useUpdateTeam(subjectId: string) {
             } else {
                 setErrorMessage('Не удалось обработать запрос');
             }
+            return false;
         } finally {
             setIsLoading(false);
         }
@@ -66,5 +68,6 @@ export function useUpdateTeam(subjectId: string) {
         handleSelectTeamId,
         handleSelectTeamMembers,
         handleUpdateTeam,
+        setErrorMessage,
     };
 }

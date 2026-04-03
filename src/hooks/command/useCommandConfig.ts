@@ -29,7 +29,7 @@ export const useCommandConfig = (
         warnings: [],
     });
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isSuccess, setIsSuccess] = useState<boolean>(false);
 
     const navigate = useNavigate();
@@ -114,11 +114,11 @@ export const useCommandConfig = (
 
     useEffect(() => {
         let isMounted = true;
+        setIsLoading(true);
         const processRequest = async () => {
             try {
                 const response: AxiosResponse<TeamConfig> = await fetchConfig(subjectId);
                 if (isMounted) {
-                    console.log('Config: ', response.data);
                     setConfig({
                         subjectId: subjectId,
                         distributionMode: response.data.distributionMode ?? 'Manual',
@@ -166,19 +166,14 @@ export const useCommandConfig = (
                     setErrorMessage('Не удалось обработать запрос');
                 }
             } finally {
-                setIsLoading(false);
+                if (isMounted) setIsLoading(false);
             }
         };
         processRequest();
-
         return () => {
             isMounted = false;
         };
     }, [subjectId]);
-
-    useEffect(() => {
-        console.log('New config: ', config);
-    }, [config]);
 
     return {
         config,

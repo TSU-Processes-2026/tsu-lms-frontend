@@ -30,7 +30,6 @@ export const useLoadTeams = (subjectId: string | undefined): UseLoadTeams => {
                 const response = await fetchSubjectTeams(subjectId);
                 if (isMounted) {
                     setTeams(response.data);
-                    console.log('Teams: ' + response);
                 }
             } catch (error) {
                 if (isAxiosError(error)) {
