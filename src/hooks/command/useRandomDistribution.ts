@@ -19,7 +19,7 @@ export function useRandomDistribution(subjectId: string) {
     const [distributionError, setDistributionError] = useState<RandomDistributionResponse | null>(
         null,
     );
-    const { config } = useLoadConfig(subjectId);
+    const { config } = useLoadConfig(subjectId, 'teacher');
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [errorMessage, setErrorMessage] = useState<string | null>();
     const [buttonDisabled, setButtonDisabled] = useState<boolean>(true);

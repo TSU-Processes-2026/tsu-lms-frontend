@@ -155,22 +155,25 @@ export function useCreateTeamManually(subjectId: string): UseCreateTeamManually 
 
 export function useSendAllTeamManually(subjectId: string) {
     const [isLoading, setLoading] = useState<boolean>(false);
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const sendAll = async (teams: TeamRequest): Promise<boolean> => {
+    const [isSuccess, setSuccess] = useState<boolean>(false);
+    const [errorCreationMessage, setErrorMessage] = useState<string | null>(null);
+
+    const sendAll = async (teams: TeamRequest): Promise<void> => {
         setLoading(true);
         try {
             await distributeWithManual(subjectId, teams);
-            return true;
+            setSuccess(true);
         } catch (error) {
             setErrorMessage('Не удалось выполнить запрос');
-            return false;
+            setSuccess(false);
         } finally {
             setLoading(false);
         }
     };
     return {
         isLoading,
-        errorMessage,
+        errorCreationMessage,
+        isSuccess,
         sendAll,
     };
 }

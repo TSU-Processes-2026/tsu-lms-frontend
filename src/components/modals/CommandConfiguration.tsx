@@ -1,9 +1,6 @@
 import { useCommandConfig } from '@/hooks/command/useCommandConfig';
-import { TeamConfig } from '@/types/command/CommandConfig';
 import { warningMessageMapper } from '@/utils/messageMapper';
 import { Plus, X } from 'lucide-react';
-import { ChangeEvent, FormEvent } from 'react';
-import { useParams } from 'react-router-dom';
 
 interface ModalProps {
     participantsCount: number;
@@ -12,37 +9,26 @@ interface ModalProps {
 }
 
 interface ConfigModalProps extends ModalProps {
-    config: TeamConfig;
-    errorMessage: string | null;
-    isLoading: boolean;
-    isSuccess: boolean;
-    segregationType: string;
-    handleSubmit: (e: FormEvent<HTMLFormElement>) => Promise<void>;
-    handleDistributionMode: (e: ChangeEvent<HTMLSelectElement, HTMLSelectElement>) => void;
-    handleSegregationType: (e: ChangeEvent<HTMLSelectElement, HTMLSelectElement>) => void;
-    handleMinSize: (value: string | null) => void;
-    handleMaxSize: (value: string | null) => void;
-    handleTeamSize: (value: string) => void;
-    handleTeamsCount: (value: string) => void;
-    onClose: () => void;
+    role: string;
 }
 
 export const CommandConfiguration = (props: ConfigModalProps) => {
+    const { subjectId, participantsCount, role, onClose } = props;
     const {
         config,
-        errorMessage,
         isLoading,
         isSuccess,
         segregationType,
-        handleSubmit,
+        errorMessage,
         handleDistributionMode,
-        handleSegregationType,
-        handleMinSize,
         handleMaxSize,
+        handleMinSize,
+        handleSegregationType,
+        handleSubmit,
         handleTeamSize,
         handleTeamsCount,
-        onClose,
-    } = props;
+    } = useCommandConfig(subjectId ?? '', participantsCount, onClose, role);
+
     if (isLoading) {
         return (
             <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm'>

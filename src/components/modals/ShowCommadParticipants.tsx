@@ -8,6 +8,7 @@ interface CommandParticipantsModalProps {
     teams: Team[];
     currentUserId: string;
     commandId: string;
+    role: string;
 }
 
 const CommandParticipantsModal = ({
@@ -16,6 +17,7 @@ const CommandParticipantsModal = ({
     teams,
     currentUserId,
     commandId,
+    role,
 }: CommandParticipantsModalProps) => {
     const members: Team =
         teams !== undefined && teams.length > 0
@@ -104,12 +106,14 @@ const CommandParticipantsModal = ({
                     >
                         Закрыть
                     </button>
-                    <button
-                        className='bg-linear-to-r from-blue-600 to-blue-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all w-full'
-                        onClick={handleEditTeam}
-                    >
-                        Изменить состав команды
-                    </button>
+                    {members && members.members.length > 0 && role != 'student' && (
+                        <button
+                            className='bg-linear-to-r from-blue-600 to-blue-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all w-full'
+                            onClick={handleEditTeam}
+                        >
+                            Изменить состав команды
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

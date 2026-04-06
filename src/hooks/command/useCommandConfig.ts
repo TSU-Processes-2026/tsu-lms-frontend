@@ -202,7 +202,7 @@ export const useCommandConfig = (
     };
 };
 
-export const useLoadConfig = (subjectId: string) => {
+export const useLoadConfig = (subjectId: string, role: string) => {
     const [config, setConfig] = useState<TeamConfig>({
         subjectId: subjectId,
         distributionMode: 0,
@@ -220,6 +220,7 @@ export const useLoadConfig = (subjectId: string) => {
     useEffect(() => {
         let isMounted = true;
         setIsLoading(true);
+        if (role === 'student') return;
         const processRequest = async () => {
             try {
                 const response: AxiosResponse<TeamConfig> = await fetchConfig(subjectId);

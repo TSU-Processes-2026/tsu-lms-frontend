@@ -2,14 +2,15 @@ import { TeamMember, UnAssignedStudents } from '@/types/command/Team';
 import { MultipleSelect } from '../ui/MultipleSelect';
 import { FormEvent, useEffect, useState } from 'react';
 import { useCreateTeamManually } from '@/hooks/command/useCreateTeamManually';
+import { useLoadConfig } from '@/hooks/command/useCommandConfig';
 
 interface CreateTeamModalProps {
     onClose: () => void;
     subjectId: string;
-    fixedTeamSize: number;
+    role: string;
 }
 
-export const CreateTeamManually = ({ onClose, subjectId, fixedTeamSize }: CreateTeamModalProps) => {
+export const CreateTeamManually = ({ onClose, subjectId, role }: CreateTeamModalProps) => {
     const {
         unassigned,
         isLoading,
@@ -20,12 +21,20 @@ export const CreateTeamManually = ({ onClose, subjectId, fixedTeamSize }: Create
     } = useCreateTeamManually(subjectId);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [message, setMessage] = useState<string | null>(null);
+    const [loadedUnassigned, setLoaded] = useState<UnAssignedStudents>(unassigned);
+    const { config } = useLoadConfig(subjectId, role);
+    const handleTeamMaxSize = (): number => {
+        if (config.fixedTeamSize) return config.fixedTeamSize;
+        if (config.maxTeamSize) return config.maxTeamSize;
+        return 0;
+    };
     const handleSelectionChange = (selectedIds: string[]) => {
         setSelectedIds(selectedIds);
     };
-    const [loadedUnassigned, setLoaded] = useState<UnAssignedStudents>(unassigned);
+
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
+        const fixedTeamSize = handleTeamMaxSize();
         if (selectedIds.length > fixedTeamSize) {
             setErrorMessage(
                 'Указано слишком большое число участников. Максимальное число участников: ' +

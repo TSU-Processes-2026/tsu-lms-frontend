@@ -8,7 +8,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 export const RandomDistributionPage = () => {
     const { subjectId } = useParams();
     const navigate = useNavigate();
-    const { sendAll } = useSendAllTeamManually(subjectId ?? '');
+    const { isSuccess, errorCreationMessage, sendAll } = useSendAllTeamManually(subjectId ?? '');
     const {
         distributedTeams,
         distributionError,
@@ -21,14 +21,7 @@ export const RandomDistributionPage = () => {
     } = useRandomDistribution(subjectId ?? '');
 
     const handleSendAll = async () => {
-        const res = await sendAll({ teams: distributedTeams.teams });
-        if (res)
-            return (
-                <div className='p-4 bg-green-50 border-b-green-50 rounded-xl border border-green-100'>
-                    <p className='text-xl text-green-700 font-semibold mb-1'>✅ Успех</p>
-                    <p className='text-lg text-green-600'>{'Команды созданы'}</p>
-                </div>
-            );
+        await sendAll({ teams: distributedTeams.teams });
     };
 
     return (
@@ -62,12 +55,21 @@ export const RandomDistributionPage = () => {
                     <div className='flex-1 overflow-y-auto py-2'>
                         <form onSubmit={() => {}} className='space-y-5'>
                             <div className='space-y-3 flex flex-col gap-1'>
+                                {isSuccess && (
+                                    <div className='p-4 bg-green-50 border-b-green-50 rounded-xl border border-green-100 shadow-md '>
+                                        <p className='text-xl text-green-700 font-semibold mb-1'>
+                                            ✅ Успех
+                                        </p>
+                                        <p className='text-lg text-green-600'>
+                                            {'Команды созданы'}
+                                        </p>
+                                    </div>
+                                )}
                                 {errorMessage && (
                                     <div className='bg-red-50 border-b-red-50 rounded-xl border border-red-100  text-center my-4 py-8 backdrop-blur-sm shadow-md text-red-600 text-xl'>
                                         {errorMessage}
                                     </div>
                                 )}
-
                                 {distributionError && (
                                     <>
                                         {distributionError.errors.length > 0 && (
@@ -104,7 +106,6 @@ export const RandomDistributionPage = () => {
                                         )}
                                     </>
                                 )}
-
                                 {distributedTeams.teams.length > 0 &&
                                     distributedTeams.teams.map((team, index) => {
                                         return (

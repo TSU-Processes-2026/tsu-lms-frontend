@@ -27,7 +27,7 @@ import { useEffect, useState } from 'react';
 import { useLoadTeams } from '@/hooks/command/useLoadTeams';
 import { CreateTeamManually } from '@/components/modals/CreateTeamManually';
 import { useNavigate } from 'react-router-dom';
-import { useCommandConfig } from '@/hooks/command/useCommandConfig';
+import { useCommandConfig, useLoadConfig } from '@/hooks/command/useCommandConfig';
 import { useValidateTeams } from '@/hooks/command/useValidateTeams';
 import { useGetProfile } from '@/hooks/profile/useProfile';
 
@@ -55,7 +55,6 @@ const SubjectView = () => {
         subjectParticipants,
         showCommandConfig,
         participants,
-
         handleEditPost,
         composerText,
         setComposerText,
@@ -103,35 +102,9 @@ const SubjectView = () => {
     const userRole: 'admin' | 'teacher' | 'student' = handleRole();
     const navigate = useNavigate();
     const { teams, isTeamLoading } = useLoadTeams(subjectId);
-    const {
-        config,
-        isLoading,
-        isSuccess,
-        segregationType,
-        errorMessage,
-        handleDistributionMode,
-        handleMaxSize,
-        handleMinSize,
-        handleSegregationType,
-        handleSubmit,
-        handleTeamSize,
-        handleTeamsCount,
-    } = useCommandConfig(
-        subjectId ?? '',
-        count,
-        () => {
-            setShowConfig(false);
-        },
-        userRole,
-    );
+
     const { details, handleValidateTeams, handleErrorMessages, handleWarningMessages } =
         useValidateTeams();
-    const handleTeamMaxSize = (): number => {
-        if (config.fixedTeamSize) return config.fixedTeamSize;
-        if (config.maxTeamSize) return config.maxTeamSize;
-        return 0;
-    };
-    const fixedSize = handleTeamMaxSize();
 
     useEffect(() => {
         if (activeTab === 'commands' && userRole != 'student') {
@@ -366,15 +339,13 @@ const SubjectView = () => {
                             </h3>
                             {userRole !== 'student' && (
                                 <div className='flex flex-row items-center gap-2'>
-                                    {config.distributionMode == 1 && (
-                                        <Dices
-                                            size={40}
-                                            className='bg-linear-to-r from-purple-600 to-purple-700 text-white p-2 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all'
-                                            onClick={() => {
-                                                navigate(`/subject/${subjectId}/teams/random`);
-                                            }}
-                                        />
-                                    )}
+                                    <Dices
+                                        size={40}
+                                        className='bg-linear-to-r from-purple-600 to-purple-700 text-white p-2 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all'
+                                        onClick={() => {
+                                            navigate(`/subject/${subjectId}/teams/random`);
+                                        }}
+                                    />
                                     <Plus
                                         size={40}
                                         className='bg-linear-to-r from-green-600 to-green-700 text-white p-2 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all'
@@ -462,6 +433,7 @@ const SubjectView = () => {
                     teams={teams}
                     currentUserId={profile.id ?? ''}
                     commandId={selectedCommand}
+                    role={userRole}
                 />
             )}
             {showAssignmentModal && (
@@ -478,18 +450,7 @@ const SubjectView = () => {
                     onClose={() => {
                         setShowConfig(false);
                     }}
-                    config={config}
-                    errorMessage={errorMessage}
-                    isLoading={isLoading}
-                    isSuccess={isSuccess}
-                    segregationType={segregationType}
-                    handleSubmit={handleSubmit}
-                    handleDistributionMode={handleDistributionMode}
-                    handleSegregationType={handleSegregationType}
-                    handleMinSize={handleMinSize}
-                    handleMaxSize={handleMaxSize}
-                    handleTeamSize={handleTeamSize}
-                    handleTeamsCount={handleTeamsCount}
+                    role={userRole}
                 />
             )}
             {showCreateTeamManuallyModal && (
@@ -498,7 +459,7 @@ const SubjectView = () => {
                         setShowCreateTeamManually(false);
                     }}
                     subjectId={subjectId ?? ''}
-                    fixedTeamSize={fixedSize}
+                    role={userRole}
                 />
             )}
         </>
