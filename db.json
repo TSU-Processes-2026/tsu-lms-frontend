@@ -22,6 +22,11 @@
       "id": "1772748407938-rqnwuv6zbrh",
       "username": "ivanov_ivan4",
       "password": "password123"
+    },
+    {
+      "id": "1772738401938-rqnwuv6zbrh",
+      "username": "ivanov_ivan5",
+      "password": "password123"
     }
   ],
   "subjects": [
@@ -54,82 +59,120 @@
       "id": "1773129600000-advprog",
       "title": "Advanced Programming",
       "description": "Deep dive into programming techniques"
+    },
+    {
+      "id": "1775112468230-qbjcvrhk8zn",
+      "title": "Test subject",
+      "description": "Test subject"
     }
   ],
   "participants": [
     {
       "subjectId": "1773129035372-dr012hhflxj",
       "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "username": "ivanov_ivan1",
       "role": "Student"
     },
     {
       "subjectId": "1773129035372-dr012hhflxj",
       "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+      "username": "ivanov_ivan2",
       "role": "Student"
     },
     {
       "subjectId": "1773129035372-dr012hhflxj",
       "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa3",
+      "username": "ivanov_ivan22",
       "role": "Teacher"
     },
     {
       "subjectId": "1773129101042-jiwhlih6mu",
       "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa1",
+      "username": "ivanov_ivan3",
       "role": "Student"
     },
     {
       "subjectId": "1773129101042-jiwhlih6mu",
       "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+      "username": "ivanov_ivan2",
       "role": "Teacher"
     },
     {
       "subjectId": "1773129500000-newsubj1",
       "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "username": "ivanov_ivan1",
       "role": "Student"
     },
     {
       "subjectId": "1773129500000-newsubj1",
       "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+      "username": "ivanov_ivan2",
       "role": "Student"
     },
     {
       "subjectId": "1773129500000-newsubj1",
       "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa1",
+      "username": "ivanov_ivan3",
       "role": "Student"
     },
     {
       "subjectId": "1773129500000-newsubj1",
       "userId": "1772748407938-rqnwuv6zbrh",
+      "username": "ivanov_ivan4",
       "role": "Student"
     },
     {
       "subjectId": "1773129500000-newsubj1",
+      "username": "extra-user-1",
       "userId": "extra-user-1",
       "role": "Student"
     },
     {
       "subjectId": "1773129500000-newsubj1",
+      "username": "extra-user-2",
       "userId": "extra-user-2",
       "role": "Student"
     },
     {
       "subjectId": "1773129500000-newsubj1",
+      "username": "extra-user-3",
       "userId": "extra-user-3",
       "role": "Student"
     },
     {
       "subjectId": "1773129600000-advprog",
       "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "username": "ivanov_ivan1",
       "role": "Student"
     },
     {
       "subjectId": "1773129600000-advprog",
       "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+      "username": "ivanov_ivan2",
+      "role": "Student"
+    },
+    {
+      "subjectId": "1773129600000-advprog",
+      "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa1",
+      "username": "ivanov_ivan3",
+      "role": "Student"
+    },
+    {
+      "subjectId": "1773129600000-advprog",
+      "userId": "1772748407938-rqnwuv6zbrh",
+      "username": "ivanov_ivan4",
+      "role": "Student"
+    },
+    {
+      "subjectId": "1773129600000-advprog",
+      "userId": "1772738401938-rqnwuv6zbrh",
+      "username": "ivanov_ivan5",
       "role": "Student"
     },
     {
       "subjectId": "1773129600000-advprog",
       "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa3",
+      "username": "ivanov_ivan22",
       "role": "Teacher"
     }
   ],
@@ -335,7 +378,16 @@
       "id": "subm-5",
       "assignmentId": "assgn-5",
       "authorId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-      "answers": [],
+      "answers": [
+        {
+          "id": "46f30ec4-e75e-4472-9a13-7a84f0d7e869",
+          "assignmentQuestionId": "q-5",
+          "answerType": 2,
+          "selectedOptionId": null,
+          "selectedOptionIds": null,
+          "text": "h"
+        }
+      ],
       "status": "Draft",
       "submittedAt": null
     },
@@ -366,6 +418,22 @@
       ],
       "status": "Graded",
       "submittedAt": "2026-03-15T18:00:00.000Z"
+    },
+    {
+      "answers": [
+        {
+          "id": "1a0a3f80-f056-47da-a570-900a908e2221",
+          "assignmentQuestionId": "q-3",
+          "answerType": 1,
+          "selectedOptionId": null,
+          "selectedOptionIds": [
+            "opt-4"
+          ],
+          "text": null
+        }
+      ],
+      "assignmentId": "assgn-2",
+      "id": "F9UK7GR"
     }
   ],
   "grades": [
@@ -674,6 +742,172 @@
       "targetId": "post-1",
       "text": "авп",
       "createdAt": "2026-03-15T21:57:04.751Z"
+    }
+  ],
+  "teams": [
+    {
+      "id": "1",
+      "subjectId": "1773129600000-advprog",
+      "memberIds": [],
+      "members": [
+        {
+          "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "username": "ivanov_ivan1"
+        },
+        {
+          "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+          "username": "ivanov_ivan2"
+        },
+        {
+          "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa1",
+          "username": "ivanov_ivan3"
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "subjectId": "1773129600000-advprog",
+      "memberIds": [],
+      "members": [
+        {
+          "userId": "1772748407938-rqnwuv6zbrh",
+          "username": "ivanov_ivan4"
+        },
+        {
+          "userId": "1772738401938-rqnwuv6zbrh",
+          "username": "ivanov_ivan5"
+        }
+      ]
+    },
+    {
+      "id": "1775125298865-7iyhprsb3k",
+      "subjectId": "1773129035372-dr012hhflxj",
+      "memberIds": [
+        "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+      ],
+      "members": [
+        {
+          "subjectId": "1773129035372-dr012hhflxj",
+          "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "username": "ivanov_ivan1",
+          "role": "Student"
+        }
+      ]
+    },
+    {
+      "id": "1775125310322-3ddrkns673",
+      "subjectId": "1773129035372-dr012hhflxj",
+      "memberIds": [
+        "3fa85f64-5717-4562-b3fc-2c963f66afa2"
+      ],
+      "members": [
+        {
+          "subjectId": "1773129035372-dr012hhflxj",
+          "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+          "username": "ivanov_ivan2",
+          "role": "Student"
+        }
+      ]
+    },
+    {
+      "id": "1775125351149-x4ypy49dcvl",
+      "subjectId": "1773129500000-newsubj1",
+      "memberIds": [
+        "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+        "3fa85f64-5717-4562-b3fc-2c963f66afa1",
+        "1772748407938-rqnwuv6zbrh"
+      ],
+      "members": [
+        {
+          "subjectId": "1773129500000-newsubj1",
+          "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "username": "ivanov_ivan1",
+          "role": "Student"
+        },
+        {
+          "subjectId": "1773129500000-newsubj1",
+          "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+          "username": "ivanov_ivan2",
+          "role": "Student"
+        },
+        {
+          "subjectId": "1773129500000-newsubj1",
+          "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa1",
+          "username": "ivanov_ivan3",
+          "role": "Student"
+        },
+        {
+          "subjectId": "1773129500000-newsubj1",
+          "userId": "1772748407938-rqnwuv6zbrh",
+          "username": "ivanov_ivan4",
+          "role": "Student"
+        }
+      ]
+    },
+    {
+      "id": "1775125353987-27vfqrcckjh",
+      "subjectId": "1773129500000-newsubj1",
+      "memberIds": [
+        "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+        "3fa85f64-5717-4562-b3fc-2c963f66afa1",
+        "1772748407938-rqnwuv6zbrh"
+      ],
+      "members": [
+        {
+          "subjectId": "1773129500000-newsubj1",
+          "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "username": "ivanov_ivan1",
+          "role": "Student"
+        },
+        {
+          "subjectId": "1773129500000-newsubj1",
+          "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa2",
+          "username": "ivanov_ivan2",
+          "role": "Student"
+        },
+        {
+          "subjectId": "1773129500000-newsubj1",
+          "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa1",
+          "username": "ivanov_ivan3",
+          "role": "Student"
+        },
+        {
+          "subjectId": "1773129500000-newsubj1",
+          "userId": "1772748407938-rqnwuv6zbrh",
+          "username": "ivanov_ivan4",
+          "role": "Student"
+        }
+      ]
+    },
+    {
+      "id": "1775125398921-09k2y7j5cfdq",
+      "subjectId": "1773129500000-newsubj1",
+      "memberIds": [
+        "extra-user-2"
+      ],
+      "members": [
+        {
+          "subjectId": "1773129500000-newsubj1",
+          "username": "extra-user-2",
+          "userId": "extra-user-2",
+          "role": "Student"
+        }
+      ]
+    }
+  ],
+  "settings": [
+    {
+      "subjectId": "1773129600000-advprog",
+      "isFinalized": false,
+      "finalizedAt": null,
+      "distributionMode": "Manual",
+      "fixedTeamsCount": 5,
+      "fixedTeamSize": 1,
+      "minTeamSize": 1,
+      "maxTeamSize": 1,
+      "warnings": []
     }
   ]
 }

@@ -1,4 +1,4 @@
-import { BookOpen, ClipboardCheck, Key, Layout, LogOut, Plus, UserIcon } from 'lucide-react';
+import { BookOpen, ClipboardCheck, Key, LogOut, Plus, UserIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useLogout } from '@/hooks/logout/useLogout';
@@ -30,7 +30,7 @@ export const ClientLayout = () => {
     }, []);
 
     return (
-        <div className='min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 flex text-slate-800 font-sans'>
+        <div className='min-h-screen bg-linear-to-br from-slate-50 to-blue-50/30 flex text-slate-800 font-sans'>
             <aside className='w-64 bg-white/80 backdrop-blur-xl border-r border-slate-200/60 hidden md:flex flex-col shadow-sm'>
                 <div
                     className='p-6 flex items-center gap-3 border-b border-slate-100 cursor-pointer'
@@ -40,10 +40,10 @@ export const ClientLayout = () => {
                         setPageTitle('Главная');
                     }}
                 >
-                    <div className='w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200/50'>
+                    <div className='w-10 h-10 bg-linear-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200/50'>
                         <BookOpen className='text-white w-5 h-5' />
                     </div>
-                    <span className='font-bold text-xl bg-gradient-to-r from-blue-900 to-blue-700 bg-clip-text text-transparent'>
+                    <span className='font-bold text-xl bg-linear-to-r from-blue-900 to-blue-700 bg-clip-text text-transparent'>
                         StudyHub
                     </span>
                 </div>
@@ -56,7 +56,7 @@ export const ClientLayout = () => {
                                 navigate(item.id);
                                 setPageTitle(item.label);
                             }}
-                            className={`w-full flex items-center cursor-pointer gap-3 px-4 py-3 rounded-xl transition-all ${currentView === item.id ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-200/50' : 'hover:bg-slate-50 text-slate-600'}`}
+                            className={`w-full flex items-center cursor-pointer gap-3 px-4 py-3 rounded-xl transition-all ${currentView === item.id ? 'bg-linear-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-200/50' : 'hover:bg-slate-50 text-slate-600'}`}
                         >
                             {item.icon}
                             <span className='font-medium'>{item.label}</span>
@@ -67,7 +67,7 @@ export const ClientLayout = () => {
                 <div className='p-4 border-t border-slate-100 space-y-3'>
                     <button
                         onClick={() => setShowJoinSubject(true)}
-                        className='w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-200/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2'
+                        className='w-full bg-linear-to-r from-purple-500 to-purple-600 text-white px-4 py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-200/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2'
                     >
                         <Key size={18} /> Присоединиться
                     </button>
@@ -76,7 +76,7 @@ export const ClientLayout = () => {
                         onClick={() => {
                             setShowSubjectModal(true);
                         }}
-                        className='w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-200/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2'
+                        className='w-full bg-linear-to-r from-blue-500 to-blue-600 text-white px-4 py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-200/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2'
                     >
                         <Plus size={18} /> Создать предмет
                     </button>
@@ -101,7 +101,7 @@ export const ClientLayout = () => {
                                     {profile.username}
                                 </p>
                             </div>
-                            <div className='w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200/50'>
+                            <div className='w-10 h-10 bg-linear-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200/50'>
                                 <UserIcon size={20} className='text-white' />
                             </div>
                         </div>

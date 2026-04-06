@@ -20,6 +20,9 @@ import { ForbiddenPage } from '@/pages/ErrorPages/ForbiddenPage.tsx';
 import { HomePage } from '@/pages/HomePage';
 import { Dashboard } from '@/pages/Dashboard';
 import { AssignmentsContainer } from '@/pages/Assignments/AssignmentsContainer';
+import path from 'path';
+import { EditTeamPage } from '@/pages/Teams/EditTeamPage';
+import { RandomDistributionPage } from '@/pages/Teams/RandomDistributionPage';
 
 export const router = createBrowserRouter([
     {
@@ -51,6 +54,14 @@ export const router = createBrowserRouter([
                     {
                         path: '/subjects',
                         element: <SubjectsPage />,
+                    },
+                    {
+                        path: '/subject/:subjectId/teams/:teamId/edit',
+                        element: <EditTeamPage />,
+                    },
+                    {
+                        path: '/subject/:subjectId/teams/random',
+                        element: <RandomDistributionPage />,
                     },
                     {
                         path: '/subjects/:subjectId',
