@@ -6,7 +6,7 @@ export interface Team {
 }
 
 export interface TeamRequest {
-    teams: Members;
+    teams: Members[];
 }
 
 export interface TeamMember {
@@ -32,7 +32,7 @@ export interface Members {
 export interface RandomDistributionResponse extends ValidationDetails {
     subjectId: string;
     teams: Members[];
-    suggestedParameters: SuggestedParameters;
+    suggestedParameters: SuggestedParameters | null;
 }
 
 export interface ValidationDetails {

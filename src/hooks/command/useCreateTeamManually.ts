@@ -97,11 +97,15 @@ export function useCreateTeamManually(subjectId: string): UseCreateTeamManually 
         setLoading(true);
         const loadUnassignedStudents = async () => {
             try {
-                const response = await fetchUnassignedStudents(subjectId);
+                const response: UnAssignedStudents = await fetchUnassignedStudents(subjectId);
                 if (isMounted) {
-                    setUnassigned(response.data);
+                    setUnassigned({
+                        subjectId: response.subjectId,
+                        studentIds: response.studentIds,
+                        students: response.students,
+                    });
                 }
-                console.log('unassigned: ' + unassigned.students);
+                console.log('unassigned: ', unassigned);
             } catch (error) {
                 if (isAxiosError(error)) {
                     switch (error.status) {

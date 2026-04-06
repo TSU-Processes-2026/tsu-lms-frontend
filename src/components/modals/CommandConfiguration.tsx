@@ -111,8 +111,8 @@ export const CommandConfiguration = ({ participantsCount, subjectId, onClose }: 
                                 paddingRight: '2.5rem',
                             }}
                         >
-                            <option value='Manual'>Ручное</option>
-                            <option value='Random'>Случайное</option>
+                            <option value='0'>Ручное</option>
+                            <option value='1'>Случайное</option>
                         </select>
                     </div>
                     <div>

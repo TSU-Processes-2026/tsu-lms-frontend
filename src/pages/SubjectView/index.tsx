@@ -23,7 +23,7 @@ import { CommandConfiguration } from '@/components/modals/CommandConfiguration';
 import { CommandCard } from '@/components/ui/CommandCard';
 import { useCommandModal } from '@/hooks/command/useCommandModal';
 import CommandParticipantsModal from '@/components/modals/ShowCommadParticipants';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLoadTeams } from '@/hooks/command/useLoadTeams';
 import { CreateTeamManually } from '@/components/modals/CreateTeamManually';
 import { useNavigate } from 'react-router-dom';
@@ -84,7 +84,13 @@ const SubjectView = () => {
         handleShowCommandParticipants();
     };
     const [showCreateTeamManuallyModal, setShowCreateTeamManually] = useState<boolean>(false);
-    const count = subjectParticipants ?? 0;
+    const count =
+        (subjectId &&
+            participants[subjectId] &&
+            participants[subjectId].filter(
+                (member) => member.role?.toLocaleLowerCase() === 'student',
+            ).length) ||
+        0;
     const navigate = useNavigate();
     const { teams, isLoading } = useLoadTeams(subjectId);
     return (

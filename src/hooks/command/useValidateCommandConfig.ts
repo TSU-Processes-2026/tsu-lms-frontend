@@ -1,4 +1,4 @@
-import { CommandConfig, TeamConfig } from '@/types/command/CommandConfig';
+import { TeamConfig } from '@/types/command/CommandConfig';
 
 export const useValidateCommandConfig = () => {
     const isMinBoundValid = (totalStudentsCount: number, form: TeamConfig) => {

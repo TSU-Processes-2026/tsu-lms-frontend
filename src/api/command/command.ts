@@ -12,7 +12,7 @@ import {
     UnAssignedStudents,
     ValidationDetails,
 } from '@/types/command/Team';
-import axios, { AxiosResponse } from 'axios';
+import axios, { AxiosResponse, isAxiosError } from 'axios';
 
 const BASE_URL = DEV_URL || PROD_URL || MOCK_URL;
 
@@ -21,6 +21,7 @@ export const saveConfigParams = async (
     params: CommandConfig,
 ): Promise<AxiosResponse<TeamConfig>> => {
     const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
+    console.log(params);
     try {
         const response: AxiosResponse<TeamConfig> = await axios.put(
             `${BASE_URL}/subjects/${subjectId}/teams/settings`,
@@ -33,6 +34,7 @@ export const saveConfigParams = async (
         );
         return response;
     } catch (error) {
+        console.log(error);
         throw error;
     }
 };
@@ -122,7 +124,7 @@ export const updateTeamMembers = async (
 
 export const fetchUnassignedStudents = async (
     subjectId: string | undefined,
-): Promise<AxiosResponse<UnAssignedStudents>> => {
+): Promise<UnAssignedStudents> => {
     const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
     try {
         const response: AxiosResponse<UnAssignedStudents> = await axios.get(
@@ -134,7 +136,7 @@ export const fetchUnassignedStudents = async (
             },
         );
         console.log(response.data);
-        return response;
+        return response.data;
     } catch (error) {
         console.log(error);
         throw error;
@@ -143,20 +145,20 @@ export const fetchUnassignedStudents = async (
 
 export const previewRandomTeamDistribution = async (
     subjectId: string | undefined,
-): Promise<AxiosResponse<RandomDistributionResponse>> => {
+): Promise<RandomDistributionResponse> => {
     const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
     try {
         const response: AxiosResponse<RandomDistributionResponse> = await axios.post(
             `${BASE_URL}/subjects/${subjectId}/teams/random`,
+            null,
             {
                 headers: {
                     Authorization: `Bearer ${accessToken}`,
                 },
             },
         );
-        return response;
+        return response.data;
     } catch (error) {
-        console.log(error);
         throw error;
     }
 };

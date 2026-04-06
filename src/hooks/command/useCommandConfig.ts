@@ -19,7 +19,7 @@ export const useCommandConfig = (
 ) => {
     const [config, setConfig] = useState<TeamConfig>({
         subjectId: subjectId,
-        distributionMode: 'Manual',
+        distributionMode: 0,
         fixedTeamsCount: 0,
         fixedTeamSize: 0,
         minTeamSize: 0,
@@ -39,7 +39,7 @@ export const useCommandConfig = (
     const handleDistributionMode = (e: React.ChangeEvent<HTMLSelectElement, HTMLSelectElement>) => {
         setConfig((prev) => ({
             ...prev,
-            distributionMode: e.target.value,
+            distributionMode: Number.parseInt(e.target.value),
         }));
         setErrorMessage(null);
     };
@@ -78,6 +78,8 @@ export const useCommandConfig = (
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        console.log('Students count: ', participantsCount);
+        console.log('Current config: ', config);
         try {
             const error: string | null = validateParams(participantsCount, config);
             if (error) {
@@ -121,7 +123,7 @@ export const useCommandConfig = (
                 if (isMounted) {
                     setConfig({
                         subjectId: subjectId,
-                        distributionMode: response.data.distributionMode ?? 'Manual',
+                        distributionMode: response.data.distributionMode || 0,
                         fixedTeamsCount: Number(response.data.fixedTeamsCount) || 0,
                         fixedTeamSize: Number(response.data.fixedTeamSize) || 0,
                         minTeamSize: Number(response.data.minTeamSize) || 1,
@@ -151,7 +153,7 @@ export const useCommandConfig = (
                         default: {
                             setConfig((prev) => ({
                                 ...prev,
-                                distributionMode: 'Manual',
+                                distributionMode: 0,
                                 fixedTeamsCount: 0,
                                 fixedTeamSize: 0,
                                 minTeamSize: 1,
@@ -186,5 +188,90 @@ export const useCommandConfig = (
         handleMinSize,
         handleMaxSize,
         handleSubmit,
+    };
+};
+
+export const useLoadConfig = (subjectId: string) => {
+    const [config, setConfig] = useState<TeamConfig>({
+        subjectId: subjectId,
+        distributionMode: 0,
+        fixedTeamsCount: 0,
+        fixedTeamSize: 0,
+        minTeamSize: 0,
+        maxTeamSize: 0,
+        isFinalized: false,
+        finalizedAt: null,
+        warnings: [],
+    });
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [isConfigLoading, setIsLoading] = useState<boolean>(false);
+    const navigate = useNavigate();
+    useEffect(() => {
+        let isMounted = true;
+        setIsLoading(true);
+        const processRequest = async () => {
+            try {
+                const response: AxiosResponse<TeamConfig> = await fetchConfig(subjectId);
+                if (isMounted) {
+                    setConfig({
+                        subjectId: subjectId,
+                        distributionMode: response.data.distributionMode || 0,
+                        fixedTeamsCount: Number(response.data.fixedTeamsCount) || 0,
+                        fixedTeamSize: Number(response.data.fixedTeamSize) || 0,
+                        minTeamSize: Number(response.data.minTeamSize) || 1,
+                        maxTeamSize: Number(response.data.maxTeamSize) || 1,
+                        warnings: response.data.warnings ?? [],
+                        isFinalized: Boolean(response.data.isFinalized) || false,
+                        finalizedAt: response.data.finalizedAt ?? null,
+                    });
+                }
+            } catch (error) {
+                if (isAxiosError(error)) {
+                    console.log('Caught an exception: ' + error);
+                    switch (error.status) {
+                        case 401: {
+                            localStorage.clear();
+                            navigate(LOGIN_PAGE_URL);
+                            break;
+                        }
+                        case 403: {
+                            navigate(FORBIDDEN_PAGE);
+                            break;
+                        }
+                        case 500: {
+                            navigate(INTERNAL_SERVER_ERROR_PAGE_URL);
+                            break;
+                        }
+                        default: {
+                            setConfig((prev) => ({
+                                ...prev,
+                                distributionMode: 0,
+                                fixedTeamsCount: 0,
+                                fixedTeamSize: 0,
+                                minTeamSize: 1,
+                                maxTeamSize: 1,
+                                isFinalized: false,
+                                finalizedAt: null,
+                                warnings: [],
+                            }));
+                        }
+                    }
+                } else {
+                    setErrorMessage('Не удалось обработать запрос');
+                }
+            } finally {
+                if (isMounted) setIsLoading(false);
+            }
+        };
+        processRequest();
+        return () => {
+            isMounted = false;
+        };
+    }, [subjectId]);
+
+    return {
+        config,
+        isConfigLoading,
+        errorMessage,
     };
 };

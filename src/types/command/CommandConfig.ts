@@ -1,7 +1,7 @@
 import { ConfirmationResponse } from './Team';
 
 export interface CommandConfig {
-    distributionMode: string;
+    distributionMode: number;
     fixedTeamsCount: number;
     fixedTeamSize: number;
     minTeamSize: number;
