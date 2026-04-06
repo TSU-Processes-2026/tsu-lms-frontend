@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useSubjectFeed, UseSubjectFeed } from '@/hooks/subject/useSubjectFeed';
 import { useSubjects, Participant, ExtendedSubject } from '@/hooks/subject/useSubjects';
 import { Subject } from '@/types/subject/Subject';
@@ -46,7 +46,8 @@ export type UseSubjectViewResult = {
     showModal: boolean;
     showAssignmentModal: boolean;
     showCommandConfig: boolean;
-    activeTab: 'feed' | 'students' | 'commands';
+    activeTab: 'feed' | 'students' | 'commands' | string;
+    handleActiveTab: (tab: 'feed' | 'students' | 'commands' | string) => void;
     handleShowModal: () => void;
     handleCloseModal: () => void;
     handleShowAssignmentModal: () => void;
@@ -163,7 +164,7 @@ export function useSubjectView(): UseSubjectViewResult {
         navigate('/assignments');
     };
     const { profile } = useProfile();
-
+    const [searchParams, setSearchParams] = useSearchParams();
     const [file, setFile] = useState<File | null>(null);
     const [fileLoading, setFileLoading] = useState<boolean>(false);
     const fileInputRef: React.RefObject<HTMLInputElement | null> = React.createRef();
@@ -172,12 +173,18 @@ export function useSubjectView(): UseSubjectViewResult {
     const [showCommandConfig, setShowConfig] = useState<boolean>(false);
     const [showModal, setShowModal] = useState<boolean>(false);
     const [showAssignmentModal, setShowAssignmentModal] = useState<boolean>(false);
-    const [activeTab, setActiveTab] = useState<'feed' | 'students' | 'commands'>('feed');
+    const [activeTab, setActiveTab] = useState<'feed' | 'students' | 'commands' | string>(
+        searchParams.get('tab') || 'feed',
+    );
 
     const handleShowModal = () => setShowModal(true);
     const handleCloseModal = () => setShowModal(false);
     const handleShowAssignmentModal = () => setShowAssignmentModal(true);
     const handleCloseAssignmentModal = () => setShowAssignmentModal(false);
+    const handleActiveTab = (tab: 'feed' | 'students' | 'commands' | string) => {
+        setSearchParams({ tab: tab });
+        setActiveTab(tab);
+    };
 
     const { subjectId } = useParams();
     const feed = useSubjectFeed(subjectId ?? '');
@@ -450,6 +457,7 @@ export function useSubjectView(): UseSubjectViewResult {
         handleShowAssignmentModal,
         handleCloseAssignmentModal,
         setActiveTab,
+        handleActiveTab,
         subjectId,
         feed,
         selectedSubject,

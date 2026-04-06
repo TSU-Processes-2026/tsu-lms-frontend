@@ -11,20 +11,20 @@ import {
 
 interface UseLoadTeams {
     teams: Team[];
-    isLoading: boolean;
+    isTeamLoading: boolean;
     errorMessage: string | null;
     setTeams: (newTeams: Team[]) => void;
 }
 
 export const useLoadTeams = (subjectId: string | undefined): UseLoadTeams => {
     const [teams, setTeams] = useState<Team[]>([]);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isTeamLoading, setIsTeamLoading] = useState<boolean>(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
         let isMounted = true;
-        setIsLoading(true);
+        setIsTeamLoading(true);
         const processRequest = async () => {
             try {
                 const response = await fetchSubjectTeams(subjectId);
@@ -62,7 +62,7 @@ export const useLoadTeams = (subjectId: string | undefined): UseLoadTeams => {
                     setErrorMessage('Не удалось обработать запрос');
                 }
             } finally {
-                if (isMounted) setIsLoading(false);
+                if (isMounted) setIsTeamLoading(false);
             }
         };
         processRequest();
@@ -73,7 +73,7 @@ export const useLoadTeams = (subjectId: string | undefined): UseLoadTeams => {
 
     return {
         teams,
-        isLoading,
+        isTeamLoading,
         errorMessage,
         setTeams,
     };

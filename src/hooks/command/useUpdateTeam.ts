@@ -20,11 +20,16 @@ export function useUpdateTeam(subjectId: string) {
     const handleSelectTeamMembers = (memberIds: Members) => {
         setNewMembers(memberIds);
     };
-    const handleUpdateTeam = async (): Promise<boolean> => {
-        if (!newMembers || !teamId) return false;
+    const handleUpdateTeam = async (id: string): Promise<boolean> => {
+        console.log(newMembers);
+        console.log(id);
+        if (!newMembers?.memberIds || !id) {
+            console.log('No members or teamId');
+            return false;
+        }
         setIsLoading(true);
         try {
-            await updateTeamMembers(subjectId, teamId, newMembers);
+            await updateTeamMembers(subjectId, id, newMembers);
             return true;
         } catch (error) {
             if (isAxiosError(error)) {

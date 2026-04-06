@@ -1,8 +1,7 @@
 import { TeamMember, UnAssignedStudents } from '@/types/command/Team';
 import { MultipleSelect } from '../ui/MultipleSelect';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { useCreateTeamManually } from '@/hooks/command/useCreateTeamManually';
-import { useParams } from 'react-router-dom';
 
 interface CreateTeamModalProps {
     onClose: () => void;
@@ -27,6 +26,13 @@ export const CreateTeamManually = ({ onClose, subjectId, fixedTeamSize }: Create
     const [loadedUnassigned, setLoaded] = useState<UnAssignedStudents>(unassigned);
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
+        if (selectedIds.length > fixedTeamSize) {
+            setErrorMessage(
+                'Указано слишком большое число участников. Максимальное число участников: ' +
+                    fixedTeamSize,
+            );
+            return;
+        }
         const res = await processCreateRequest({ memberIds: selectedIds });
         if (res) {
             setErrorMessage(null);
@@ -40,6 +46,9 @@ export const CreateTeamManually = ({ onClose, subjectId, fixedTeamSize }: Create
             setMessage(null);
         }
     };
+    useEffect(() => {
+        setLoaded({ ...unassigned });
+    }, [unassigned]);
     if (isLoading) {
         return (
             <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm'>

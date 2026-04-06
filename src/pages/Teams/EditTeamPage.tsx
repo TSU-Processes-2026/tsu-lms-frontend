@@ -79,7 +79,7 @@ export const EditTeamPage = () => {
         e.preventDefault();
         const memberIds = teamMembers.map((member) => member.userId);
         handleSelectTeamMembers({ memberIds });
-        const res = await handleUpdateTeam();
+        const res = await handleUpdateTeam(teamId ?? '');
         if (res) {
             setErrorMessage(null);
             setMessage('Состав команды обновлен успешно');

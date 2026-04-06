@@ -35,10 +35,6 @@ export const useValidateCommandConfig = () => {
         if (!isMaxBoundValid(totalStudentsCount, form))
             return 'Указана неверная максимальная граница диапазона';
 
-        if (form.maxTeamSize && form.fixedTeamSize) {
-            if (form.maxTeamSize > form.fixedTeamSize)
-                return 'Верхняя граница не должна превышать число участников в команде';
-        }
         return null;
     };
 

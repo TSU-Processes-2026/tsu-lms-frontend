@@ -23,10 +23,11 @@ import { CommandConfiguration } from '@/components/modals/CommandConfiguration';
 import { CommandCard } from '@/components/ui/CommandCard';
 import { useCommandModal } from '@/hooks/command/useCommandModal';
 import CommandParticipantsModal from '@/components/modals/ShowCommadParticipants';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useLoadTeams } from '@/hooks/command/useLoadTeams';
 import { CreateTeamManually } from '@/components/modals/CreateTeamManually';
 import { useNavigate } from 'react-router-dom';
+import { useCommandConfig } from '@/hooks/command/useCommandConfig';
 
 interface MaterialPostCardData extends MaterialPostResponse {
     authorUsername: string;
@@ -45,7 +46,7 @@ const SubjectView = () => {
         handleCloseModal,
         handleShowAssignmentModal,
         handleCloseAssignmentModal,
-        setActiveTab,
+        handleActiveTab,
         feed,
         subjectId,
         subjectCode,
@@ -92,26 +93,49 @@ const SubjectView = () => {
             ).length) ||
         0;
     const navigate = useNavigate();
-    const { teams, isLoading } = useLoadTeams(subjectId);
+    const { teams, isTeamLoading } = useLoadTeams(subjectId);
+    const {
+        config,
+        isLoading,
+        isSuccess,
+        segregationType,
+        errorMessage,
+        handleDistributionMode,
+        handleMaxSize,
+        handleMinSize,
+        handleSegregationType,
+        handleSubmit,
+        handleTeamSize,
+        handleTeamsCount,
+    } = useCommandConfig(subjectId ?? '', count, () => {
+        setShowConfig(false);
+    });
+    const handleTeamMaxSize = (): number => {
+        if (config.fixedTeamSize) return config.fixedTeamSize;
+        if (config.maxTeamSize) return config.maxTeamSize;
+        return 0;
+    };
+    const fixedSize = handleTeamMaxSize();
+
     return (
         <>
             <div className='max-w-4xl mx-auto'>
                 <div className='flex border-b border-slate-200 mb-8 bg-white/60 backdrop-blur-sm rounded-t-3xl px-2 pt-2'>
                     <button
                         className={`px-6 py-3 font-semibold transition-all rounded-t-2xl ${activeTab === 'feed' ? 'text-blue-600 bg-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                        onClick={() => setActiveTab('feed')}
+                        onClick={() => handleActiveTab('feed')}
                     >
                         Лента
                     </button>
                     <button
                         className={`px-6 py-3 font-semibold transition-all rounded-t-2xl ${activeTab === 'students' ? 'text-blue-600 bg-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                        onClick={() => setActiveTab('students')}
+                        onClick={() => handleActiveTab('students')}
                     >
                         Студенты
                     </button>
                     <button
                         className={`px-6 py-3 font-semibold transition-all rounded-t-2xl ${activeTab === 'commands' ? 'text-blue-600 bg-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                        onClick={() => setActiveTab('commands')}
+                        onClick={() => handleActiveTab('commands')}
                     >
                         Команды
                     </button>
@@ -315,20 +339,24 @@ const SubjectView = () => {
                                 Список команд
                             </h3>
                             <div className='flex flex-row items-center gap-2'>
-                                <Dices
-                                    size={40}
-                                    className='bg-linear-to-r from-purple-600 to-purple-700 text-white p-2 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all'
-                                    onClick={() => {
-                                        navigate(`/subject/${subjectId}/teams/random`);
-                                    }}
-                                />
-                                <Plus
-                                    size={40}
-                                    className='bg-linear-to-r from-green-600 to-green-700 text-white p-2 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all'
-                                    onClick={() => {
-                                        setShowCreateTeamManually(true);
-                                    }}
-                                />
+                                {config.distributionMode == 1 && (
+                                    <Dices
+                                        size={40}
+                                        className='bg-linear-to-r from-purple-600 to-purple-700 text-white p-2 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all'
+                                        onClick={() => {
+                                            navigate(`/subject/${subjectId}/teams/random`);
+                                        }}
+                                    />
+                                )}
+                                {config.distributionMode == 0 && (
+                                    <Plus
+                                        size={40}
+                                        className='bg-linear-to-r from-green-600 to-green-700 text-white p-2 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all'
+                                        onClick={() => {
+                                            setShowCreateTeamManually(true);
+                                        }}
+                                    />
+                                )}
                                 <Settings
                                     size={40}
                                     className='bg-linear-to-r from-blue-600 to-blue-700 text-white p-2 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all'
@@ -338,7 +366,7 @@ const SubjectView = () => {
                                 />
                             </div>
                         </div>
-                        {isLoading ? (
+                        {isTeamLoading ? (
                             <div className='my-4 font-medium text-2xl w-full h-48 text-center text-gray-500 flex flex-col items-center justify-center bg-white rounded-2xl shadow-md border border-slate-100'>
                                 <p className='font-normal text-lg'>Загрузка списка команд...</p>
                             </div>
@@ -392,6 +420,18 @@ const SubjectView = () => {
                     onClose={() => {
                         setShowConfig(false);
                     }}
+                    config={config}
+                    errorMessage={errorMessage}
+                    isLoading={isLoading}
+                    isSuccess={isSuccess}
+                    segregationType={segregationType}
+                    handleSubmit={handleSubmit}
+                    handleDistributionMode={handleDistributionMode}
+                    handleSegregationType={handleSegregationType}
+                    handleMinSize={handleMinSize}
+                    handleMaxSize={handleMaxSize}
+                    handleTeamSize={handleTeamSize}
+                    handleTeamsCount={handleTeamsCount}
                 />
             )}
             {showCreateTeamManuallyModal && (
@@ -400,7 +440,7 @@ const SubjectView = () => {
                         setShowCreateTeamManually(false);
                     }}
                     subjectId={subjectId ?? ''}
-                    fixedTeamSize={8}
+                    fixedTeamSize={fixedSize}
                 />
             )}
         </>

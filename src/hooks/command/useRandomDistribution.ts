@@ -45,7 +45,11 @@ export function useRandomDistribution(subjectId: string) {
         handleButtonDisableState();
     }, [config]);
     const handleButtonDisableState = () => {
-        if (config.distributionMode !== 1 || distributionError != null) {
+        if (
+            config.distributionMode !== 1 ||
+            distributionError != null ||
+            config.warnings.length > 0
+        ) {
             setButtonDisabled(true);
         } else {
             setButtonDisabled(false);

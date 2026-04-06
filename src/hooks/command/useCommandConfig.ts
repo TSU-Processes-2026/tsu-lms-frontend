@@ -102,6 +102,7 @@ export const useCommandConfig = (
                 ...prev,
                 ...response.data,
             }));
+            setErrorMessage(null);
             setIsSuccess(true);
         } catch (error) {
             if (isAxiosError(error)) {
