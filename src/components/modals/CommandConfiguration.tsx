@@ -1,4 +1,5 @@
 import { useCommandConfig } from '@/hooks/command/useCommandConfig';
+import { warningMessageMapper } from '@/utils/messageMapper';
 import { Plus, X } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 
@@ -14,8 +15,10 @@ export const CommandConfiguration = ({ participantsCount, subjectId, onClose }: 
         errorMessage,
         isLoading,
         isSuccess,
+        segregationType,
         handleSubmit,
         handleDistributionMode,
+        handleSegregationType,
         handleMinSize,
         handleMaxSize,
         handleTeamSize,
@@ -127,23 +130,42 @@ export const CommandConfiguration = ({ participantsCount, subjectId, onClose }: 
                             className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all'
                         />
                     </div>
-                    {Number.parseInt(config.fixedTeamsCount.toString()) > 0 && (
-                        <div>
-                            <label className='block text-sm font-semibold text-slate-700 mb-2'>
-                                Студентов в команде
-                            </label>
-                            <input
-                                type='number'
-                                value={config.fixedTeamSize}
-                                onChange={(e) => handleTeamSize(e.target.value)}
-                                min={1}
-                                className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all'
-                            />
-                        </div>
-                    )}
-                    {Number.parseInt(config.fixedTeamsCount.toString()) *
-                        Number.parseInt(config.fixedTeamSize.toString()) >
-                        0 && (
+                    <div>
+                        <label className='block text-sm font-semibold text-slate-700 mb-2'>
+                            Выберите способ разделения по числу студентов в команде
+                        </label>
+                        <select
+                            value={segregationType}
+                            onChange={(e) => handleSegregationType(e)}
+                            className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all appearance-none cursor-pointer'
+                            style={{
+                                backgroundImage: `url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
+                                backgroundPosition: 'right 1rem center',
+                                backgroundRepeat: 'no-repeat',
+                                backgroundSize: '1.5em 1.5em',
+                                paddingRight: '2.5rem',
+                            }}
+                        >
+                            <option value='fixed'>Фиксированное</option>
+                            <option value='range'>Задать диапазон</option>
+                        </select>
+                    </div>
+                    {segregationType === 'fixed' &&
+                        Number.parseInt(config.fixedTeamsCount.toString()) > 0 && (
+                            <div>
+                                <label className='block text-sm font-semibold text-slate-700 mb-2'>
+                                    Студентов в команде
+                                </label>
+                                <input
+                                    type='number'
+                                    value={config.fixedTeamSize ?? ''}
+                                    onChange={(e) => handleTeamSize(e.target.value)}
+                                    min={1}
+                                    className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all'
+                                />
+                            </div>
+                        )}
+                    {segregationType === 'range' && (
                         <div className='w-full flex flex-col items-start justify-between'>
                             <label className='block text-sm font-semibold text-slate-700 mb-2'>
                                 Диапазон студентов в команде
@@ -155,7 +177,7 @@ export const CommandConfiguration = ({ participantsCount, subjectId, onClose }: 
                                     </label>
                                     <input
                                         type='number'
-                                        value={config.minTeamSize}
+                                        value={config.minTeamSize ?? ''}
                                         placeholder='От'
                                         onChange={(e) => handleMinSize(e.target.value)}
                                         min={1}
@@ -168,7 +190,7 @@ export const CommandConfiguration = ({ participantsCount, subjectId, onClose }: 
                                     </label>
                                     <input
                                         type='number'
-                                        value={config.maxTeamSize}
+                                        value={config.maxTeamSize ?? ''}
                                         placeholder='До'
                                         onChange={(e) => handleMaxSize(e.target.value)}
                                         min={1}
@@ -183,6 +205,14 @@ export const CommandConfiguration = ({ participantsCount, subjectId, onClose }: 
                         <div className='p-4 bg-red-50 border-b-red-50 rounded-xl border border-red-100'>
                             <p className='text-xs text-red-700 font-semibold mb-1'>❌ Ошибка</p>
                             <p className='text-xs text-red-600'>{errorMessage}</p>
+                        </div>
+                    )}
+                    {config.warnings.length > 0 && (
+                        <div className='p-4 bg-orange-50 border-b-orange-50 rounded-xl border border-orange-100'>
+                            <p className='text-xs text-amber-700 font-semibold mb-1'>⚠️ Внимание</p>
+                            <p className='text-xs text-amber-600'>
+                                {warningMessageMapper(config.warnings).map((warn) => warn + '\n')}
+                            </p>
                         </div>
                     )}
                     {isSuccess && (

@@ -11,10 +11,13 @@ export const RandomDistributionPage = () => {
     const { sendAll } = useSendAllTeamManually(subjectId ?? '');
     const {
         distributedTeams,
-        isLoading,
+        distributionError,
         buttonDisabled,
         errorMessage,
         handleDistributeTeamsByRandomMode,
+        handleWarningMessages,
+        handleErrorMessages,
+        handleSuggestParameters,
     } = useRandomDistribution(subjectId ?? '');
 
     const handleSendAll = async () => {
@@ -56,19 +59,50 @@ export const RandomDistributionPage = () => {
                     </button>
                 </div>
                 <div className='flex'>
-                    <div className='flex-1 overflow-y-auto'>
+                    <div className='flex-1 overflow-y-auto py-2'>
                         <form onSubmit={() => {}} className='space-y-5'>
-                            <div className='space-y-3 flex flex-col gap-4'>
+                            <div className='space-y-3 flex flex-col gap-1'>
                                 {errorMessage && (
                                     <div className='bg-red-50 border-b-red-50 rounded-xl border border-red-100  text-center my-4 py-8 backdrop-blur-sm shadow-md text-red-600 text-xl'>
                                         {errorMessage}
                                     </div>
                                 )}
-                                {errorMessage === null && distributedTeams.teams.length == 0 && (
-                                    <div className='bg-white text-center my-4 py-8 backdrop-blur-sm shadow-md rounded-2xl text-gray-500 text-xl'>
-                                        Нажмите на кнопку <strong>"Распределить"</strong> для
-                                        предпросмотра списка команд
-                                    </div>
+
+                                {distributionError && (
+                                    <>
+                                        {distributionError.errors.length > 0 && (
+                                            <>
+                                                <div className='p-4 bg-red-50 border-b-red-50 rounded-xl border border-red-100 backdrop-blur-sm shadow-md'>
+                                                    <p className='text-lg text-red-700 font-semibold mb-1'>
+                                                        ❌ Ошибка
+                                                    </p>
+                                                    <p className='text-md text-red-600 whitespace-pre-line px-2'>
+                                                        {handleErrorMessages()}
+                                                    </p>
+                                                </div>
+                                            </>
+                                        )}
+                                        {distributionError.warnings.length > 0 && (
+                                            <div className='p-4 bg-orange-50 border-b-orange-50 rounded-xl border border-orange-100 backdrop-blur-sm shadow-md'>
+                                                <p className='text-lg text-amber-700 font-semibold mb-1'>
+                                                    ⚠️ Внимание
+                                                </p>
+                                                <p className='text-md text-amber-600 whitespace-pre-line px-2'>
+                                                    {handleWarningMessages()}
+                                                </p>
+                                            </div>
+                                        )}
+                                        {distributionError.suggestedParameters && (
+                                            <div className='p-4 bg-blue-50 border-b-blue-50 rounded-xl border border-blue-100 backdrop-blur-sm shadow-md'>
+                                                <p className='text-lg text-blue-700 font-semibold mb-1'>
+                                                    ℹ️ Рекомендации по разбиению команд:
+                                                </p>
+                                                <p className='text-md text-blue-600 whitespace-pre-line px-2'>
+                                                    {handleSuggestParameters()}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </>
                                 )}
 
                                 {distributedTeams.teams.length > 0 &&

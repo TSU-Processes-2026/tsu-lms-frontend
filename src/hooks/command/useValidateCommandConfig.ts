@@ -2,38 +2,30 @@ import { TeamConfig } from '@/types/command/CommandConfig';
 
 export const useValidateCommandConfig = () => {
     const isMinBoundValid = (totalStudentsCount: number, form: TeamConfig) => {
-        if (
-            form.minTeamSize <= 0 ||
-            form.minTeamSize > totalStudentsCount ||
-            form.minTeamSize > form.maxTeamSize
-        )
-            return false;
+        if (form.minTeamSize && form.maxTeamSize) {
+            if (
+                form.minTeamSize <= 0 ||
+                form.minTeamSize > totalStudentsCount ||
+                form.minTeamSize > form.maxTeamSize
+            )
+                return false;
+        }
         return true;
     };
 
     const isMaxBoundValid = (totalStudentsCount: number, form: TeamConfig) => {
-        if (form.maxTeamSize <= 0 || form.maxTeamSize > totalStudentsCount) return false;
+        if (form.maxTeamSize) {
+            if (form.maxTeamSize <= 0 || form.maxTeamSize > totalStudentsCount) return false;
+        }
         return true;
     };
 
     const validateTeamSize = (totalStudentsCount: number, form: TeamConfig): string | null => {
-        if (form.fixedTeamSize <= 0) return 'Количество участников должно быть больше 0';
-        if (form.fixedTeamSize > totalStudentsCount)
-            return 'Количество участников должно быть меньше общего числа студентов';
-        let teamsSize = totalStudentsCount / form.fixedTeamsCount;
-        if (form.fixedTeamSize > teamsSize)
-            return `Указано неверное число участников команды: 
-        Число команд: ${form.fixedTeamsCount}
-        Максимально допустимое число участников: ${teamsSize}`;
-
-        let val = totalStudentsCount % form.fixedTeamSize;
-        if (val != 0)
-            return 'Число участников в командах должно быть равным. Укажите другое количество или выберите другой способ разбиения.';
-        let teamsCount = totalStudentsCount / form.fixedTeamSize;
-        if (teamsCount != form.fixedTeamsCount)
-            return `Число команд при разбиении не совпадает с указанным. Указано: ${form.fixedTeamsCount}
-            Число команд при указанном количестве участников: ${teamsCount}
-        `;
+        if (form.fixedTeamSize) {
+            if (form.fixedTeamSize <= 0) return 'Количество участников должно быть больше 0';
+            if (form.fixedTeamSize > totalStudentsCount)
+                return 'Количество участников должно быть меньше общего числа студентов';
+        }
         return null;
     };
 
@@ -43,8 +35,10 @@ export const useValidateCommandConfig = () => {
         if (!isMaxBoundValid(totalStudentsCount, form))
             return 'Указана неверная максимальная граница диапазона';
 
-        if (form.maxTeamSize > form.fixedTeamSize)
-            return 'Верхняя граница не должна превышать число участников в команде';
+        if (form.maxTeamSize && form.fixedTeamSize) {
+            if (form.maxTeamSize > form.fixedTeamSize)
+                return 'Верхняя граница не должна превышать число участников в команде';
+        }
         return null;
     };
 

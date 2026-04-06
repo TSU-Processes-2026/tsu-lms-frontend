@@ -21,13 +21,14 @@ export const useCommandConfig = (
         subjectId: subjectId,
         distributionMode: 0,
         fixedTeamsCount: 0,
-        fixedTeamSize: 0,
-        minTeamSize: 0,
-        maxTeamSize: 0,
+        fixedTeamSize: null,
+        minTeamSize: null,
+        maxTeamSize: null,
         isFinalized: false,
         finalizedAt: null,
         warnings: [],
     });
+    const [segregationType, setType] = useState<'fixed' | 'range' | string>('fixed');
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isSuccess, setIsSuccess] = useState<boolean>(false);
@@ -42,6 +43,12 @@ export const useCommandConfig = (
             distributionMode: Number.parseInt(e.target.value),
         }));
         setErrorMessage(null);
+    };
+
+    const handleSegregationType = (
+        e: React.ChangeEvent<HTMLSelectElement, HTMLSelectElement>,
+    ): void => {
+        setType(e.target.value);
     };
 
     const handleTeamsCount = (value: string) => {
@@ -59,27 +66,26 @@ export const useCommandConfig = (
         }));
     };
 
-    const handleMinSize = (value: string) => {
-        setConfig((prev) => ({
-            ...prev,
-            minTeamSize: Number.parseInt(value),
-        }));
+    const handleMinSize = (value: string | null) => {
+        if (value) {
+            setConfig((prev) => ({
+                ...prev,
+                minTeamSize: Number.parseInt(value),
+            }));
+        }
     };
 
-    const handleMaxSize = (value: string) => {
-        const parsedValue: number = Number.parseInt(value);
-        const validatedMaxSize: number =
-            parsedValue > config.fixedTeamSize ? config.fixedTeamSize : parsedValue;
-        setConfig((prev) => ({
-            ...prev,
-            maxTeamSize: validatedMaxSize,
-        }));
+    const handleMaxSize = (value: string | null) => {
+        if (value) {
+            setConfig((prev) => ({
+                ...prev,
+                maxTeamSize: Number.parseInt(value),
+            }));
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        console.log('Students count: ', participantsCount);
-        console.log('Current config: ', config);
         try {
             const error: string | null = validateParams(participantsCount, config);
             if (error) {
@@ -88,9 +94,9 @@ export const useCommandConfig = (
             const response: AxiosResponse<TeamConfig> = await saveConfigParams(subjectId, {
                 distributionMode: config.distributionMode,
                 fixedTeamsCount: config.fixedTeamsCount,
-                fixedTeamSize: config.fixedTeamSize,
-                minTeamSize: config.minTeamSize,
-                maxTeamSize: config.maxTeamSize,
+                fixedTeamSize: segregationType === 'fixed' ? config.fixedTeamSize : null,
+                minTeamSize: segregationType === 'range' ? config.minTeamSize : null,
+                maxTeamSize: segregationType === 'range' ? config.maxTeamSize : null,
             });
             setConfig((prev) => ({
                 ...prev,
@@ -125,9 +131,9 @@ export const useCommandConfig = (
                         subjectId: subjectId,
                         distributionMode: response.data.distributionMode || 0,
                         fixedTeamsCount: Number(response.data.fixedTeamsCount) || 0,
-                        fixedTeamSize: Number(response.data.fixedTeamSize) || 0,
-                        minTeamSize: Number(response.data.minTeamSize) || 1,
-                        maxTeamSize: Number(response.data.maxTeamSize) || 1,
+                        fixedTeamSize: Number(response.data.fixedTeamSize) || null,
+                        minTeamSize: Number(response.data.minTeamSize) || null,
+                        maxTeamSize: Number(response.data.maxTeamSize) || null,
                         warnings: response.data.warnings ?? [],
                         isFinalized: Boolean(response.data.isFinalized) || false,
                         finalizedAt: response.data.finalizedAt ?? null,
@@ -155,9 +161,9 @@ export const useCommandConfig = (
                                 ...prev,
                                 distributionMode: 0,
                                 fixedTeamsCount: 0,
-                                fixedTeamSize: 0,
-                                minTeamSize: 1,
-                                maxTeamSize: 1,
+                                fixedTeamSize: null,
+                                minTeamSize: null,
+                                maxTeamSize: null,
                                 isFinalized: false,
                                 finalizedAt: null,
                                 warnings: [],
@@ -182,8 +188,10 @@ export const useCommandConfig = (
         errorMessage,
         isLoading,
         isSuccess,
+        segregationType,
         handleDistributionMode,
         handleTeamsCount,
+        handleSegregationType,
         handleTeamSize,
         handleMinSize,
         handleMaxSize,

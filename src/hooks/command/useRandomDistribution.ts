@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLoadConfig } from './useCommandConfig';
 import { previewRandomTeamDistribution } from '@/api/command/command';
+import { errorMessageMapper, warningMessageMapper } from '@/utils/messageMapper';
 
 export function useRandomDistribution(subjectId: string) {
     const [distributedTeams, setTeams] = useState<RandomDistributionResponse>({
@@ -15,6 +16,9 @@ export function useRandomDistribution(subjectId: string) {
         warnings: [],
         suggestedParameters: null,
     });
+    const [distributionError, setDistributionError] = useState<RandomDistributionResponse | null>(
+        null,
+    );
     const { config } = useLoadConfig(subjectId);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [errorMessage, setErrorMessage] = useState<string | null>();
@@ -41,12 +45,69 @@ export function useRandomDistribution(subjectId: string) {
         handleButtonDisableState();
     }, [config]);
     const handleButtonDisableState = () => {
-        if (config.distributionMode !== 1) {
+        if (config.distributionMode !== 1 || distributionError != null) {
             setButtonDisabled(true);
         } else {
             setButtonDisabled(false);
         }
     };
+
+    const handleBadDistribution = (response: RandomDistributionResponse): void => {
+        if (!response) {
+            setErrorMessage('Не удалось обработать запрос. Переданы неверные параметры');
+            return;
+        }
+        if (distributionError) {
+            setDistributionError((prev) => ({
+                ...prev,
+                ...response,
+            }));
+        } else {
+            setDistributionError({ ...response });
+        }
+    };
+
+    const handleSuggestParameters = (): string | null => {
+        if (distributionError && distributionError.suggestedParameters != null) {
+            const teamCount =
+                'Рекомендованное число команд: ' +
+                distributionError.suggestedParameters.suggestedTeamsCount;
+            const teamSize = distributionError.suggestedParameters.suggestedFixedTeamSize
+                ? '\nРекомендованное число участников в команде: ' +
+                  distributionError.suggestedParameters.suggestedFixedTeamSize
+                : '';
+            const teamMinSize =
+                '\nМинимальный размер: ' +
+                distributionError.suggestedParameters.suggestedMinTeamSize;
+            const teamMaxSize =
+                '\nМаксимальный размер: ' +
+                distributionError.suggestedParameters.suggestedMaxTeamSize;
+            const suggestTeams =
+                distributionError.suggestedParameters.suggestedTeamSizes.length > 0
+                    ? '\nРекомендованное разбиение по командам: ' +
+                      distributionError.suggestedParameters.suggestedTeamSizes
+                          .map((size) => size)
+                          .join('-')
+                    : '';
+            return teamCount + teamSize + teamMinSize + teamMaxSize + suggestTeams;
+        }
+        return null;
+    };
+
+    const handleWarningMessages = (): string[] | null => {
+        if (distributionError && distributionError.warnings.length > 0) {
+            return warningMessageMapper(distributionError.warnings).map((warn) => warn + ';\n');
+        }
+        return null;
+    };
+
+    const handleErrorMessages = (): string[] | null => {
+        if (distributionError && distributionError.errors.length > 0) {
+            return errorMessageMapper(distributionError.errors).map((error) => error + ';\n');
+        }
+        return null;
+    };
+
     const handleDistributeTeamsByRandomMode = async () => {
         setIsLoading(true);
         setErrorMessage(null);
@@ -66,9 +127,7 @@ export function useRandomDistribution(subjectId: string) {
             if (isAxiosError(error)) {
                 switch (error.status) {
                     case 400: {
-                        setErrorMessage(
-                            error.response?.data.detail || 'Переданы неверные параметры',
-                        );
+                        handleBadDistribution(error.response?.data || null);
                         break;
                     }
                     case 401: {
@@ -98,9 +157,13 @@ export function useRandomDistribution(subjectId: string) {
 
     return {
         distributedTeams,
+        distributionError,
         isLoading,
         errorMessage,
         buttonDisabled,
         handleDistributeTeamsByRandomMode,
+        handleWarningMessages,
+        handleErrorMessages,
+        handleSuggestParameters,
     };
 }
