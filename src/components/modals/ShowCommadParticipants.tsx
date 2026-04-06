@@ -68,6 +68,7 @@ const CommandParticipantsModal = ({
                             <div className='text-slate-400 text-center'>Нет участников</div>
                         ) : (
                             members.members.map((participant) => {
+                                const isSelf = participant.userId === currentUserId;
                                 return (
                                     <div
                                         key={participant.userId}
@@ -81,6 +82,11 @@ const CommandParticipantsModal = ({
                                                 <div className='flex items-center gap-2 flex-wrap'>
                                                     <p className='font-bold text-slate-800'>
                                                         {participant.username}
+                                                        {isSelf && (
+                                                            <span className='text-xs text-slate-400'>
+                                                                (вы)
+                                                            </span>
+                                                        )}
                                                     </p>
                                                 </div>
                                             </div>

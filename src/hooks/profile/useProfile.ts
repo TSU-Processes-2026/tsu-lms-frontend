@@ -2,7 +2,7 @@ import { getProfile } from '@/api/profile/profile';
 import { INTERNAL_SERVER_ERROR_PAGE_URL, LOGIN_PAGE_URL } from '@/constants/paths/paths';
 import { UserResponse } from '@/types/user/UserResponse';
 import { isAxiosError } from 'axios';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export const useProfile = () => {
@@ -36,4 +36,45 @@ export const useProfile = () => {
     };
 
     return { profile, setProfile, getCurrentUser };
+};
+
+export const useGetProfile = () => {
+    const [profile, setProfile] = useState<UserResponse>({
+        id: '',
+        username: '',
+    });
+
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        let isMounted = true;
+        const getCurrentUser = async () => {
+            try {
+                const response = await getProfile();
+                if (isMounted) {
+                    setProfile((prev) => ({
+                        ...prev,
+                        ...response.data,
+                    }));
+                }
+            } catch (error) {
+                if (isAxiosError(error)) {
+                    if (error.response?.status === 401) {
+                        navigate(LOGIN_PAGE_URL);
+                    }
+                    if (error.response?.status === 500) {
+                        navigate(INTERNAL_SERVER_ERROR_PAGE_URL);
+                    }
+                } else {
+                    return;
+                }
+            }
+        };
+        getCurrentUser();
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
+    return { profile };
 };

@@ -9,6 +9,7 @@ import {
     Team,
     TeamCreationResponse,
     TeamRequest,
+    TeamValidation,
     UnAssignedStudents,
     ValidationDetails,
 } from '@/types/command/Team';
@@ -165,8 +166,8 @@ export const previewRandomTeamDistribution = async (
 
 export const validateManualDistribution = async (
     subjectId: string | undefined,
-    teams: Members[],
-): Promise<AxiosResponse<ValidationDetails>> => {
+    teams: TeamValidation,
+): Promise<ValidationDetails> => {
     const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
     try {
         const response: AxiosResponse<ValidationDetails> = await axios.post(
@@ -178,7 +179,7 @@ export const validateManualDistribution = async (
                 },
             },
         );
-        return response;
+        return response.data;
     } catch (error) {
         throw error;
     }

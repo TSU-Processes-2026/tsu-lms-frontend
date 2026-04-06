@@ -159,6 +159,14 @@ export function useRandomDistribution(subjectId: string) {
         }
     };
 
+    useEffect(() => {
+        let isMounted = true;
+        if (isMounted) handleDistributeTeamsByRandomMode();
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
     return {
         distributedTeams,
         distributionError,

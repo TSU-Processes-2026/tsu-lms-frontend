@@ -16,6 +16,7 @@ export const useCommandConfig = (
     subjectId: string,
     participantsCount: number,
     onClose: () => void,
+    role: 'student' | 'teacher' | 'admin' | string,
 ) => {
     const [config, setConfig] = useState<TeamConfig>({
         subjectId: subjectId,
@@ -122,6 +123,7 @@ export const useCommandConfig = (
     };
 
     useEffect(() => {
+        if (role === 'student') return;
         let isMounted = true;
         setIsLoading(true);
         const processRequest = async () => {

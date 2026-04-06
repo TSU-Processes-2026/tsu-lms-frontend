@@ -23,11 +23,13 @@ import { CommandConfiguration } from '@/components/modals/CommandConfiguration';
 import { CommandCard } from '@/components/ui/CommandCard';
 import { useCommandModal } from '@/hooks/command/useCommandModal';
 import CommandParticipantsModal from '@/components/modals/ShowCommadParticipants';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLoadTeams } from '@/hooks/command/useLoadTeams';
 import { CreateTeamManually } from '@/components/modals/CreateTeamManually';
 import { useNavigate } from 'react-router-dom';
 import { useCommandConfig } from '@/hooks/command/useCommandConfig';
+import { useValidateTeams } from '@/hooks/command/useValidateTeams';
+import { useGetProfile } from '@/hooks/profile/useProfile';
 
 interface MaterialPostCardData extends MaterialPostResponse {
     authorUsername: string;
@@ -52,9 +54,8 @@ const SubjectView = () => {
         subjectCode,
         subjectParticipants,
         showCommandConfig,
-        userRole,
         participants,
-        profile,
+
         handleEditPost,
         composerText,
         setComposerText,
@@ -72,7 +73,7 @@ const SubjectView = () => {
         handleCreateAssignment,
         selectedSubject,
     } = useSubjectView();
-
+    const { profile } = useGetProfile();
     const [selectedCommand, setSelectedCommand] = useState<string>('1');
     const {
         showCommandParticipants,
@@ -92,6 +93,14 @@ const SubjectView = () => {
                 (member) => member.role?.toLocaleLowerCase() === 'student',
             ).length) ||
         0;
+    const handleRole = (): 'admin' | 'teacher' | 'student' => {
+        if (subjectId && participants[subjectId] && profile.id) {
+            const found = participants[subjectId].find((p) => p.userId === profile.id);
+            return found ? (found.role?.toLocaleLowerCase() ?? 'student') : 'student';
+        }
+        return 'student';
+    };
+    const userRole: 'admin' | 'teacher' | 'student' = handleRole();
     const navigate = useNavigate();
     const { teams, isTeamLoading } = useLoadTeams(subjectId);
     const {
@@ -107,15 +116,32 @@ const SubjectView = () => {
         handleSubmit,
         handleTeamSize,
         handleTeamsCount,
-    } = useCommandConfig(subjectId ?? '', count, () => {
-        setShowConfig(false);
-    });
+    } = useCommandConfig(
+        subjectId ?? '',
+        count,
+        () => {
+            setShowConfig(false);
+        },
+        userRole,
+    );
+    const { details, handleValidateTeams, handleErrorMessages, handleWarningMessages } =
+        useValidateTeams();
     const handleTeamMaxSize = (): number => {
         if (config.fixedTeamSize) return config.fixedTeamSize;
         if (config.maxTeamSize) return config.maxTeamSize;
         return 0;
     };
     const fixedSize = handleTeamMaxSize();
+
+    useEffect(() => {
+        if (activeTab === 'commands' && userRole != 'student') {
+            console.log(activeTab);
+            if (subjectId && teams && teams.length > 0) {
+                console.log('Called');
+                handleValidateTeams(subjectId, teams);
+            }
+        }
+    }, [activeTab, teams]);
 
     return (
         <>
@@ -338,17 +364,17 @@ const SubjectView = () => {
                             <h3 className='text-3xl font-bold text-slate-800 mb-2'>
                                 Список команд
                             </h3>
-                            <div className='flex flex-row items-center gap-2'>
-                                {config.distributionMode == 1 && (
-                                    <Dices
-                                        size={40}
-                                        className='bg-linear-to-r from-purple-600 to-purple-700 text-white p-2 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all'
-                                        onClick={() => {
-                                            navigate(`/subject/${subjectId}/teams/random`);
-                                        }}
-                                    />
-                                )}
-                                {config.distributionMode == 0 && (
+                            {userRole !== 'student' && (
+                                <div className='flex flex-row items-center gap-2'>
+                                    {config.distributionMode == 1 && (
+                                        <Dices
+                                            size={40}
+                                            className='bg-linear-to-r from-purple-600 to-purple-700 text-white p-2 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all'
+                                            onClick={() => {
+                                                navigate(`/subject/${subjectId}/teams/random`);
+                                            }}
+                                        />
+                                    )}
                                     <Plus
                                         size={40}
                                         className='bg-linear-to-r from-green-600 to-green-700 text-white p-2 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all'
@@ -356,15 +382,47 @@ const SubjectView = () => {
                                             setShowCreateTeamManually(true);
                                         }}
                                     />
-                                )}
-                                <Settings
-                                    size={40}
-                                    className='bg-linear-to-r from-blue-600 to-blue-700 text-white p-2 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all'
-                                    onClick={() => {
-                                        setShowConfig(true);
-                                    }}
-                                />
-                            </div>
+                                    <Settings
+                                        size={40}
+                                        className='bg-linear-to-r from-blue-600 to-blue-700 text-white p-2 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all'
+                                        onClick={() => {
+                                            setShowConfig(true);
+                                        }}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                        <div className='flex flex-col gap-2 my-2'>
+                            {details && details.isValid && (
+                                <div className='p-4 bg-green-50 border-b-green-50 rounded-xl border border-green-100 backdrop-blur-sm shadow-md'>
+                                    <p className='text-md text-green-700 font-semibold mb-1'>
+                                        ✅ Валидация пройдена
+                                    </p>
+                                    <p className='text-sm text-green-600'>
+                                        {'Распределение команд корректно'}
+                                    </p>
+                                </div>
+                            )}
+                            {details && !details.isValid && (
+                                <div className='p-4 bg-red-50 border-b-red-50 rounded-xl border border-red-100 backdrop-blur-sm shadow-md'>
+                                    <p className='text-md text-red-700 font-semibold mb-1'>
+                                        ❌ Валидация провалена
+                                    </p>
+                                    <p className='text-sm text-red-600 whitespace-pre-line px-2'>
+                                        {handleErrorMessages()}
+                                    </p>
+                                </div>
+                            )}
+                            {details && details.warnings.length > 0 && (
+                                <div className='p-4 bg-orange-50 border-b-orange-50 rounded-xl border border-orange-100 backdrop-blur-sm shadow-md'>
+                                    <p className='text-md text-amber-700 font-semibold mb-1'>
+                                        ⚠️ Внимание
+                                    </p>
+                                    <p className='text-sm text-amber-600 whitespace-pre-line px-2'>
+                                        {handleWarningMessages()}
+                                    </p>
+                                </div>
+                            )}
                         </div>
                         {isTeamLoading ? (
                             <div className='my-4 font-medium text-2xl w-full h-48 text-center text-gray-500 flex flex-col items-center justify-center bg-white rounded-2xl shadow-md border border-slate-100'>
@@ -402,7 +460,7 @@ const SubjectView = () => {
                     commandNumber={Number.parseInt(selectedCommand)}
                     onClose={handleCloseCommandParticipants}
                     teams={teams}
-                    currentUserId={''}
+                    currentUserId={profile.id ?? ''}
                     commandId={selectedCommand}
                 />
             )}

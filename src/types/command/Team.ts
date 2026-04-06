@@ -9,6 +9,10 @@ export interface TeamRequest {
     teams: Members[];
 }
 
+export interface TeamValidation {
+    teams: Members[];
+}
+
 export interface TeamMember {
     userId: string;
     username: string;
