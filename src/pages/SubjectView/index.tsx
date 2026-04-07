@@ -32,6 +32,8 @@ import { useValidateTeams } from '@/hooks/command/useValidateTeams';
 import { useGetProfile } from '@/hooks/profile/useProfile';
 import { Team } from '@/types/command/Team';
 import { useLoadConfig } from '@/hooks/command/useCommandConfig';
+import { useConfirmation } from '@/hooks/command/useConfirmDistribution';
+import { errorMessageMapper, warningMessageMapper } from '@/utils/messageMapper';
 
 interface MaterialPostCardData extends MaterialPostResponse {
     authorUsername: string;
@@ -118,10 +120,22 @@ const SubjectView = () => {
         config,
         isConfigLoading,
         errorMessage: configError,
+        setConfig,
     } = useLoadConfig(subjectId ?? '', userRole);
 
     const { details, handleValidateTeams, handleErrorMessages, handleWarningMessages } =
         useValidateTeams();
+    const { confirmation, validationDetails, handleFinalize } = useConfirmation(subjectId ?? '');
+    const finalize = async () => {
+        handleFinalize();
+        if (confirmation) {
+            setConfig((prev) => ({
+                ...prev,
+                isFinalized: confirmation.isFinalized,
+                finalizedAt: confirmation.finalizedAt,
+            }));
+        }
+    };
 
     useEffect(() => {
         if (activeTab === 'commands' && userRole != 'student') {
@@ -129,12 +143,14 @@ const SubjectView = () => {
                 handleValidateTeams(subjectId, teams);
             }
         }
-    }, [activeTab, teams, subjectId, userRole, handleValidateTeams]);
+    }, [activeTab, teams, subjectId, userRole]);
 
     const randomActionDisabled =
         userRole === 'student' || config.distributionMode !== 'Random' || config.isFinalized;
     const manualActionDisabled =
         userRole === 'student' || config.distributionMode !== 'Manual' || config.isFinalized;
+    const draftActionDisabled =
+        userRole === 'student' || config.distributionMode !== 'Draft' || config.isFinalized;
     const configActionDisabled = userRole === 'student' || config.isFinalized;
 
     const handleTeamUpdate = (teamId: string, updater: (team: Team) => Team) => {
@@ -363,38 +379,50 @@ const SubjectView = () => {
                                 Список команд
                             </h3>
                             {userRole !== 'student' && (
-                                <div className='flex flex-row items-center gap-2'>
-                                    <Brackets
-                                        size={40}
-                                        className='bg-linear-to-r from-gray-600 to-gray-700 text-white p-2 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all'
-                                        onClick={() => {
-                                            navigate(`/subject/${subjectId}/teams/draft`);
-                                        }}
-                                    />
-                                    <Dices
-                                        size={40}
-                                        className={`p-2 rounded-xl font-bold shadow-lg transition-all ${randomActionDisabled ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-linear-to-r from-purple-600 to-purple-700 text-white hover:-translate-y-0.5'}`}
-                                        onClick={() => {
-                                            if (randomActionDisabled) return;
-                                            navigate(`/subject/${subjectId}/teams/random`);
-                                        }}
-                                    />
-                                    <Plus
-                                        size={40}
-                                        className={`p-2 rounded-xl font-bold shadow-lg transition-all ${manualActionDisabled ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-linear-to-r from-green-600 to-green-700 text-white hover:-translate-y-0.5'}`}
-                                        onClick={() => {
-                                            if (manualActionDisabled) return;
-                                            setShowCreateTeamManually(true);
-                                        }}
-                                    />
-                                    <Settings
-                                        size={40}
-                                        className={`p-2 rounded-xl font-bold shadow-lg transition-all ${configActionDisabled ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-linear-to-r from-blue-600 to-blue-700 text-white hover:-translate-y-0.5'}`}
-                                        onClick={() => {
-                                            if (configActionDisabled) return;
-                                            setShowConfig(true);
-                                        }}
-                                    />
+                                <div className='flex flex-col gap-3 items-end'>
+                                    <div className='flex flex-row items-center gap-2 w-full justify-between'>
+                                        <Brackets
+                                            size={40}
+                                            className={`p-2 rounded-xl font-bold shadow-lg transition-all ${draftActionDisabled ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-linear-to-r from-slate-700 to-slate-800 text-white hover:-translate-y-0.5'}`}
+                                            onClick={() => {
+                                                if (draftActionDisabled) return;
+                                                navigate(`/subject/${subjectId}/teams/draft`);
+                                            }}
+                                        />
+                                        <Dices
+                                            size={40}
+                                            className={`p-2 rounded-xl font-bold shadow-lg transition-all ${randomActionDisabled ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-linear-to-r from-purple-600 to-purple-700 text-white hover:-translate-y-0.5'}`}
+                                            onClick={() => {
+                                                if (randomActionDisabled) return;
+                                                navigate(`/subject/${subjectId}/teams/random`);
+                                            }}
+                                        />
+                                        <Plus
+                                            size={40}
+                                            className={`p-2 rounded-xl font-bold shadow-lg transition-all ${manualActionDisabled ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-linear-to-r from-green-600 to-green-700 text-white hover:-translate-y-0.5'}`}
+                                            onClick={() => {
+                                                if (manualActionDisabled) return;
+                                                setShowCreateTeamManually(true);
+                                            }}
+                                        />
+                                        <Settings
+                                            size={40}
+                                            className={`p-2 rounded-xl font-bold shadow-lg transition-all ${configActionDisabled ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-linear-to-r from-blue-600 to-blue-700 text-white hover:-translate-y-0.5'}`}
+                                            onClick={() => {
+                                                if (configActionDisabled) return;
+                                                setShowConfig(true);
+                                            }}
+                                        />
+                                    </div>
+                                    <button
+                                        disabled={config.isFinalized}
+                                        className='text-md bg-linear-to-r from-blue-600 to-blue-700 text-white px-3 py-2 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all w-full disabled:opacity-50 disabled:hover:translate-y-0 disabled:cursor-not-allowed'
+                                        onClick={finalize}
+                                    >
+                                        {config.isFinalized
+                                            ? 'Команды сформированы'
+                                            : 'Закончить формирование'}
+                                    </button>
                                 </div>
                             )}
                         </div>
@@ -404,6 +432,17 @@ const SubjectView = () => {
                                     <p className='text-sm text-red-700'>{configError}</p>
                                 </div>
                             )}
+                            {validationDetails && (
+                                <div className='p-4 bg-red-50 border-b-red-50 rounded-xl border border-red-100 backdrop-blur-sm shadow-md'>
+                                    <p className='text-lg text-red-700 font-semibold mb-1'>
+                                        ❌ Ошибка
+                                    </p>
+                                    <p className='text-sm text-red-700 whitespace-pre-line'>
+                                        {errorMessageMapper(validationDetails.errors)}
+                                        {warningMessageMapper(validationDetails.warnings)}
+                                    </p>
+                                </div>
+                            )}
                             {isConfigLoading && (
                                 <div className='p-4 bg-blue-50 border-b-blue-50 rounded-xl border border-blue-100 backdrop-blur-sm shadow-md'>
                                     <p className='text-sm text-blue-700'>
@@ -411,7 +450,7 @@ const SubjectView = () => {
                                     </p>
                                 </div>
                             )}
-                            <div className='p-4 bg-slate-50 border border-slate-100 rounded-xl'>
+                            <div className='p-4 bg-slate-50 border border-slate-100 rounded-xl backdrop-blur-sm shadow-md'>
                                 <p className='text-sm text-slate-700 font-semibold'>
                                     Режим: {config.distributionMode}
                                 </p>

@@ -1,4 +1,4 @@
-import { INTERNAL_SERVER_ERROR_PAGE_URL } from '@/constants/paths/paths';
+import { INTERNAL_SERVER_ERROR_PAGE_URL, LOGIN_PAGE_URL } from '@/constants/paths/paths';
 import { RandomDistributionResponse } from '@/types/command/Team';
 import { isAxiosError } from 'axios';
 import { useEffect, useState } from 'react';

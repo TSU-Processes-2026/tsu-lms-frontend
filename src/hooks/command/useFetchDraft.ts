@@ -1,6 +1,5 @@
 import { fetchSubjectTeamDraft } from '@/api/command/command';
 import { DraftResponse } from '@/types/command/Draft';
-import { isAxiosError } from 'axios';
 import { useEffect, useState } from 'react';
 
 export const useFetchDraft = (subjectId: string) => {

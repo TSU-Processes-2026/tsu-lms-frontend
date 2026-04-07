@@ -15,6 +15,7 @@ import {
     UnAssignedStudents,
     ValidationDetails,
 } from '@/types/command/Team';
+import { normalizeDistributionModeLegacy } from '@/utils/teamConfig';
 import axios, { AxiosResponse, isAxiosError } from 'axios';
 
 const BASE_URL = DEV_URL || PROD_URL || MOCK_URL;
@@ -28,7 +29,10 @@ export const saveConfigParams = async (
     try {
         const response: AxiosResponse<TeamConfig> = await axios.put(
             `${BASE_URL}/subjects/${subjectId}/teams/settings`,
-            params,
+            {
+                ...params,
+                distributionMode: normalizeDistributionModeLegacy(params.distributionMode),
+            },
             {
                 headers: {
                     Authorization: `Bearer ${accessToken}`,
@@ -212,9 +216,11 @@ export const confirmTeamDistribution = async (
     subjectId: string | undefined,
 ): Promise<AxiosResponse<ConfirmationResponse>> => {
     const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
+
     try {
         const response: AxiosResponse<ConfirmationResponse> = await axios.post(
             `${BASE_URL}/subjects/${subjectId}/teams/finalize`,
+            null,
             {
                 headers: {
                     Authorization: `Bearer ${accessToken}`,

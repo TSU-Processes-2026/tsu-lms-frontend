@@ -61,10 +61,7 @@ export const useLoadTeams = (subjectId: string | undefined): UseLoadTeams => {
                             navigate(LOGIN_PAGE_URL);
                             break;
                         }
-                        case 403: {
-                            navigate(FORBIDDEN_PAGE);
-                            break;
-                        }
+
                         case 404: {
                             navigate('*');
                             break;

@@ -95,9 +95,9 @@ export const useCreateDraft = (subjectId: string) => {
                 const participantsData: Participant[] = await fetchSubjectParticipants(
                     subjectId ?? '',
                 );
-                console.log('Participants: ', participantsData);
+
                 const filteredParticipants: Participant[] = filterParticipants(participantsData);
-                console.log('Students: ', filteredParticipants);
+
                 setStudents(filteredParticipants);
             } catch (err: unknown) {
                 if (err instanceof Error) {
@@ -113,7 +113,7 @@ export const useCreateDraft = (subjectId: string) => {
     }, [subjectId]);
 
     useEffect(() => {
-        setIsDraftSelected(config.distributionMode === 3);
+        setIsDraftSelected(config.distributionMode === 'Draft');
     }, [config.distributionMode]);
 
     return {

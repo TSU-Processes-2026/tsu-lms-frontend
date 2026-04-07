@@ -16,7 +16,7 @@ const warningMap: Record<string, string> = {
     'Current number of students cannot be distributed within MinTeamSize and MaxTeamSize.':
         'Текущее количество студентов не может быть распределено между минимальным и максимальным размером участников команды.',
     'All students must be assigned to a team.':
-        'Все сутденты должны быть распределены по командам.',
+        'Все студенты должны быть распределены по командам.',
 };
 
 const errorMap: Record<string, string> = {
@@ -37,7 +37,7 @@ const errorMap: Record<string, string> = {
     'Current number of students cannot be distributed within MinTeamSize and MaxTeamSize.':
         'Текущее количество студентов не может быть распределено между минимальным и максимальным размером участников команды.',
     'All students must be assigned to a team.':
-        'Все сутденты должны быть распределены по командам.',
+        'Все студенты должны быть распределены по командам.',
     'Total number of students must be divisible by FixedTeamSize.':
         'Общее количество студентов должно быть делимо на число студентов в команде',
     'Each student must belong to only one team.':

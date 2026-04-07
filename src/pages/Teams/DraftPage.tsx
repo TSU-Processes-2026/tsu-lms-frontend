@@ -6,6 +6,7 @@ import { mapErrorMessage } from '@/utils/messageMapper';
 import { ArrowLeft, UserIcon, X } from 'lucide-react';
 import { useState, useEffect, FormEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { DraftContent } from './DraftContent';
 
 export const DraftPage = () => {
     const { subjectId, teamId } = useParams();
@@ -94,7 +95,7 @@ export const DraftPage = () => {
         return <div>Загрузка...</div>;
     }
 
-    if (draft) return;
+    if (draft) return <DraftContent navigate={navigate} draft={draft} />;
 
     if (!isDraftSelected) {
         return (
@@ -106,7 +107,9 @@ export const DraftPage = () => {
                     }}
                 />
                 <div className='max-w-4xl w-full mx-auto'>
-                    <h2 className='font-bold text-4xl mb-4'>Создание шаблонов команд</h2>
+                    <h2 className='font-bold text-4xl mb-4'>
+                        Создание команд в режиме <strong>Draft</strong>
+                    </h2>
                     <div
                         className='bg-red-50 border-b-red-50 rounded-xl border
                      border-red-100  text-center my-8 py-8 backdrop-blur-sm shadow-md text-red-600 text-xl'
@@ -127,7 +130,9 @@ export const DraftPage = () => {
                 }}
             />
             <div className='max-w-4xl w-full mx-auto'>
-                <h2 className='font-bold text-4xl mb-4'>Создание шаблонов команд</h2>
+                <h2 className='font-bold text-4xl mb-4'>
+                    Создание команд в режиме <strong>Draft</strong>
+                </h2>
                 <div className='flex border-b border-slate-200 mb-8 bg-white/60 backdrop-blur-sm rounded-3xl px-2 pt-2'>
                     <div className='flex-1 overflow-y-auto p-8'>
                         <form onSubmit={handleSubmit} className='space-y-5'>

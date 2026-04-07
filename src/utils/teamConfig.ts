@@ -1,4 +1,5 @@
 import { TeamDistributionMode } from '@/types/command/CommandConfig';
+import { mapToNumber } from './distributionModeMapper';
 
 const distributionModeByLegacyNumber: Record<number, TeamDistributionMode> = {
     0: 'Manual',
@@ -22,6 +23,10 @@ export const normalizeDistributionMode = (value: unknown): TeamDistributionMode 
     }
 
     return 'Manual';
+};
+
+export const normalizeDistributionModeLegacy = (value: TeamDistributionMode): number => {
+    return mapToNumber(value);
 };
 
 export const distributionModeLabels: Record<TeamDistributionMode, string> = {

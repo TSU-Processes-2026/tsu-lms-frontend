@@ -47,7 +47,7 @@ export function useUpdateTeam(subjectId: string) {
                         break;
                     }
                     case 403: {
-                        navigate(FORBIDDEN_PAGE);
+                        console.log(error.response);
                         break;
                     }
                     case 404: {

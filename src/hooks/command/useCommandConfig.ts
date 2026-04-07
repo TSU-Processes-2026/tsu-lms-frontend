@@ -14,7 +14,7 @@ import { AxiosResponse, isAxiosError } from 'axios';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useValidateCommandConfig } from './useValidateCommandConfig';
-import { normalizeDistributionMode } from '@/utils/teamConfig';
+import { normalizeDistributionMode, normalizeDistributionModeLegacy } from '@/utils/teamConfig';
 
 const createDefaultConfig = (subjectId: string): TeamConfig => ({
     subjectId,
@@ -105,11 +105,12 @@ export const useCommandConfig = (
 
     const handleTeamSize = (value: string) => {
         const parsed = parsePositiveNumber(value);
+
         setConfig((prev) => ({
             ...prev,
             fixedTeamSize: parsed,
-            maxTeamSize: parsed,
-            minTeamSize: parsed,
+            maxTeamSize: null,
+            minTeamSize: null,
         }));
         setIsSuccess(false);
     };
@@ -117,6 +118,7 @@ export const useCommandConfig = (
     const handleMinSize = (value: string | null) => {
         setConfig((prev) => ({
             ...prev,
+            fixedTeamSize: null,
             minTeamSize: value ? parsePositiveNumber(value) : null,
         }));
         setIsSuccess(false);
@@ -125,6 +127,7 @@ export const useCommandConfig = (
     const handleMaxSize = (value: string | null) => {
         setConfig((prev) => ({
             ...prev,
+            fixedTeamSize: null,
             maxTeamSize: value ? parsePositiveNumber(value) : null,
         }));
         setIsSuccess(false);
@@ -138,7 +141,9 @@ export const useCommandConfig = (
                 ...prev,
                 captainEnabled,
                 captainSelectionMethod:
-                    captainEnabled && (mode === 'Random' || mode === 'Manual') ? 'Voting' : 'Manual',
+                    captainEnabled && (mode === 'Random' || mode === 'Manual')
+                        ? 'Voting'
+                        : 'Manual',
                 decisionMethod: normalizeDecisionMethod(captainEnabled),
                 captainVotingDeadline: captainEnabled ? prev.captainVotingDeadline : null,
             };
@@ -202,44 +207,45 @@ export const useCommandConfig = (
                 decisionMethod: normalizeDecisionMethod(preparedConfig.captainEnabled),
                 finalDecisionDeadline: preparedConfig.finalDecisionDeadline,
             });
-            const loadedMode = normalizeDistributionMode(response.data.distributionMode);
-            setConfig({
-                ...createDefaultConfig(subjectId),
-                ...response.data,
-                distributionMode: loadedMode,
-                captainEnabled: Boolean(response.data.captainEnabled),
-                captainSelectionMethod:
-                    response.data.captainSelectionMethod &&
-                    response.data.captainSelectionMethod === 'Voting'
-                        ? 'Voting'
-                        : loadedMode === 'Random' || loadedMode === 'Manual'
-                          ? 'Voting'
-                          : 'Manual',
-                captainVotingDeadline: response.data.captainVotingDeadline ?? null,
-                finalDecisionThreshold:
-                    Number(response.data.finalDecisionThreshold) || participantsCount || 1,
-                decisionMethod: normalizeLoadedDecisionMethod(
-                    response.data.decisionMethod,
-                    Boolean(response.data.captainEnabled),
-                ),
-                finalDecisionDeadline: response.data.finalDecisionDeadline ?? null,
-            });
+            // const loadedMode = normalizeDistributionMode(response.data.distributionMode);
+            // setConfig({
+            //     ...createDefaultConfig(subjectId),
+            //     ...response.data,
+            //     distributionMode: loadedMode,
+            //     captainEnabled: Boolean(response.data.captainEnabled),
+            //     captainSelectionMethod:
+            //         response.data.captainSelectionMethod &&
+            //         response.data.captainSelectionMethod === 'Voting'
+            //             ? 'Voting'
+            //             : loadedMode === 'Random' || loadedMode === 'Manual'
+            //               ? 'Voting'
+            //               : 'Manual',
+            //     captainVotingDeadline: response.data.captainVotingDeadline ?? null,
+            //     finalDecisionThreshold:
+            //         Number(response.data.finalDecisionThreshold) || participantsCount || 1,
+            //     decisionMethod: normalizeLoadedDecisionMethod(
+            //         response.data.decisionMethod,
+            //         Boolean(response.data.captainEnabled),
+            //     ),
+            //     finalDecisionDeadline: response.data.finalDecisionDeadline ?? null,
+            // });
             setErrorMessage(null);
             setIsSuccess(true);
             onClose();
         } catch (error) {
             if (isAxiosError(error)) {
                 if (error.response?.status === 400) {
+                    console.log('error: ', error.response.data);
                     setErrorMessage(error.response.data.detail || 'Переданы неверные параметры');
                 } else if (error.response?.status === 401) {
-                    setErrorMessage(error.response.data.detail || 'Требуется повторная авторизация');
+                    setErrorMessage(
+                        error.response.data.detail || 'Требуется повторная авторизация',
+                    );
                     localStorage.clear();
                     navigate(LOGIN_PAGE_URL);
                 } else {
                     setErrorMessage(error.response?.data.detail || 'Ошибка сервера');
                 }
-            } else {
-                setErrorMessage('Не удалось обработать запрос');
             }
         }
     };
@@ -289,10 +295,6 @@ export const useCommandConfig = (
                         case 401: {
                             localStorage.clear();
                             navigate(LOGIN_PAGE_URL);
-                            break;
-                        }
-                        case 403: {
-                            navigate(FORBIDDEN_PAGE);
                             break;
                         }
                         case 500: {
@@ -376,6 +378,40 @@ export const useLoadConfig = (subjectId: string, role: string) => {
                         ),
                         finalDecisionDeadline: response.data.finalDecisionDeadline ?? null,
                     });
+
+                    setConfig({
+                        ...createDefaultConfig(subjectId),
+                        ...response.data, // сначала все, что пришло с сервера
+                        subjectId,
+                        // принудительно нормализуем только distributionMode
+                        distributionMode: loadedMode,
+                        // числовые поля: если пришли null/undefined, оставляем как есть (не заменяем на 0)
+                        fixedTeamsCount: response.data.fixedTeamsCount ?? 0,
+                        fixedTeamSize: response.data.fixedTeamSize ?? null,
+                        minTeamSize: response.data.minTeamSize ?? null,
+                        maxTeamSize: response.data.maxTeamSize ?? null,
+
+                        captainEnabled:
+                            loadedMode === 'Draft' ? true : (response.data.captainEnabled ?? false),
+
+                        captainSelectionMethod:
+                            response.data.captainSelectionMethod ??
+                            ((loadedMode === 'Random' || loadedMode === 'Manual') && captainEnabled
+                                ? 'Voting'
+                                : 'Manual'),
+                        captainVotingDeadline: response.data.captainVotingDeadline ?? null,
+                        // finalDecisionThreshold: если сервер прислал число (даже 0) — оставляем его
+                        finalDecisionThreshold:
+                            response.data.finalDecisionThreshold !== undefined &&
+                            response.data.finalDecisionThreshold !== null
+                                ? Number(response.data.finalDecisionThreshold)
+                                : 1,
+                        // decisionMethod: берём с сервера, если есть, иначе вычисляем
+                        decisionMethod:
+                            response.data.decisionMethod ??
+                            (captainEnabled ? 'CaptainDecision' : 'Voting'),
+                        finalDecisionDeadline: response.data.finalDecisionDeadline ?? null,
+                    });
                 }
             } catch (error) {
                 if (isAxiosError(error)) {
@@ -385,10 +421,7 @@ export const useLoadConfig = (subjectId: string, role: string) => {
                             navigate(LOGIN_PAGE_URL);
                             break;
                         }
-                        case 403: {
-                            navigate(FORBIDDEN_PAGE);
-                            break;
-                        }
+
                         case 500: {
                             navigate(INTERNAL_SERVER_ERROR_PAGE_URL);
                             break;
@@ -414,5 +447,6 @@ export const useLoadConfig = (subjectId: string, role: string) => {
         config,
         isConfigLoading,
         errorMessage,
+        setConfig,
     };
 };
