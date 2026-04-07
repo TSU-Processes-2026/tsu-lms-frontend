@@ -1,4 +1,5 @@
 import { TeamConfig } from '@/types/command/CommandConfig';
+import { normalizeDistributionMode } from '@/utils/teamConfig';
 
 export const useValidateCommandConfig = () => {
     const isMinBoundValid = (totalStudentsCount: number, form: TeamConfig) => {
@@ -25,6 +26,9 @@ export const useValidateCommandConfig = () => {
             if (form.fixedTeamSize <= 0) return 'Количество участников должно быть больше 0';
             if (form.fixedTeamSize > totalStudentsCount)
                 return 'Количество участников должно быть меньше общего числа студентов';
+            if (totalStudentsCount % form.fixedTeamSize !== 0) {
+                return `При фиксированном размере команды (${form.fixedTeamSize}) количество студентов (${totalStudentsCount}) должно делиться без остатка`;
+            }
         }
         return null;
     };
@@ -34,6 +38,13 @@ export const useValidateCommandConfig = () => {
             return 'Указана неверная минимальная граница диапазона';
         if (!isMaxBoundValid(totalStudentsCount, form))
             return 'Указана неверная максимальная граница диапазона';
+        if (form.minTeamSize && form.maxTeamSize && form.fixedTeamsCount > 0) {
+            const minStudents = form.minTeamSize * form.fixedTeamsCount;
+            const maxStudents = form.maxTeamSize * form.fixedTeamsCount;
+            if (totalStudentsCount < minStudents || totalStudentsCount > maxStudents) {
+                return 'Текущее число студентов не укладывается в выбранный диапазон размеров команд';
+            }
+        }
 
         return null;
     };
@@ -47,6 +58,65 @@ export const useValidateCommandConfig = () => {
         return null;
     };
 
+    const validateCaptainAndDecisionRules = (form: TeamConfig): string | null => {
+        const mode = normalizeDistributionMode(form.distributionMode);
+        if (mode === 'Draft' && !form.captainEnabled) {
+            return 'В режиме драфта капитан обязателен';
+        }
+
+        if (!form.captainEnabled && form.decisionMethod !== 'Voting') {
+            return 'Без капитана метод принятия решения должен быть "Голосование"';
+        }
+
+        if (
+            form.captainEnabled &&
+            form.decisionMethod !== 'CaptainChoice' &&
+            form.decisionMethod !== 'CaptainDecision'
+        ) {
+            return 'При включенном капитане метод принятия решения должен быть "Выбор капитана"';
+        }
+
+        return null;
+    };
+
+    const validateDeadlines = (form: TeamConfig): string | null => {
+        if (form.captainEnabled && form.captainVotingDeadline) {
+            if (Number.isNaN(Date.parse(form.captainVotingDeadline))) {
+                return 'Укажите корректный дедлайн голосования за капитана';
+            }
+        }
+
+        if (form.finalDecisionDeadline) {
+            if (Number.isNaN(Date.parse(form.finalDecisionDeadline))) {
+                return 'Укажите корректный дедлайн итогового решения';
+            }
+        }
+
+        if (form.captainVotingDeadline && form.finalDecisionDeadline) {
+            const captainDeadline = Date.parse(form.captainVotingDeadline);
+            const finalDecisionDeadline = Date.parse(form.finalDecisionDeadline);
+
+            if (captainDeadline > finalDecisionDeadline) {
+                return 'Дедлайн выбора капитана должен быть раньше дедлайна итогового решения';
+            }
+        }
+
+        return null;
+    };
+
+    const validateFinalDecisionThreshold = (
+        totalStudentsCount: number,
+        form: TeamConfig,
+    ): string | null => {
+        if (form.finalDecisionThreshold == null) {
+            return 'Укажите порог принятия финального решения';
+        }
+        if (form.finalDecisionThreshold < 1 || form.finalDecisionThreshold > totalStudentsCount) {
+            return `Порог принятия решения должен быть в диапазоне от 1 до ${totalStudentsCount}`;
+        }
+        return null;
+    };
+
     const validateParams = (totalStudentsCount: number, form: TeamConfig): string | null => {
         let validationResult = null;
         validationResult = validateTeamsCount(totalStudentsCount, form);
@@ -56,6 +126,15 @@ export const useValidateCommandConfig = () => {
         if (validationResult) return validationResult;
 
         validationResult = validateTeamBounds(totalStudentsCount, form);
+        if (validationResult) return validationResult;
+
+        validationResult = validateFinalDecisionThreshold(totalStudentsCount, form);
+        if (validationResult) return validationResult;
+
+        validationResult = validateCaptainAndDecisionRules(form);
+        if (validationResult) return validationResult;
+
+        validationResult = validateDeadlines(form);
         return validationResult;
     };
 
