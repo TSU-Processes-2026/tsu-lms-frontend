@@ -9,6 +9,7 @@ import {
     Settings,
     Plus,
     Dices,
+    Brackets,
 } from 'lucide-react';
 import AnnouncementPostCard from '@/components/ui/AnnouncementPostCard';
 import MaterialPostCard from '@/components/ui/MaterialPostCard';
@@ -338,6 +339,13 @@ const SubjectView = () => {
                             </h3>
                             {userRole !== 'student' && (
                                 <div className='flex flex-row items-center gap-2'>
+                                    <Brackets
+                                        size={40}
+                                        className='bg-linear-to-r from-gray-600 to-gray-700 text-white p-2 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all'
+                                        onClick={() => {
+                                            navigate(`/subject/${subjectId}/teams/draft`);
+                                        }}
+                                    />
                                     <Dices
                                         size={40}
                                         className='bg-linear-to-r from-purple-600 to-purple-700 text-white p-2 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all'

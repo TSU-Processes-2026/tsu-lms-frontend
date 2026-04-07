@@ -25,21 +25,7 @@ export function useRandomDistribution(subjectId: string) {
     const [buttonDisabled, setButtonDisabled] = useState<boolean>(true);
     const navigate = useNavigate();
     const handle403ErrorMessage = () => {
-        if (config.distributionMode == 0) {
-            setErrorMessage(
-                'Текущий режим разбиения на команды "Ручной". Укажите режим "Случайно"',
-            );
-        } else if (config.distributionMode == 2) {
-            setErrorMessage(
-                'Текущий режим разбиения на команды "Самостоятельный". Укажите режим "Случайно"',
-            );
-        } else if (config.distributionMode == 3) {
-            setErrorMessage(
-                'Текущий режим разбиения на команды "Шаблон". Укажите режим "Случайно"',
-            );
-        } else {
-            setErrorMessage('У вас не прав на это действие');
-        }
+        setErrorMessage('Выберите режим разбиения на команды "Случайное".');
     };
     useEffect(() => {
         handleButtonDisableState();

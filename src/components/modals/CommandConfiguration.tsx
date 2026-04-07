@@ -27,7 +27,7 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
         handleSubmit,
         handleTeamSize,
         handleTeamsCount,
-    } = useCommandConfig(subjectId ?? '', participantsCount, onClose, role);
+    } = useCommandConfig(subjectId ?? '', participantsCount, role);
 
     if (isLoading) {
         return (
@@ -121,6 +121,8 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                         >
                             <option value='0'>Ручное</option>
                             <option value='1'>Случайное</option>
+                            <option value='2'>Студентами</option>
+                            <option value='3'>Создать черновик</option>
                         </select>
                     </div>
                     <div>

@@ -16,6 +16,7 @@ export interface TeamValidation {
 export interface TeamMember {
     userId: string;
     username: string;
+    isCaptain?: boolean;
 }
 
 export interface TeamCreationResponse {

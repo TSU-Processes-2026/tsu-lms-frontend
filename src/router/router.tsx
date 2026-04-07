@@ -23,6 +23,7 @@ import { AssignmentsContainer } from '@/pages/Assignments/AssignmentsContainer';
 import path from 'path';
 import { EditTeamPage } from '@/pages/Teams/EditTeamPage';
 import { RandomDistributionPage } from '@/pages/Teams/RandomDistributionPage';
+import { DraftPage } from '@/pages/Teams/DraftPage';
 
 export const router = createBrowserRouter([
     {
@@ -62,6 +63,10 @@ export const router = createBrowserRouter([
                     {
                         path: '/subject/:subjectId/teams/random',
                         element: <RandomDistributionPage />,
+                    },
+                    {
+                        path: '/subject/:subjectId/teams/draft',
+                        element: <DraftPage />,
                     },
                     {
                         path: '/subjects/:subjectId',

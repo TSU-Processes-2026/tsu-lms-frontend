@@ -14,7 +14,7 @@ export const JoinSubjectModal = ({ onClose }: JoinModalProps) => {
             <div className='bg-white w-full max-w-md rounded-3xl shadow-2xl p-8'>
                 <div className='flex items-center justify-between mb-6'>
                     <div className='flex items-center gap-3'>
-                        <div className='w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-200/50'>
+                        <div className='w-10 h-10 bg-linear-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-200/50'>
                             <Key className='text-white' size={20} />
                         </div>
                         <h3 className='text-xl font-bold text-slate-800'>Присоединиться</h3>
@@ -72,7 +72,7 @@ export const JoinSubjectModal = ({ onClose }: JoinModalProps) => {
                         </button>
                         <button
                             type='submit'
-                            className='flex-1 bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-purple-200/50 hover:-translate-y-0.5 transition-all'
+                            className='flex-1 bg-linear-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-purple-200/50 hover:-translate-y-0.5 transition-all'
                         >
                             Присоединиться
                         </button>

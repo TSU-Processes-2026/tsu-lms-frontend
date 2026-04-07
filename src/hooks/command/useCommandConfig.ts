@@ -15,7 +15,6 @@ import { useValidateCommandConfig } from './useValidateCommandConfig';
 export const useCommandConfig = (
     subjectId: string,
     participantsCount: number,
-    onClose: () => void,
     role: 'student' | 'teacher' | 'admin' | string,
 ) => {
     const [config, setConfig] = useState<TeamConfig>({

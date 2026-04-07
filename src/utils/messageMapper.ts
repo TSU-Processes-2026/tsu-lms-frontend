@@ -51,6 +51,7 @@ const errorMap: Record<string, string> = {
     'MaxTeamSize must be greater than zero.': 'Максимальный размер команды должен быть больше нуля',
     'MinTeamSize must be less than or equal to MaxTeamSize.':
         'Минимальный размер команды должен быть не больше максимального',
+    'A draft is already in progress.': 'Черновик команд уже создан',
 };
 
 export const warningMessageMapper = (warnings: string[]): string[] => {
@@ -59,4 +60,11 @@ export const warningMessageMapper = (warnings: string[]): string[] => {
 
 export const errorMessageMapper = (errors: string[]): string[] => {
     return errors.map((error) => errorMap[error] || error);
+};
+
+export const mapErrorMessage = (msg: string | null): string | null => {
+    if (msg) {
+        return errorMap[msg] || msg;
+    }
+    return null;
 };

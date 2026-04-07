@@ -16,18 +16,19 @@ export function useUpdateTeam(subjectId: string) {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const navigate = useNavigate();
+
     const handleSelectTeamId = (selectedTeamId: string) => setTeamId(selectedTeamId);
+
     const handleSelectTeamMembers = (memberIds: Members) => {
         setNewMembers(memberIds);
     };
+
     const handleUpdateTeam = async (id: string): Promise<boolean> => {
-        console.log(newMembers);
-        console.log(id);
         if (!newMembers?.memberIds || !id) {
             console.log('No members or teamId');
             return false;
         }
-        setIsLoading(true);
+
         try {
             await updateTeamMembers(subjectId, id, newMembers);
             return true;
@@ -62,8 +63,6 @@ export function useUpdateTeam(subjectId: string) {
                 setErrorMessage('Не удалось обработать запрос');
             }
             return false;
-        } finally {
-            setIsLoading(false);
         }
     };
 

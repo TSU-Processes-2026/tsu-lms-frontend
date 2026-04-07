@@ -1,4 +1,4 @@
-import { TeamMember, UnAssignedStudents } from '@/types/command/Team';
+import { UnAssignedStudents } from '@/types/command/Team';
 import { MultipleSelect } from '../ui/MultipleSelect';
 import { FormEvent, useEffect, useState } from 'react';
 import { useCreateTeamManually } from '@/hooks/command/useCreateTeamManually';
@@ -90,7 +90,7 @@ export const CreateTeamManually = ({ onClose, subjectId, role }: CreateTeamModal
                                 <button
                                     type='submit'
                                     disabled={true}
-                                    className='flex-1 bg-gradient-to-r from-gray-500 to-gray-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-purple-200/50 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0'
+                                    className='flex-1 bg-linear-to-r from-gray-500 to-gray-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-purple-200/50 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0'
                                 >
                                     Создать ({selectedIds.length})
                                 </button>
@@ -165,7 +165,7 @@ export const CreateTeamManually = ({ onClose, subjectId, role }: CreateTeamModal
                             <button
                                 type='submit'
                                 disabled={selectedIds.length === 0 || isCreating}
-                                className='flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-purple-200/50 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0'
+                                className='flex-1 bg-linear-to-r from-green-600 to-green-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-purple-200/50 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0'
                             >
                                 Создать ({selectedIds.length})
                             </button>

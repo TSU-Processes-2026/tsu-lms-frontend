@@ -77,6 +77,8 @@ export const EditTeamPage = () => {
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
+        e.stopPropagation();
+
         const memberIds = teamMembers.map((member) => member.userId);
         handleSelectTeamMembers({ memberIds });
         const res = await handleUpdateTeam(teamId ?? '');
@@ -104,7 +106,7 @@ export const EditTeamPage = () => {
                 <h2 className='font-bold text-4xl'>Редактирование состава команды</h2>
                 <div className='flex border-b border-slate-200 mb-8 bg-white/60 backdrop-blur-sm rounded-3xl px-2 pt-2'>
                     <div className='flex-1 overflow-y-auto p-8'>
-                        <form onSubmit={handleSubmit} className='space-y-5'>
+                        <div className='space-y-5'>
                             <div className='space-y-3'>
                                 {!studentsList || studentsList.length === 0 ? (
                                     <div className='text-center py-8 text-gray-500'>
@@ -198,14 +200,15 @@ export const EditTeamPage = () => {
                                     Отмена
                                 </button>
                                 <button
-                                    type='submit'
+                                    type='button'
+                                    onClick={handleSubmit}
                                     disabled={selectedIds.length === 0}
                                     className='flex-1 bg-linear-to-r from-amber-600 to-amber-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-purple-200/50 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0'
                                 >
                                     Сохранить
                                 </button>
                             </div>
-                        </form>
+                        </div>
                     </div>
                 </div>
             </div>
