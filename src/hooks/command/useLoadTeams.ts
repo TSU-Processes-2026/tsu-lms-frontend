@@ -29,7 +29,22 @@ export const useLoadTeams = (subjectId: string | undefined): UseLoadTeams => {
             try {
                 const response = await fetchSubjectTeams(subjectId);
                 if (isMounted) {
-                    setTeams(response.data);
+                    setTeams(
+                        response.data.map((team) => ({
+                            ...team,
+                            memberIds:
+                                team.memberIds && team.memberIds.length > 0
+                                    ? team.memberIds
+                                    : (team.members || []).map((member) => member.userId),
+                            captainId: team.captainId ?? null,
+                            captain:
+                                team.captain ??
+                                team.members.find((member) => member.userId === team.captainId) ??
+                                null,
+                            captainSelectionMethod: team.captainSelectionMethod ?? null,
+                            captainVoting: team.captainVoting ?? null,
+                        })),
+                    );
                 }
             } catch (error) {
                 if (isAxiosError(error)) {
@@ -69,7 +84,7 @@ export const useLoadTeams = (subjectId: string | undefined): UseLoadTeams => {
         return () => {
             isMounted = false;
         };
-    }, [subjectId]);
+    }, [subjectId, navigate]);
 
     return {
         teams,

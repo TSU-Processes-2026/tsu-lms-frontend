@@ -1,5 +1,8 @@
+import { TeamConfig } from '@/types/command/CommandConfig';
 import { Team } from '@/types/command/Team';
+import { buildRandomVotes, resolveCaptainVoting } from '@/utils/captainVoting';
 import { Crown, UserIcon } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 interface CommandParticipantsModalProps {
@@ -9,6 +12,8 @@ interface CommandParticipantsModalProps {
     currentUserId: string;
     commandId: string;
     role: string;
+    config: TeamConfig;
+    onTeamUpdate: (teamId: string, updater: (team: Team) => Team) => void;
 }
 
 const CommandParticipantsModal = ({
@@ -18,32 +23,79 @@ const CommandParticipantsModal = ({
     currentUserId,
     commandId,
     role,
+    config,
+    onTeamUpdate,
 }: CommandParticipantsModalProps) => {
-    const members: Team =
-        teams !== undefined && teams.length > 0
-            ? teams.filter((item) => item.id == commandId)[0]
-            : {
-                  id: '',
-                  subjectId: '',
-                  memberIds: [],
-                  members: [],
-              };
-    const roleBadge: Record<string, React.ReactNode> = {
-        captain: (
-            <span className='px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-xs font-bold flex items-center gap-1'>
-                <Crown size={11} /> Капитан
-            </span>
-        ),
-        student: (
-            <span className='px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full text-xs font-bold flex items-center gap-1'>
-                <UserIcon size={11} /> Студент
-            </span>
-        ),
-    };
+    const members: Team = useMemo(
+        () =>
+            teams !== undefined && teams.length > 0
+                ? teams.filter((item) => item.id === commandId)[0]
+                : {
+                      id: '',
+                      subjectId: '',
+                      memberIds: [],
+                      members: [],
+                      captainId: null,
+                  },
+        [teams, commandId],
+    );
+
+    const [message, setMessage] = useState<string | null>(null);
     const navigate = useNavigate();
+
+    const isTeacher = role !== 'student';
+    const isCaptainVotingMode =
+        config.captainEnabled &&
+        (config.distributionMode === 'Random' || config.distributionMode === 'Manual');
+
+    const captain = useMemo(
+        () => members.members.find((participant) => participant.userId === members.captainId) ?? null,
+        [members.members, members.captainId],
+    );
 
     const handleEditTeam = () => {
         navigate(`/subject/${members.subjectId}/teams/${commandId}/edit`);
+    };
+
+    const handleAssignCaptainManually = (captainId: string) => {
+        onTeamUpdate(members.id, (team) => {
+            const teamCaptain = team.members.find((member) => member.userId === captainId) ?? null;
+            return {
+                ...team,
+                captainId,
+                captain: teamCaptain,
+                captainSelectionMethod: 'Manual',
+                captainVoting: null,
+            };
+        });
+        setMessage('Капитан назначен вручную');
+    };
+
+    const handleCaptainVoting = () => {
+        if (members.members.length === 0) {
+            return;
+        }
+
+        const votes = buildRandomVotes(members.members);
+        const voting = resolveCaptainVoting(votes);
+
+        onTeamUpdate(members.id, (team) => {
+            const teamCaptain =
+                team.members.find((member) => member.userId === voting.winnerId) ?? team.captain ?? null;
+            return {
+                ...team,
+                captainId: voting.winnerId,
+                captain: teamCaptain,
+                captainSelectionMethod: 'Voting',
+                captainVoting: voting,
+            };
+        });
+
+        if (voting.tieResolvedByRandom) {
+            setMessage('Есть ничья в голосовании. Победитель выбран случайно и отмечен как капитан.');
+        } else {
+            setMessage('Голосование завершено. Капитан выбран большинством голосов.');
+        }
     };
 
     return (
@@ -60,17 +112,87 @@ const CommandParticipantsModal = ({
                         onClick={onClose}
                     ></button>
                 </div>
-                <div className='flex-1 overflow-y-auto p-8'>
-                    <div className='mb-5 p-4 bg-amber-100 rounded-2xl border border-amber-100 flex flex-row items-center gap-4'>
-                        ⚠️
-                        <p className='font-medium text-lg text-amber-700'> Капитан не выбран </p>
-                    </div>
+                <div className='flex-1 overflow-y-auto p-8 space-y-4'>
+                    {config.captainEnabled ? (
+                        captain ? (
+                            <div className='mb-5 p-4 bg-amber-100 rounded-2xl border border-amber-100 flex flex-row items-center gap-4'>
+                                <Crown className='text-amber-700' size={18} />
+                                <p className='font-medium text-lg text-amber-700'>
+                                    Капитан: {captain.username}
+                                </p>
+                            </div>
+                        ) : (
+                            <div className='mb-5 p-4 bg-amber-100 rounded-2xl border border-amber-100 flex flex-row items-center gap-4'>
+                                ⚠️
+                                <p className='font-medium text-lg text-amber-700'>
+                                    Капитан не выбран
+                                </p>
+                            </div>
+                        )
+                    ) : (
+                        <div className='mb-5 p-4 bg-slate-100 rounded-2xl border border-slate-100 text-slate-600'>
+                            Капитан отключен. Финальное решение принимается голосованием участников.
+                        </div>
+                    )}
+
+                    {isTeacher && config.captainEnabled && (
+                        <div className='rounded-2xl border border-slate-100 p-4 bg-slate-50'>
+                            <p className='text-sm font-semibold text-slate-700 mb-3'>
+                                Назначение капитана преподавателем
+                            </p>
+                            <div className='flex flex-wrap gap-2'>
+                                {members.members.map((participant) => (
+                                    <button
+                                        key={participant.userId}
+                                        type='button'
+                                        onClick={() => handleAssignCaptainManually(participant.userId)}
+                                        className='px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm hover:bg-slate-100 transition-all'
+                                    >
+                                        {participant.username}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {isTeacher && isCaptainVotingMode && (
+                        <div className='rounded-2xl border border-purple-100 p-4 bg-purple-50'>
+                            <p className='text-sm font-semibold text-purple-700 mb-2'>
+                                Выбор капитана голосованием команды
+                            </p>
+                            <button
+                                type='button'
+                                onClick={handleCaptainVoting}
+                                disabled={members.members.length === 0}
+                                className='px-4 py-2 rounded-xl bg-linear-to-r from-purple-600 to-blue-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed'
+                            >
+                                Провести голосование
+                            </button>
+                            {members.captainVoting && (
+                                <div className='mt-3 text-xs text-purple-700 whitespace-pre-line'>
+                                    {Object.entries(members.captainVoting.votes)
+                                        .map(([userId, votesCount]) => `${userId}: ${votesCount}`)
+                                        .join('\n')}
+                                    {members.captainVoting.tieResolvedByRandom &&
+                                        `\nНичья: ${members.captainVoting.tieCandidates.join(', ')}. Победитель выбран случайно.`}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {message && (
+                        <div className='p-4 bg-green-50 border border-green-100 rounded-xl text-green-700 text-sm'>
+                            {message}
+                        </div>
+                    )}
+
                     <div className='space-y-3'>
                         {!members || members.members.length === 0 ? (
                             <div className='text-slate-400 text-center'>Нет участников</div>
                         ) : (
                             members.members.map((participant) => {
                                 const isSelf = participant.userId === currentUserId;
+                                const isCaptain = members.captainId === participant.userId;
                                 return (
                                     <div
                                         key={participant.userId}
@@ -93,6 +215,11 @@ const CommandParticipantsModal = ({
                                                 </div>
                                             </div>
                                         </div>
+                                        {isCaptain && (
+                                            <span className='px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-xs font-bold flex items-center gap-1'>
+                                                <Crown size={11} /> Капитан
+                                            </span>
+                                        )}
                                     </div>
                                 );
                             })
@@ -106,7 +233,7 @@ const CommandParticipantsModal = ({
                     >
                         Закрыть
                     </button>
-                    {members && members.members.length > 0 && role != 'student' && (
+                    {members && members.members.length > 0 && role !== 'student' && (
                         <button
                             className='bg-linear-to-r from-blue-600 to-blue-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all w-full'
                             onClick={handleEditTeam}

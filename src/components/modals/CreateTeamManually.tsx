@@ -1,6 +1,6 @@
-import { TeamMember, UnAssignedStudents } from '@/types/command/Team';
+import { UnAssignedStudents } from '@/types/command/Team';
 import { MultipleSelect } from '../ui/MultipleSelect';
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useMemo, useState } from 'react';
 import { useCreateTeamManually } from '@/hooks/command/useCreateTeamManually';
 import { useLoadConfig } from '@/hooks/command/useCommandConfig';
 
@@ -21,12 +21,24 @@ export const CreateTeamManually = ({ onClose, subjectId, role }: CreateTeamModal
     } = useCreateTeamManually(subjectId);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [message, setMessage] = useState<string | null>(null);
-    const [loadedUnassigned, setLoaded] = useState<UnAssignedStudents>(unassigned);
+    const [hiddenIds, setHiddenIds] = useState<string[]>([]);
     const { config } = useLoadConfig(subjectId, role);
+    const loadedUnassigned: UnAssignedStudents = useMemo(
+        () => ({
+            ...unassigned,
+            students: unassigned.students.filter((student) => !hiddenIds.includes(student.userId)),
+        }),
+        [unassigned, hiddenIds],
+    );
     const handleTeamMaxSize = (): number => {
         if (config.fixedTeamSize) return config.fixedTeamSize;
         if (config.maxTeamSize) return config.maxTeamSize;
-        return 0;
+        return Number.POSITIVE_INFINITY;
+    };
+    const handleTeamMinSize = (): number => {
+        if (config.fixedTeamSize) return config.fixedTeamSize;
+        if (config.minTeamSize) return config.minTeamSize;
+        return 1;
     };
     const handleSelectionChange = (selectedIds: string[]) => {
         setSelectedIds(selectedIds);
@@ -35,6 +47,7 @@ export const CreateTeamManually = ({ onClose, subjectId, role }: CreateTeamModal
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         const fixedTeamSize = handleTeamMaxSize();
+        const minTeamSize = handleTeamMinSize();
         if (selectedIds.length > fixedTeamSize) {
             setErrorMessage(
                 'Указано слишком большое число участников. Максимальное число участников: ' +
@@ -42,22 +55,23 @@ export const CreateTeamManually = ({ onClose, subjectId, role }: CreateTeamModal
             );
             return;
         }
+        if (selectedIds.length < minTeamSize) {
+            setErrorMessage(
+                'Указано слишком малое число участников. Минимальное число участников: ' +
+                    minTeamSize,
+            );
+            return;
+        }
         const res = await processCreateRequest({ memberIds: selectedIds });
         if (res) {
             setErrorMessage(null);
-            setLoaded((prev) => ({
-                ...prev,
-                students: prev.students.filter((student) => !selectedIds.includes(student.userId)),
-            }));
+            setHiddenIds((prev) => [...prev, ...selectedIds]);
             setSelectedIds([]);
             setMessage('Сформирована новая команда');
         } else {
             setMessage(null);
         }
     };
-    useEffect(() => {
-        setLoaded({ ...unassigned });
-    }, [unassigned]);
     if (isLoading) {
         return (
             <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm'>

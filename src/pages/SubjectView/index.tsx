@@ -27,9 +27,10 @@ import { useEffect, useState } from 'react';
 import { useLoadTeams } from '@/hooks/command/useLoadTeams';
 import { CreateTeamManually } from '@/components/modals/CreateTeamManually';
 import { useNavigate } from 'react-router-dom';
-import { useCommandConfig, useLoadConfig } from '@/hooks/command/useCommandConfig';
+import { useLoadConfig } from '@/hooks/command/useCommandConfig';
 import { useValidateTeams } from '@/hooks/command/useValidateTeams';
 import { useGetProfile } from '@/hooks/profile/useProfile';
+import { Team } from '@/types/command/Team';
 
 interface MaterialPostCardData extends MaterialPostResponse {
     authorUsername: string;
@@ -74,14 +75,16 @@ const SubjectView = () => {
     } = useSubjectView();
     const { profile } = useGetProfile();
     const [selectedCommand, setSelectedCommand] = useState<string>('1');
+    const [selectedCommandIndex, setSelectedCommandIndex] = useState<number>(0);
     const {
         showCommandParticipants,
         handleCloseCommandParticipants,
         handleShowCommandParticipants,
     } = useCommandModal();
 
-    const handleSelectCommand = (id: string) => {
+    const handleSelectCommand = (id: string, index: number) => {
         setSelectedCommand(id);
+        setSelectedCommandIndex(index);
         handleShowCommandParticipants();
     };
     const [showCreateTeamManuallyModal, setShowCreateTeamManually] = useState<boolean>(false);
@@ -95,26 +98,36 @@ const SubjectView = () => {
     const handleRole = (): 'admin' | 'teacher' | 'student' => {
         if (subjectId && participants[subjectId] && profile.id) {
             const found = participants[subjectId].find((p) => p.userId === profile.id);
-            return found ? (found.role?.toLocaleLowerCase() ?? 'student') : 'student';
+            const normalizedRole = found?.role?.toLocaleLowerCase();
+            if (normalizedRole === 'admin' || normalizedRole === 'teacher' || normalizedRole === 'student') {
+                return normalizedRole;
+            }
+            return 'student';
         }
         return 'student';
     };
     const userRole: 'admin' | 'teacher' | 'student' = handleRole();
     const navigate = useNavigate();
-    const { teams, isTeamLoading } = useLoadTeams(subjectId);
+    const { teams, isTeamLoading, setTeams } = useLoadTeams(subjectId);
+    const { config, isConfigLoading, errorMessage: configError } = useLoadConfig(subjectId ?? '', userRole);
 
     const { details, handleValidateTeams, handleErrorMessages, handleWarningMessages } =
         useValidateTeams();
 
     useEffect(() => {
         if (activeTab === 'commands' && userRole != 'student') {
-            console.log(activeTab);
             if (subjectId && teams && teams.length > 0) {
-                console.log('Called');
                 handleValidateTeams(subjectId, teams);
             }
         }
-    }, [activeTab, teams]);
+    }, [activeTab, teams, subjectId, userRole, handleValidateTeams]);
+
+    const randomActionDisabled = userRole === 'student' || config.distributionMode !== 'Random';
+    const manualActionDisabled = userRole === 'student' || config.distributionMode !== 'Manual';
+
+    const handleTeamUpdate = (teamId: string, updater: (team: Team) => Team) => {
+        setTeams(teams.map((team) => (team.id === teamId ? updater(team) : team)));
+    };
 
     return (
         <>
@@ -341,15 +354,17 @@ const SubjectView = () => {
                                 <div className='flex flex-row items-center gap-2'>
                                     <Dices
                                         size={40}
-                                        className='bg-linear-to-r from-purple-600 to-purple-700 text-white p-2 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all'
+                                        className={`p-2 rounded-xl font-bold shadow-lg transition-all ${randomActionDisabled ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-linear-to-r from-purple-600 to-purple-700 text-white hover:-translate-y-0.5'}`}
                                         onClick={() => {
+                                            if (randomActionDisabled) return;
                                             navigate(`/subject/${subjectId}/teams/random`);
                                         }}
                                     />
                                     <Plus
                                         size={40}
-                                        className='bg-linear-to-r from-green-600 to-green-700 text-white p-2 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all'
+                                        className={`p-2 rounded-xl font-bold shadow-lg transition-all ${manualActionDisabled ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-linear-to-r from-green-600 to-green-700 text-white hover:-translate-y-0.5'}`}
                                         onClick={() => {
+                                            if (manualActionDisabled) return;
                                             setShowCreateTeamManually(true);
                                         }}
                                     />
@@ -364,6 +379,26 @@ const SubjectView = () => {
                             )}
                         </div>
                         <div className='flex flex-col gap-2 my-2'>
+                            {configError && (
+                                <div className='p-4 bg-red-50 border-b-red-50 rounded-xl border border-red-100 backdrop-blur-sm shadow-md'>
+                                    <p className='text-sm text-red-700'>{configError}</p>
+                                </div>
+                            )}
+                            {isConfigLoading && (
+                                <div className='p-4 bg-blue-50 border-b-blue-50 rounded-xl border border-blue-100 backdrop-blur-sm shadow-md'>
+                                    <p className='text-sm text-blue-700'>Загрузка настроек команд...</p>
+                                </div>
+                            )}
+                            <div className='p-4 bg-slate-50 border border-slate-100 rounded-xl'>
+                                <p className='text-sm text-slate-700 font-semibold'>
+                                    Режим: {config.distributionMode}
+                                </p>
+                                <p className='text-xs text-slate-500 mt-1'>
+                                    {config.captainEnabled
+                                        ? `Капитан включен, метод решения: выбор капитана, порог: ${config.finalDecisionThreshold}`
+                                        : `Капитан выключен, метод решения: голосование, порог: ${config.finalDecisionThreshold}`}
+                                </p>
+                            </div>
                             {details && details.isValid && (
                                 <div className='p-4 bg-green-50 border-b-green-50 rounded-xl border border-green-100 backdrop-blur-sm shadow-md'>
                                     <p className='text-md text-green-700 font-semibold mb-1'>
@@ -406,7 +441,16 @@ const SubjectView = () => {
                                         index={index}
                                         key={item.id}
                                         participants={item.members || []}
-                                        onClick={() => handleSelectCommand(item.id)}
+                                        captainName={
+                                            item.members.find((participant) => participant.userId === item.captainId)
+                                                ?.username ?? null
+                                        }
+                                        decisionInfo={
+                                            config.captainEnabled
+                                                ? 'Финальное решение принимает капитан'
+                                                : 'Финальное решение принимает голосование команды'
+                                        }
+                                        onClick={() => handleSelectCommand(item.id, index)}
                                     />
                                 ))}
                             </ul>
@@ -428,12 +472,14 @@ const SubjectView = () => {
             )}
             {showCommandParticipants && (
                 <CommandParticipantsModal
-                    commandNumber={Number.parseInt(selectedCommand)}
+                    commandNumber={selectedCommandIndex}
                     onClose={handleCloseCommandParticipants}
                     teams={teams}
                     currentUserId={profile.id ?? ''}
                     commandId={selectedCommand}
                     role={userRole}
+                    config={config}
+                    onTeamUpdate={handleTeamUpdate}
                 />
             )}
             {showAssignmentModal && (
