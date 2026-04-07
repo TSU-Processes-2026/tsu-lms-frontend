@@ -50,7 +50,8 @@ export function useRandomDistribution(subjectId: string) {
         if (
             normalizeDistributionMode(config.distributionMode) !== 'Random' ||
             distributionError != null ||
-            config.warnings.length > 0
+            config.warnings.length > 0 ||
+            config.isFinalized
         ) {
             setButtonDisabled(true);
         } else {
@@ -115,6 +116,10 @@ export function useRandomDistribution(subjectId: string) {
     };
 
     const handleDistributeTeamsByRandomMode = async () => {
+        if (config.isFinalized) {
+            setErrorMessage('Команды финализированы. Повторное распределение запрещено');
+            return;
+        }
         setIsLoading(true);
         setErrorMessage(null);
         try {

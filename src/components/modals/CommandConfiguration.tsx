@@ -15,6 +15,17 @@ interface ConfigModalProps extends ModalProps {
 }
 
 const modeOptions: TeamDistributionMode[] = ['Draft', 'Random', 'Students', 'Manual'];
+const toInputDateTime = (value: string | null): string => {
+    if (!value) return '';
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) {
+        return value;
+    }
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    const offset = date.getTimezoneOffset();
+    const localDate = new Date(date.getTime() - offset * 60_000);
+    return localDate.toISOString().slice(0, 16);
+};
 
 export const CommandConfiguration = (props: ConfigModalProps) => {
     const { subjectId, participantsCount, role, onClose } = props;
@@ -33,11 +44,14 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
         handleTeamsCount,
         handleCaptainEnabled,
         handleFinalDecisionThreshold,
+        handleCaptainVotingDeadline,
+        handleFinalDecisionDeadline,
     } = useCommandConfig(subjectId ?? '', participantsCount, onClose, role);
 
     const mode = config.distributionMode;
     const isDraftMode = mode === 'Draft';
     const isCaptainVotingMode = mode === 'Random' || mode === 'Manual';
+    const isFinalized = config.isFinalized;
 
     if (isLoading) {
         return (
@@ -85,6 +99,16 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                     </button>
                 </div>
                 <form onSubmit={handleSubmit} className='space-y-5'>
+                    {isFinalized && (
+                        <div className='p-4 bg-amber-50 border border-amber-100 rounded-xl'>
+                            <p className='text-xs text-amber-700 font-semibold mb-1'>
+                                Команды финализированы
+                            </p>
+                            <p className='text-xs text-amber-600'>
+                                Изменение параметров и капитанов после финализации запрещено.
+                            </p>
+                        </div>
+                    )}
                     <div>
                         <label className='block text-sm font-semibold text-slate-700 mb-2'>
                             Выберите режим формирования
@@ -92,6 +116,7 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                         <select
                             value={mode}
                             onChange={handleDistributionMode}
+                            disabled={isFinalized}
                             className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all appearance-none cursor-pointer'
                         >
                             {modeOptions.map((option) => (
@@ -110,6 +135,7 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                             value={config.fixedTeamsCount}
                             onChange={(e) => handleTeamsCount(e.target.value)}
                             min={1}
+                            disabled={isFinalized}
                             className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all'
                         />
                     </div>
@@ -120,6 +146,7 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                         <select
                             value={segregationType}
                             onChange={handleSegregationType}
+                            disabled={isFinalized}
                             className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all appearance-none cursor-pointer'
                         >
                             <option value='fixed'>Фиксированное число студентов в команде</option>
@@ -136,6 +163,7 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                                 value={config.fixedTeamSize ?? ''}
                                 onChange={(e) => handleTeamSize(e.target.value)}
                                 min={1}
+                                disabled={isFinalized}
                                 className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all'
                             />
                         </div>
@@ -156,6 +184,7 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                                         placeholder='От'
                                         onChange={(e) => handleMinSize(e.target.value)}
                                         min={1}
+                                        disabled={isFinalized}
                                         className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all'
                                     />
                                 </div>
@@ -169,6 +198,7 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                                         placeholder='До'
                                         onChange={(e) => handleMaxSize(e.target.value)}
                                         min={1}
+                                        disabled={isFinalized}
                                         className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all'
                                     />
                                 </div>
@@ -188,7 +218,7 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                             <input
                                 type='checkbox'
                                 checked={config.captainEnabled}
-                                disabled={isDraftMode}
+                                disabled={isDraftMode || isFinalized}
                                 onChange={(e) => handleCaptainEnabled(e.target.checked)}
                                 className='h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 disabled:opacity-60'
                             />
@@ -206,6 +236,18 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                             </p>
                         </div>
                     </div>
+                    <div>
+                        <label className='block text-sm font-semibold text-slate-700 mb-2'>
+                            Дедлайн голосования за капитана
+                        </label>
+                        <input
+                            type='datetime-local'
+                            value={toInputDateTime(config.captainVotingDeadline)}
+                            onChange={(e) => handleCaptainVotingDeadline(e.target.value)}
+                            disabled={isFinalized || !config.captainEnabled || !isCaptainVotingMode}
+                            className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all disabled:opacity-60'
+                        />
+                    </div>
 
                     <div>
                         <label className='block text-sm font-semibold text-slate-700 mb-2'>
@@ -217,7 +259,20 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                             onChange={(e) => handleFinalDecisionThreshold(e.target.value)}
                             min={1}
                             max={Math.max(1, participantsCount)}
+                            disabled={isFinalized}
                             className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all'
+                        />
+                    </div>
+                    <div>
+                        <label className='block text-sm font-semibold text-slate-700 mb-2'>
+                            Дедлайн итогового решения
+                        </label>
+                        <input
+                            type='datetime-local'
+                            value={toInputDateTime(config.finalDecisionDeadline)}
+                            onChange={(e) => handleFinalDecisionDeadline(e.target.value)}
+                            disabled={isFinalized}
+                            className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all disabled:opacity-60'
                         />
                     </div>
 
@@ -268,7 +323,8 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                         </button>
                         <button
                             type='submit'
-                            className='flex-1 bg-linear-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-300/150 hover:-translate-y-0.5 transition-all'
+                            disabled={isFinalized}
+                            className='flex-1 bg-linear-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-300/150 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0 disabled:cursor-not-allowed'
                         >
                             Сохранить
                         </button>

@@ -43,6 +43,7 @@ export const useLoadTeams = (subjectId: string | undefined): UseLoadTeams => {
                                 null,
                             captainSelectionMethod: team.captainSelectionMethod ?? null,
                             captainVoting: team.captainVoting ?? null,
+                            finalDecision: team.finalDecision ?? null,
                         })),
                     );
                 }

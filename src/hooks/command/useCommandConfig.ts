@@ -4,7 +4,11 @@ import {
     INTERNAL_SERVER_ERROR_PAGE_URL,
     LOGIN_PAGE_URL,
 } from '@/constants/paths/paths';
-import { TeamConfig, TeamDistributionMode } from '@/types/command/CommandConfig';
+import {
+    FinalDecisionMethod,
+    TeamConfig,
+    TeamDistributionMode,
+} from '@/types/command/CommandConfig';
 
 import { AxiosResponse, isAxiosError } from 'axios';
 import { useEffect, useState } from 'react';
@@ -21,15 +25,32 @@ const createDefaultConfig = (subjectId: string): TeamConfig => ({
     maxTeamSize: null,
     captainEnabled: false,
     captainSelectionMethod: 'Manual',
+    captainVotingDeadline: null,
     finalDecisionThreshold: 1,
     decisionMethod: 'Voting',
+    finalDecisionDeadline: null,
     isFinalized: false,
     finalizedAt: null,
     warnings: [],
 });
 
-const normalizeDecisionMethod = (captainEnabled: boolean): 'Voting' | 'CaptainChoice' =>
-    captainEnabled ? 'CaptainChoice' : 'Voting';
+const normalizeDecisionMethod = (captainEnabled: boolean): FinalDecisionMethod =>
+    captainEnabled ? 'CaptainDecision' : 'Voting';
+
+const normalizeLoadedDecisionMethod = (
+    decisionMethod: FinalDecisionMethod | null | undefined,
+    captainEnabled: boolean,
+): FinalDecisionMethod => {
+    if (!captainEnabled) {
+        return 'Voting';
+    }
+
+    if (decisionMethod === 'CaptainChoice' || decisionMethod === 'CaptainDecision') {
+        return decisionMethod;
+    }
+
+    return 'CaptainDecision';
+};
 
 export const useCommandConfig = (
     subjectId: string,
@@ -120,6 +141,7 @@ export const useCommandConfig = (
                 captainSelectionMethod:
                     captainEnabled && (mode === 'Random' || mode === 'Manual') ? 'Voting' : 'Manual',
                 decisionMethod: normalizeDecisionMethod(captainEnabled),
+                captainVotingDeadline: captainEnabled ? prev.captainVotingDeadline : null,
             };
         });
         setIsSuccess(false);
@@ -129,6 +151,22 @@ export const useCommandConfig = (
         setConfig((prev) => ({
             ...prev,
             finalDecisionThreshold: parsePositiveNumber(value),
+        }));
+        setIsSuccess(false);
+    };
+
+    const handleCaptainVotingDeadline = (value: string) => {
+        setConfig((prev) => ({
+            ...prev,
+            captainVotingDeadline: value || null,
+        }));
+        setIsSuccess(false);
+    };
+
+    const handleFinalDecisionDeadline = (value: string) => {
+        setConfig((prev) => ({
+            ...prev,
+            finalDecisionDeadline: value || null,
         }));
         setIsSuccess(false);
     };
@@ -160,8 +198,10 @@ export const useCommandConfig = (
                         preparedConfig.distributionMode === 'Manual')
                         ? 'Voting'
                         : 'Manual',
+                captainVotingDeadline: preparedConfig.captainVotingDeadline,
                 finalDecisionThreshold: preparedConfig.finalDecisionThreshold,
                 decisionMethod: normalizeDecisionMethod(preparedConfig.captainEnabled),
+                finalDecisionDeadline: preparedConfig.finalDecisionDeadline,
             });
             const loadedMode = normalizeDistributionMode(response.data.distributionMode);
             setConfig({
@@ -176,9 +216,14 @@ export const useCommandConfig = (
                         : loadedMode === 'Random' || loadedMode === 'Manual'
                           ? 'Voting'
                           : 'Manual',
+                captainVotingDeadline: response.data.captainVotingDeadline ?? null,
                 finalDecisionThreshold:
                     Number(response.data.finalDecisionThreshold) || participantsCount || 1,
-                decisionMethod: normalizeDecisionMethod(Boolean(response.data.captainEnabled)),
+                decisionMethod: normalizeLoadedDecisionMethod(
+                    response.data.decisionMethod,
+                    Boolean(response.data.captainEnabled),
+                ),
+                finalDecisionDeadline: response.data.finalDecisionDeadline ?? null,
             });
             setErrorMessage(null);
             setIsSuccess(true);
@@ -229,9 +274,14 @@ export const useCommandConfig = (
                             captainEnabled && (loadedMode === 'Random' || loadedMode === 'Manual')
                                 ? 'Voting'
                                 : 'Manual',
+                        captainVotingDeadline: response.data.captainVotingDeadline ?? null,
                         finalDecisionThreshold:
                             Number(response.data.finalDecisionThreshold) || participantsCount || 1,
-                        decisionMethod: normalizeDecisionMethod(captainEnabled),
+                        decisionMethod: normalizeLoadedDecisionMethod(
+                            response.data.decisionMethod,
+                            captainEnabled,
+                        ),
+                        finalDecisionDeadline: response.data.finalDecisionDeadline ?? null,
                     });
                 }
             } catch (error) {
@@ -281,6 +331,8 @@ export const useCommandConfig = (
         handleMaxSize,
         handleCaptainEnabled,
         handleFinalDecisionThreshold,
+        handleCaptainVotingDeadline,
+        handleFinalDecisionDeadline,
         handleSubmit,
     };
 };
@@ -294,10 +346,6 @@ export const useLoadConfig = (subjectId: string, role: string) => {
     useEffect(() => {
         let isMounted = true;
         setIsLoading(true);
-        if (role === 'student') {
-            setIsLoading(false);
-            return;
-        }
         const processRequest = async () => {
             try {
                 const response: AxiosResponse<TeamConfig> = await fetchConfig(subjectId);
@@ -321,8 +369,13 @@ export const useLoadConfig = (subjectId: string, role: string) => {
                             captainEnabled && (loadedMode === 'Random' || loadedMode === 'Manual')
                                 ? 'Voting'
                                 : 'Manual',
+                        captainVotingDeadline: response.data.captainVotingDeadline ?? null,
                         finalDecisionThreshold: Number(response.data.finalDecisionThreshold) || 1,
-                        decisionMethod: normalizeDecisionMethod(captainEnabled),
+                        decisionMethod: normalizeLoadedDecisionMethod(
+                            response.data.decisionMethod,
+                            captainEnabled,
+                        ),
+                        finalDecisionDeadline: response.data.finalDecisionDeadline ?? null,
                     });
                 }
             } catch (error) {

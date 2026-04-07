@@ -46,6 +46,10 @@ export const CreateTeamManually = ({ onClose, subjectId, role }: CreateTeamModal
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
+        if (config.isFinalized) {
+            setErrorMessage('Команды финализированы. Изменение состава запрещено');
+            return;
+        }
         const fixedTeamSize = handleTeamMaxSize();
         const minTeamSize = handleTeamMinSize();
         if (selectedIds.length > fixedTeamSize) {
@@ -135,6 +139,11 @@ export const CreateTeamManually = ({ onClose, subjectId, role }: CreateTeamModal
                 <div className='flex-1 overflow-y-auto p-8'>
                     <form onSubmit={handleSubmit} className='space-y-5'>
                         <div className='space-y-3'>
+                            {config.isFinalized && (
+                                <div className='p-4 bg-amber-50 border border-amber-100 rounded-xl text-amber-700 text-sm'>
+                                    Команды финализированы. Создание новых команд недоступно.
+                                </div>
+                            )}
                             {!loadedUnassigned?.students ||
                             loadedUnassigned.students.length === 0 ? (
                                 <div className='text-center py-8 text-gray-500'>
@@ -178,7 +187,7 @@ export const CreateTeamManually = ({ onClose, subjectId, role }: CreateTeamModal
                             </button>
                             <button
                                 type='submit'
-                                disabled={selectedIds.length === 0 || isCreating}
+                                disabled={selectedIds.length === 0 || isCreating || config.isFinalized}
                                 className='flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-purple-200/50 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0'
                             >
                                 Создать ({selectedIds.length})

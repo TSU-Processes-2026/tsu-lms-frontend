@@ -68,8 +68,37 @@ export const useValidateCommandConfig = () => {
             return 'Без капитана метод принятия решения должен быть "Голосование"';
         }
 
-        if (form.captainEnabled && form.decisionMethod !== 'CaptainChoice') {
+        if (
+            form.captainEnabled &&
+            form.decisionMethod !== 'CaptainChoice' &&
+            form.decisionMethod !== 'CaptainDecision'
+        ) {
             return 'При включенном капитане метод принятия решения должен быть "Выбор капитана"';
+        }
+
+        return null;
+    };
+
+    const validateDeadlines = (form: TeamConfig): string | null => {
+        if (form.captainEnabled && form.captainVotingDeadline) {
+            if (Number.isNaN(Date.parse(form.captainVotingDeadline))) {
+                return 'Укажите корректный дедлайн голосования за капитана';
+            }
+        }
+
+        if (form.finalDecisionDeadline) {
+            if (Number.isNaN(Date.parse(form.finalDecisionDeadline))) {
+                return 'Укажите корректный дедлайн итогового решения';
+            }
+        }
+
+        if (form.captainVotingDeadline && form.finalDecisionDeadline) {
+            const captainDeadline = Date.parse(form.captainVotingDeadline);
+            const finalDecisionDeadline = Date.parse(form.finalDecisionDeadline);
+
+            if (captainDeadline > finalDecisionDeadline) {
+                return 'Дедлайн выбора капитана должен быть раньше дедлайна итогового решения';
+            }
         }
 
         return null;
@@ -103,6 +132,9 @@ export const useValidateCommandConfig = () => {
         if (validationResult) return validationResult;
 
         validationResult = validateCaptainAndDecisionRules(form);
+        if (validationResult) return validationResult;
+
+        validationResult = validateDeadlines(form);
         return validationResult;
     };
 

@@ -122,8 +122,11 @@ const SubjectView = () => {
         }
     }, [activeTab, teams, subjectId, userRole, handleValidateTeams]);
 
-    const randomActionDisabled = userRole === 'student' || config.distributionMode !== 'Random';
-    const manualActionDisabled = userRole === 'student' || config.distributionMode !== 'Manual';
+    const randomActionDisabled =
+        userRole === 'student' || config.distributionMode !== 'Random' || config.isFinalized;
+    const manualActionDisabled =
+        userRole === 'student' || config.distributionMode !== 'Manual' || config.isFinalized;
+    const configActionDisabled = userRole === 'student' || config.isFinalized;
 
     const handleTeamUpdate = (teamId: string, updater: (team: Team) => Team) => {
         setTeams(teams.map((team) => (team.id === teamId ? updater(team) : team)));
@@ -370,8 +373,9 @@ const SubjectView = () => {
                                     />
                                     <Settings
                                         size={40}
-                                        className='bg-linear-to-r from-blue-600 to-blue-700 text-white p-2 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all'
+                                        className={`p-2 rounded-xl font-bold shadow-lg transition-all ${configActionDisabled ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-linear-to-r from-blue-600 to-blue-700 text-white hover:-translate-y-0.5'}`}
                                         onClick={() => {
+                                            if (configActionDisabled) return;
                                             setShowConfig(true);
                                         }}
                                     />
@@ -398,6 +402,23 @@ const SubjectView = () => {
                                         ? `Капитан включен, метод решения: выбор капитана, порог: ${config.finalDecisionThreshold}`
                                         : `Капитан выключен, метод решения: голосование, порог: ${config.finalDecisionThreshold}`}
                                 </p>
+                                {config.captainVotingDeadline && (
+                                    <p className='text-xs text-slate-500 mt-1'>
+                                        Дедлайн голосования за капитана:{' '}
+                                        {new Date(config.captainVotingDeadline).toLocaleString('ru-RU')}
+                                    </p>
+                                )}
+                                {config.finalDecisionDeadline && (
+                                    <p className='text-xs text-slate-500 mt-1'>
+                                        Дедлайн итогового решения:{' '}
+                                        {new Date(config.finalDecisionDeadline).toLocaleString('ru-RU')}
+                                    </p>
+                                )}
+                                {config.isFinalized && (
+                                    <p className='text-xs text-amber-700 mt-2 font-semibold'>
+                                        Команды финализированы. Изменения запрещены.
+                                    </p>
+                                )}
                             </div>
                             {details && details.isValid && (
                                 <div className='p-4 bg-green-50 border-b-green-50 rounded-xl border border-green-100 backdrop-blur-sm shadow-md'>
@@ -446,9 +467,11 @@ const SubjectView = () => {
                                                 ?.username ?? null
                                         }
                                         decisionInfo={
-                                            config.captainEnabled
-                                                ? 'Финальное решение принимает капитан'
-                                                : 'Финальное решение принимает голосование команды'
+                                            item.finalDecision
+                                                ? `Итог: ${item.finalDecision.approved ? 'принято' : 'не принято'} (${item.finalDecision.method === 'CaptainDecision' ? 'капитан' : 'голосование'})`
+                                                : config.captainEnabled
+                                                  ? 'Финальное решение принимает капитан'
+                                                  : 'Финальное решение принимает голосование команды'
                                         }
                                         onClick={() => handleSelectCommand(item.id, index)}
                                     />

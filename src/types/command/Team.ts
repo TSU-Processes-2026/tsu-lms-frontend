@@ -7,6 +7,7 @@ export interface Team {
     captain?: TeamMember | null;
     captainSelectionMethod?: 'Manual' | 'Voting' | null;
     captainVoting?: CaptainVotingSummary | null;
+    finalDecision?: TeamFinalDecision | null;
 }
 
 export interface TeamRequest {
@@ -28,6 +29,15 @@ export interface CaptainVotingSummary {
     tieResolvedByRandom: boolean;
     winnerId: string | null;
     resolvedAt: string | null;
+}
+
+export interface TeamFinalDecision {
+    method: 'Voting' | 'CaptainDecision';
+    approvals: number;
+    threshold: number;
+    approved: boolean;
+    selectedBy: string | null;
+    selectedAt: string | null;
 }
 
 export interface TeamCreationResponse {
