@@ -27,7 +27,6 @@ import { useEffect, useState } from 'react';
 import { useLoadTeams } from '@/hooks/command/useLoadTeams';
 import { CreateTeamManually } from '@/components/modals/CreateTeamManually';
 import { useNavigate } from 'react-router-dom';
-import { useCommandConfig, useLoadConfig } from '@/hooks/command/useCommandConfig';
 import { useValidateTeams } from '@/hooks/command/useValidateTeams';
 import { useGetProfile } from '@/hooks/profile/useProfile';
 

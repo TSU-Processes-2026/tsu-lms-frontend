@@ -135,7 +135,7 @@ export function useRandomDistribution(subjectId: string) {
                         break;
                     }
                     case 401: {
-                        throw error;
+                        navigate(LOGIN_PAGE_URL);
                         break;
                     }
                     case 403: {

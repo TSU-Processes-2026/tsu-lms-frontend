@@ -1,14 +1,12 @@
 import { useSendAllTeamManually } from '@/hooks/command/useCreateTeamManually';
 import { useRandomDistribution } from '@/hooks/command/useRandomDistribution';
-import { Team } from '@/types/command/Team';
 import { ArrowLeft, Dices, Send, UserIcon } from 'lucide-react';
-import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 export const RandomDistributionPage = () => {
     const { subjectId } = useParams();
     const navigate = useNavigate();
-    const { isSuccess, errorCreationMessage, sendAll } = useSendAllTeamManually(subjectId ?? '');
+    const { isSuccess, sendAll } = useSendAllTeamManually(subjectId ?? '');
     const {
         distributedTeams,
         distributionError,
@@ -44,7 +42,7 @@ export const RandomDistributionPage = () => {
                     </button>
                     <button
                         onClick={handleSendAll}
-                        className='px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white font-bold rounded-full shadow-lg shadow-purple-200/50 flex flex-row gap-3 items-center transition-all  duration-200 hover:from-green-700 hover:to-green-800 cursor-pointer disabled:bg-gray-400  disabled:from-gray-400 disabled:to-gray-500 disabled:hover:from-gray-400 disabled:hover:to-gray-500 disabled:cursor-not-allowed disabled:shadow-none disabled:opacity-70'
+                        className='px-6 py-3 bg-linear-to-r from-green-600 to-green-700 text-white font-bold rounded-full shadow-lg shadow-purple-200/50 flex flex-row gap-3 items-center transition-all  duration-200 hover:from-green-700 hover:to-green-800 cursor-pointer disabled:bg-gray-400  disabled:from-gray-400 disabled:to-gray-500 disabled:hover:from-gray-400 disabled:hover:to-gray-500 disabled:cursor-not-allowed disabled:shadow-none disabled:opacity-70'
                         disabled={buttonDisabled}
                     >
                         <Send size={22} className='text-white' />
