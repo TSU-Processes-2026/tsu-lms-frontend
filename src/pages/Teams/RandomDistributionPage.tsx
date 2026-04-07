@@ -1,17 +1,16 @@
 import { useSendAllTeamManually } from '@/hooks/command/useCreateTeamManually';
 import { useRandomDistribution } from '@/hooks/command/useRandomDistribution';
-import { Team } from '@/types/command/Team';
 import { ArrowLeft, Dices, Send, UserIcon } from 'lucide-react';
-import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 export const RandomDistributionPage = () => {
     const { subjectId } = useParams();
     const navigate = useNavigate();
-    const { isSuccess, errorCreationMessage, sendAll } = useSendAllTeamManually(subjectId ?? '');
+    const { isSuccess, sendAll } = useSendAllTeamManually(subjectId ?? '');
     const {
         distributedTeams,
         distributionError,
+        isLoading,
         buttonDisabled,
         errorMessage,
         handleDistributeTeamsByRandomMode,
@@ -140,6 +139,19 @@ export const RandomDistributionPage = () => {
                                             </div>
                                         );
                                     })}
+                                {!isLoading &&
+                                    !errorMessage &&
+                                    !distributionError &&
+                                    distributedTeams.teams.length === 0 && (
+                                        <div className='bg-slate-50 rounded-xl border border-slate-100 py-10 text-center text-slate-500'>
+                                            Не удалось сгенерировать команды. Проверьте настройки и попробуйте снова.
+                                        </div>
+                                    )}
+                                {isLoading && (
+                                    <div className='bg-blue-50 rounded-xl border border-blue-100 py-10 text-center text-blue-600'>
+                                        Выполняем распределение...
+                                    </div>
+                                )}
                             </div>
                         </form>
                     </div>

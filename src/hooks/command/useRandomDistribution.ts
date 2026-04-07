@@ -1,4 +1,4 @@
-import { INTERNAL_SERVER_ERROR_PAGE_URL, LOGIN_PAGE_URL } from '@/constants/paths/paths';
+import { INTERNAL_SERVER_ERROR_PAGE_URL } from '@/constants/paths/paths';
 import { RandomDistributionResponse } from '@/types/command/Team';
 import { isAxiosError } from 'axios';
 import { useEffect, useState } from 'react';
@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLoadConfig } from './useCommandConfig';
 import { previewRandomTeamDistribution } from '@/api/command/command';
 import { errorMessageMapper, warningMessageMapper } from '@/utils/messageMapper';
+import { normalizeDistributionMode } from '@/utils/teamConfig';
 
 export function useRandomDistribution(subjectId: string) {
     const [distributedTeams, setTeams] = useState<RandomDistributionResponse>({
@@ -25,17 +26,18 @@ export function useRandomDistribution(subjectId: string) {
     const [buttonDisabled, setButtonDisabled] = useState<boolean>(true);
     const navigate = useNavigate();
     const handle403ErrorMessage = () => {
-        if (config.distributionMode == 0) {
+        const mode = normalizeDistributionMode(config.distributionMode);
+        if (mode === 'Manual') {
             setErrorMessage(
                 'Текущий режим разбиения на команды "Ручной". Укажите режим "Случайно"',
             );
-        } else if (config.distributionMode == 2) {
+        } else if (mode === 'Students') {
             setErrorMessage(
                 'Текущий режим разбиения на команды "Самостоятельный". Укажите режим "Случайно"',
             );
-        } else if (config.distributionMode == 3) {
+        } else if (mode === 'Draft') {
             setErrorMessage(
-                'Текущий режим разбиения на команды "Шаблон". Укажите режим "Случайно"',
+                'Текущий режим разбиения на команды "Драфт". Укажите режим "Случайно"',
             );
         } else {
             setErrorMessage('У вас не прав на это действие');
@@ -46,9 +48,10 @@ export function useRandomDistribution(subjectId: string) {
     }, [config]);
     const handleButtonDisableState = () => {
         if (
-            config.distributionMode !== 1 ||
+            normalizeDistributionMode(config.distributionMode) !== 'Random' ||
             distributionError != null ||
-            config.warnings.length > 0
+            config.warnings.length > 0 ||
+            config.isFinalized
         ) {
             setButtonDisabled(true);
         } else {
@@ -113,6 +116,10 @@ export function useRandomDistribution(subjectId: string) {
     };
 
     const handleDistributeTeamsByRandomMode = async () => {
+        if (config.isFinalized) {
+            setErrorMessage('Команды финализированы. Повторное распределение запрещено');
+            return;
+        }
         setIsLoading(true);
         setErrorMessage(null);
         try {

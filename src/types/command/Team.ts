@@ -3,6 +3,11 @@ export interface Team {
     subjectId: string;
     memberIds: string[];
     members: TeamMember[];
+    captainId?: string | null;
+    captain?: TeamMember | null;
+    captainSelectionMethod?: 'Manual' | 'Voting' | null;
+    captainVoting?: CaptainVotingSummary | null;
+    finalDecision?: TeamFinalDecision | null;
 }
 
 export interface TeamRequest {
@@ -16,6 +21,23 @@ export interface TeamValidation {
 export interface TeamMember {
     userId: string;
     username: string;
+}
+
+export interface CaptainVotingSummary {
+    votes: Record<string, number>;
+    tieCandidates: string[];
+    tieResolvedByRandom: boolean;
+    winnerId: string | null;
+    resolvedAt: string | null;
+}
+
+export interface TeamFinalDecision {
+    method: 'Voting' | 'CaptainDecision';
+    approvals: number;
+    threshold: number;
+    approved: boolean;
+    selectedBy: string | null;
+    selectedAt: string | null;
 }
 
 export interface TeamCreationResponse {
