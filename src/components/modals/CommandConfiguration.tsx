@@ -182,7 +182,7 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                                     </label>
                                     <input
                                         type='number'
-                                        value={config.minTeamSize ?? ''}
+                                        value={config.minTeamSize ?? 1}
                                         placeholder='От'
                                         onChange={(e) => handleMinSize(e.target.value)}
                                         min={1}
@@ -196,7 +196,7 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                                     </label>
                                     <input
                                         type='number'
-                                        value={config.maxTeamSize ?? ''}
+                                        value={config.maxTeamSize ?? 2}
                                         placeholder='До'
                                         onChange={(e) => handleMaxSize(e.target.value)}
                                         min={1}
@@ -215,7 +215,7 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                                 </p>
                                 <p className='text-xs text-slate-500'>
                                     {isDraftMode
-                                        ? 'В режиме драфта капитан обязателен'
+                                        ? 'В режиме Draft капитан обязателен'
                                         : 'Можно отключить, если решение принимается голосованием'}
                                 </p>
                             </div>

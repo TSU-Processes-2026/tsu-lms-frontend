@@ -381,14 +381,16 @@ const SubjectView = () => {
                             {userRole !== 'student' && (
                                 <div className='flex flex-col gap-3 items-end'>
                                     <div className='flex flex-row items-center gap-2 w-full justify-between'>
-                                        <Brackets
-                                            size={40}
-                                            className={`p-2 rounded-xl font-bold shadow-lg transition-all ${draftActionDisabled ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-linear-to-r from-slate-700 to-slate-800 text-white hover:-translate-y-0.5'}`}
-                                            onClick={() => {
-                                                if (draftActionDisabled) return;
-                                                navigate(`/subject/${subjectId}/teams/draft`);
-                                            }}
-                                        />
+                                        {false && (
+                                            <Brackets
+                                                size={40}
+                                                className={`p-2 rounded-xl font-bold shadow-lg transition-all ${draftActionDisabled ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-linear-to-r from-slate-700 to-slate-800 text-white hover:-translate-y-0.5'}`}
+                                                onClick={() => {
+                                                    if (draftActionDisabled) return;
+                                                    navigate(`/subject/${subjectId}/teams/draft`);
+                                                }}
+                                            />
+                                        )}
                                         <Dices
                                             size={40}
                                             className={`p-2 rounded-xl font-bold shadow-lg transition-all ${randomActionDisabled ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-linear-to-r from-purple-600 to-purple-700 text-white hover:-translate-y-0.5'}`}
@@ -414,15 +416,17 @@ const SubjectView = () => {
                                             }}
                                         />
                                     </div>
-                                    <button
-                                        disabled={config.isFinalized}
-                                        className='text-md bg-linear-to-r from-blue-600 to-blue-700 text-white px-3 py-2 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all w-full disabled:opacity-50 disabled:hover:translate-y-0 disabled:cursor-not-allowed'
-                                        onClick={finalize}
-                                    >
-                                        {config.isFinalized
-                                            ? 'Команды сформированы'
-                                            : 'Закончить формирование'}
-                                    </button>
+                                    {teams && teams.length > 0 && (
+                                        <button
+                                            disabled={config.isFinalized}
+                                            className='text-md bg-linear-to-r from-blue-600 to-blue-700 text-white px-3 py-2 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all w-full disabled:opacity-50 disabled:hover:translate-y-0 disabled:cursor-not-allowed'
+                                            onClick={finalize}
+                                        >
+                                            {config.isFinalized
+                                                ? 'Команды сформированы'
+                                                : 'Закончить формирование'}
+                                        </button>
+                                    )}
                                 </div>
                             )}
                         </div>

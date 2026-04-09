@@ -1,4 +1,3 @@
-import { ACCESS_TOKEN } from '@/constants/auth/auth';
 import { DEV_URL, PROD_URL, MOCK_URL } from '@/constants/config/config';
 import { CaptainsRequest } from '@/types/command/Captains';
 import { CommandConfig, TeamConfig } from '@/types/command/CommandConfig';
@@ -16,7 +15,8 @@ import {
     ValidationDetails,
 } from '@/types/command/Team';
 import { normalizeDistributionModeLegacy } from '@/utils/teamConfig';
-import axios, { AxiosResponse, isAxiosError } from 'axios';
+import { AxiosResponse } from 'axios';
+import { apiClient } from '../axios-client';
 
 const BASE_URL = DEV_URL || PROD_URL || MOCK_URL;
 
@@ -24,19 +24,12 @@ export const saveConfigParams = async (
     subjectId: string,
     params: CommandConfig,
 ): Promise<AxiosResponse<TeamConfig>> => {
-    const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
-    console.log(params);
     try {
-        const response: AxiosResponse<TeamConfig> = await axios.put(
+        const response: AxiosResponse<TeamConfig> = await apiClient.put(
             `${BASE_URL}/subjects/${subjectId}/teams/settings`,
             {
                 ...params,
                 distributionMode: normalizeDistributionModeLegacy(params.distributionMode),
-            },
-            {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
             },
         );
         return response;
@@ -47,15 +40,9 @@ export const saveConfigParams = async (
 };
 
 export const fetchConfig = async (subjectId: string): Promise<AxiosResponse<TeamConfig>> => {
-    const accessToken = localStorage.getItem(ACCESS_TOKEN);
     try {
-        const response: AxiosResponse<TeamConfig> = await axios.get(
+        const response: AxiosResponse<TeamConfig> = await apiClient.get<TeamConfig>(
             `${BASE_URL}/subjects/${subjectId}/teams/settings`,
-            {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            },
         );
         return response;
     } catch (error) {
@@ -66,17 +53,10 @@ export const fetchConfig = async (subjectId: string): Promise<AxiosResponse<Team
 export const fetchSubjectTeams = async (
     subjectId: string | undefined,
 ): Promise<AxiosResponse<Team[]>> => {
-    const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
     try {
-        const response: AxiosResponse<Team[]> = await axios.get(
+        const response: AxiosResponse<Team[]> = await apiClient.get<Team[]>(
             `${BASE_URL}/subjects/${subjectId}/teams`,
-            {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            },
         );
-        console.log(response);
         return response;
     } catch (error) {
         console.log(error);
@@ -88,17 +68,12 @@ export const createTeamManually = async (
     subjectId: string | undefined,
     members: Members,
 ): Promise<AxiosResponse<TeamCreationResponse>> => {
-    const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
     try {
-        const response: AxiosResponse<TeamCreationResponse> = await axios.post(
-            `${BASE_URL}/subjects/${subjectId}/teams`,
-            members,
-            {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            },
-        );
+        const response: AxiosResponse<TeamCreationResponse> =
+            await apiClient.post<TeamCreationResponse>(
+                `${BASE_URL}/subjects/${subjectId}/teams`,
+                members,
+            );
         return response;
     } catch (error) {
         console.log(error);
@@ -111,16 +86,10 @@ export const updateTeamMembers = async (
     teamId: string | undefined,
     members: Members,
 ): Promise<AxiosResponse<TeamCreationResponse>> => {
-    const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
     try {
-        const response: AxiosResponse<TeamCreationResponse> = await axios.put(
+        const response: AxiosResponse<TeamCreationResponse> = await apiClient.put(
             `${BASE_URL}/subjects/${subjectId}/teams/${teamId}`,
             members,
-            {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            },
         );
         return response;
     } catch (error) {
@@ -132,17 +101,11 @@ export const updateTeamMembers = async (
 export const fetchUnassignedStudents = async (
     subjectId: string | undefined,
 ): Promise<UnAssignedStudents> => {
-    const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
     try {
-        const response: AxiosResponse<UnAssignedStudents> = await axios.get(
-            `${BASE_URL}/subjects/${subjectId}/teams/unassigned`,
-            {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            },
-        );
-        console.log(response.data);
+        const response: AxiosResponse<UnAssignedStudents> =
+            await apiClient.post<UnAssignedStudents>(
+                `${BASE_URL}/subjects/${subjectId}/teams/unassigned`,
+            );
         return response.data;
     } catch (error) {
         console.log(error);
@@ -153,17 +116,12 @@ export const fetchUnassignedStudents = async (
 export const previewRandomTeamDistribution = async (
     subjectId: string | undefined,
 ): Promise<RandomDistributionResponse> => {
-    const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
     try {
-        const response: AxiosResponse<RandomDistributionResponse> = await axios.post(
-            `${BASE_URL}/subjects/${subjectId}/teams/random`,
-            null,
-            {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            },
-        );
+        const response: AxiosResponse<RandomDistributionResponse> =
+            await apiClient.post<RandomDistributionResponse>(
+                `${BASE_URL}/subjects/${subjectId}/teams/random`,
+                null,
+            );
         return response.data;
     } catch (error) {
         throw error;
@@ -174,16 +132,10 @@ export const validateManualDistribution = async (
     subjectId: string | undefined,
     teams: TeamValidation,
 ): Promise<ValidationDetails> => {
-    const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
     try {
-        const response: AxiosResponse<ValidationDetails> = await axios.post(
+        const response: AxiosResponse<ValidationDetails> = await apiClient.post<ValidationDetails>(
             `${BASE_URL}/subjects/${subjectId}/teams/validate`,
             teams,
-            {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            },
         );
         return response.data;
     } catch (error) {
@@ -195,16 +147,10 @@ export const distributeWithManual = async (
     subjectId: string | undefined,
     teams: TeamRequest,
 ): Promise<AxiosResponse<DistributedTeam>> => {
-    const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
     try {
-        const response: AxiosResponse<DistributedTeam> = await axios.post(
+        const response: AxiosResponse<DistributedTeam> = await apiClient.post<DistributedTeam>(
             `${BASE_URL}/subjects/${subjectId}/teams/manual`,
             teams,
-            {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            },
         );
         return response;
     } catch (error) {
@@ -215,18 +161,12 @@ export const distributeWithManual = async (
 export const confirmTeamDistribution = async (
     subjectId: string | undefined,
 ): Promise<AxiosResponse<ConfirmationResponse>> => {
-    const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
-
     try {
-        const response: AxiosResponse<ConfirmationResponse> = await axios.post(
-            `${BASE_URL}/subjects/${subjectId}/teams/finalize`,
-            null,
-            {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            },
-        );
+        const response: AxiosResponse<ConfirmationResponse> =
+            await apiClient.post<ConfirmationResponse>(
+                `${BASE_URL}/subjects/${subjectId}/teams/finalize`,
+                null,
+            );
         return response;
     } catch (error) {
         throw error;
@@ -237,17 +177,12 @@ export const createDraft = async (
     subjectId: string | undefined,
     captains: CaptainsRequest,
 ): Promise<any> => {
-    const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
     try {
-        const response: AxiosResponse<ConfirmationResponse> = await axios.post(
-            `${BASE_URL}/subjects/${subjectId}/teams/draft/start`,
-            captains,
-            {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            },
-        );
+        const response: AxiosResponse<ConfirmationResponse> =
+            await apiClient.post<ConfirmationResponse>(
+                `${BASE_URL}/subjects/${subjectId}/teams/draft/start`,
+                captains,
+            );
         return response.data;
     } catch (error) {
         throw error;
@@ -257,15 +192,9 @@ export const createDraft = async (
 export const fetchSubjectTeamDraft = async (
     subjectId: string | undefined,
 ): Promise<DraftResponse> => {
-    const accessToken: string | null = localStorage.getItem(ACCESS_TOKEN);
     try {
-        const response: AxiosResponse<DraftResponse> = await axios.get(
+        const response: AxiosResponse<DraftResponse> = await apiClient.get(
             `${BASE_URL}/subjects/${subjectId}/teams/draft/state`,
-            {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            },
         );
         return response.data;
     } catch (error) {

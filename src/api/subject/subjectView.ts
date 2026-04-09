@@ -1,16 +1,7 @@
-import { DEV_URL, PROD_URL, MOCK_URL } from '@/constants/config/config';
-import { ACCESS_TOKEN } from '@/constants/auth/auth';
+import { apiClient } from '@/api/axios-client';
 import { PostResponse, CommentResponse } from '@/types/subject/FeedTypes';
-
-const BASE_URL = DEV_URL || PROD_URL || MOCK_URL;
-
-/**
- * Returns the headers for authentication.
- */
-const getAuthHeaders = () => ({
-  'Authorization': `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
-  'Content-Type': 'application/json',
-});
+import { UpsertAssignmentRequest } from '@/types/subject/AssignmentCreate';
+import { AssignmentResponse } from '@/types/subject/FeedTypes';
 
 /**
  * Fetches posts for a subject by subjectId.
@@ -23,19 +14,22 @@ const getAuthHeaders = () => ({
  * @throws {Error} If network request fails.
  */
 export async function fetchSubjectPosts(
-  subjectId: string,
-  options?: { postType?: string; limit?: number; offset?: number }
+    subjectId: string,
+    options?: { postType?: string; limit?: number; offset?: number },
 ): Promise<PostResponse[]> {
-  const params = new URLSearchParams();
-  if (options?.postType) params.append('postType', options.postType);
-  if (options?.limit) params.append('limit', String(options.limit));
-  if (options?.offset) params.append('offset', String(options.offset));
-  const url = `${BASE_URL}/subjects/${subjectId}/posts${params.toString() ? '?' + params.toString() : ''}`;
-  const res = await fetch(url, {
-    headers: getAuthHeaders(),
-  });
-  if (!res.ok) throw new Error('Network error');
-  return await res.json();
+    try {
+        const params = new URLSearchParams();
+        if (options?.postType) params.append('postType', options.postType);
+        if (options?.limit) params.append('limit', String(options.limit));
+        if (options?.offset) params.append('offset', String(options.offset));
+
+        const url = `/subjects/${subjectId}/posts${params.toString() ? '?' + params.toString() : ''}`;
+        const response = await apiClient.get<PostResponse[]>(url);
+
+        return response.data;
+    } catch (error) {
+        throw new Error('Network error');
+    }
 }
 
 /**
@@ -49,22 +43,29 @@ export async function fetchSubjectPosts(
  * @throws {Error} If network request fails.
  */
 export async function publishSubjectPost(
-  subjectId: string,
-  data: { PostType?: string; Content?: string; File?: File }
+    subjectId: string,
+    data: { PostType?: string; Content?: string; File?: File },
 ): Promise<PostResponse> {
-  const formData = new FormData();
-  if (data.PostType) formData.append('PostType', data.PostType);
-  if (data.Content) formData.append('Content', data.Content);
-  if (data.File) formData.append('File', data.File);
-  const res = await fetch(`${BASE_URL}/subjects/${subjectId}/posts`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`
-    },
-    body: formData,
-  });
-  if (!res.ok) throw new Error('Network error');
-  return await res.json();
+    try {
+        const formData = new FormData();
+        if (data.PostType) formData.append('PostType', data.PostType);
+        if (data.Content) formData.append('Content', data.Content);
+        if (data.File) formData.append('File', data.File);
+
+        const response = await apiClient.post<PostResponse>(
+            `/subjects/${subjectId}/posts`,
+            formData,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            },
+        );
+
+        return response.data;
+    } catch (error) {
+        throw new Error('Network error');
+    }
 }
 
 /**
@@ -78,23 +79,30 @@ export async function publishSubjectPost(
  * @throws {Error} If network request fails.
  */
 export async function publishAssignmentPost(
-  subjectId: string,
-  data: { Content?: string; AssignmentData?: string; File?: File }
+    subjectId: string,
+    data: { Content?: string; AssignmentData?: string; File?: File },
 ): Promise<PostResponse> {
-  const formData = new FormData();
-  formData.append('PostType', 'Assignment');
-  if (data.Content) formData.append('Content', data.Content);
-  if (data.AssignmentData) formData.append('AssignmentData', data.AssignmentData);
-  if (data.File) formData.append('File', data.File);
-  const res = await fetch(`${BASE_URL}/subjects/${subjectId}/posts`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`
-    },
-    body: formData,
-  });
-  if (!res.ok) throw new Error('Network error');
-  return await res.json();
+    try {
+        const formData = new FormData();
+        formData.append('PostType', 'Assignment');
+        if (data.Content) formData.append('Content', data.Content);
+        if (data.AssignmentData) formData.append('AssignmentData', data.AssignmentData);
+        if (data.File) formData.append('File', data.File);
+
+        const response = await apiClient.post<PostResponse>(
+            `/subjects/${subjectId}/posts`,
+            formData,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            },
+        );
+
+        return response.data;
+    } catch (error) {
+        throw new Error('Network error');
+    }
 }
 
 /**
@@ -108,20 +116,23 @@ export async function publishAssignmentPost(
  * @throws {Error} If network request fails.
  */
 export async function fetchPostComments(
-  postId: string,
-  options?: { targetType?: string; limit?: number; offset?: number }
+    postId: string,
+    options?: { targetType?: string; limit?: number; offset?: number },
 ): Promise<CommentResponse[]> {
-  const params = new URLSearchParams();
-  params.append('targetId', postId);
-  params.append('targetType', options?.targetType || 'Post');
-  if (options?.limit) params.append('limit', String(options.limit));
-  if (options?.offset) params.append('offset', String(options.offset));
-  const url = `${BASE_URL}/comments?${params.toString()}`;
-  const res = await fetch(url, {
-    headers: getAuthHeaders(),
-  });
-  if (!res.ok) throw new Error('Network error');
-  return await res.json();
+    try {
+        const params = new URLSearchParams();
+        params.append('targetId', postId);
+        params.append('targetType', options?.targetType || 'Post');
+        if (options?.limit) params.append('limit', String(options.limit));
+        if (options?.offset) params.append('offset', String(options.offset));
+
+        const url = `/comments?${params.toString()}`;
+        const response = await apiClient.get<CommentResponse[]>(url);
+
+        return response.data;
+    } catch (error) {
+        throw new Error('Network error');
+    }
 }
 
 /**
@@ -133,17 +144,21 @@ export async function fetchPostComments(
  * @throws {Error} If network request fails.
  */
 export async function addPostComment(
-  postId: string,
-  text: string,
-  targetType: string = 'Post'
+    postId: string,
+    text: string,
+    targetType: string = 'Post',
 ): Promise<CommentResponse> {
-  const res = await fetch(`${BASE_URL}/comments`, {
-    method: 'POST',
-    headers: getAuthHeaders(),
-    body: JSON.stringify({ targetType, targetId: postId, text }),
-  });
-  if (!res.ok) throw new Error('Network error');
-  return await res.json();
+    try {
+        const response = await apiClient.post<CommentResponse>('/comments', {
+            targetType,
+            targetId: postId,
+            text,
+        });
+
+        return response.data;
+    } catch (error) {
+        throw new Error('Network error');
+    }
 }
 
 /**
@@ -154,14 +169,15 @@ export async function addPostComment(
  * @throws {Error} - Throws an error if the request fails or the file is not found.
  */
 export async function downloadPostFile(postId: string): Promise<Blob> {
-  const res = await fetch(`${BASE_URL}/posts/${postId}/file`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
-    },
-  });
-  if (!res.ok) throw new Error('Failed to download file');
-  return await res.blob();
+    try {
+        const response = await apiClient.get<Blob>(`/posts/${postId}/file`, {
+            responseType: 'blob',
+        });
+
+        return response.data;
+    } catch (error) {
+        throw new Error('Failed to download file');
+    }
 }
 
 /**
@@ -172,14 +188,17 @@ export async function downloadPostFile(postId: string): Promise<Blob> {
  * @throws {Error} If network request fails.
  */
 export async function createAssignment(
-  subjectId: string,
-  request: import('@/types/subject/AssignmentCreate').UpsertAssignmentRequest
-): Promise<import('@/types/subject/FeedTypes').AssignmentResponse> {
-  const res = await fetch(`${BASE_URL}/subjects/${subjectId}/assignments`, {
-    method: 'POST',
-    headers: getAuthHeaders(),
-    body: JSON.stringify(request),
-  });
-  if (!res.ok) throw new Error('Network error');
-  return await res.json();
+    subjectId: string,
+    request: UpsertAssignmentRequest,
+): Promise<AssignmentResponse> {
+    try {
+        const response = await apiClient.post<AssignmentResponse>(
+            `/subjects/${subjectId}/assignments`,
+            request,
+        );
+
+        return response.data;
+    } catch (error) {
+        throw new Error('Network error');
+    }
 }
