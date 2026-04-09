@@ -1,5 +1,5 @@
 import { fetchSubjectTeams } from '@/api/command/command';
-import { Team } from '@/types/command/Team';
+import { Team, TeamResponse } from '@/types/command/Team';
 import { useState, useEffect } from 'react';
 import { isAxiosError } from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +12,7 @@ import {
 interface UseLoadTeams {
     teams: Team[];
     isTeamLoading: boolean;
+    loadedDistributionMode: string;
     errorMessage: string | null;
     setTeams: (newTeams: Team[]) => void;
 }
@@ -19,6 +20,7 @@ interface UseLoadTeams {
 export const useLoadTeams = (subjectId: string | undefined): UseLoadTeams => {
     const [teams, setTeams] = useState<Team[]>([]);
     const [isTeamLoading, setIsTeamLoading] = useState<boolean>(false);
+    const [loadedDistributionMode, setMode] = useState<string>('Manual');
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const navigate = useNavigate();
 
@@ -27,25 +29,26 @@ export const useLoadTeams = (subjectId: string | undefined): UseLoadTeams => {
         setIsTeamLoading(true);
         const processRequest = async () => {
             try {
-                const response = await fetchSubjectTeams(subjectId);
+                const response: TeamResponse = await fetchSubjectTeams(subjectId);
                 if (isMounted) {
-                    setTeams(
-                        response.data.map((team) => ({
-                            ...team,
-                            memberIds:
-                                team.memberIds && team.memberIds.length > 0
-                                    ? team.memberIds
-                                    : (team.members || []).map((member) => member.userId),
-                            captainId: team.captainId ?? null,
-                            captain:
-                                team.captain ??
-                                team.members.find((member) => member.userId === team.captainId) ??
-                                null,
-                            captainSelectionMethod: team.captainSelectionMethod ?? null,
-                            captainVoting: team.captainVoting ?? null,
-                            finalDecision: team.finalDecision ?? null,
-                        })),
-                    );
+                    setMode(response.distributionMode);
+                    const fetchedTeams: Team[] = response.teams.map((team) => ({
+                        ...team,
+                        memberIds:
+                            team.memberIds && team.memberIds.length > 0
+                                ? team.memberIds
+                                : (team.members || []).map((member) => member.userId),
+                        captainId: team.captainId ?? null,
+                        captain:
+                            team.captain ??
+                            team.members.find((member) => member.userId === team.captainId) ??
+                            null,
+                        captainSelectionMethod: team.captainSelectionMethod ?? null,
+                        captainVoting: team.captainVoting ?? null,
+                        finalDecision: team.finalDecision ?? null,
+                    }));
+
+                    setTeams(fetchedTeams);
                 }
             } catch (error) {
                 if (isAxiosError(error)) {
@@ -79,6 +82,7 @@ export const useLoadTeams = (subjectId: string | undefined): UseLoadTeams => {
             }
         };
         processRequest();
+
         return () => {
             isMounted = false;
         };
@@ -87,6 +91,7 @@ export const useLoadTeams = (subjectId: string | undefined): UseLoadTeams => {
     return {
         teams,
         isTeamLoading,
+        loadedDistributionMode,
         errorMessage,
         setTeams,
     };

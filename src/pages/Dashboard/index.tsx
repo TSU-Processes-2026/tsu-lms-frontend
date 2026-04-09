@@ -1,6 +1,5 @@
 import { SubjectCard } from '@/components/ui/SubjectCard';
 import { useSubjects, ExtendedSubject } from '@/hooks/subject/useSubjects';
-import { FileText, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const Dashboard = () => {

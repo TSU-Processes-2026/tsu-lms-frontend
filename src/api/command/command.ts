@@ -5,11 +5,14 @@ import { DraftResponse } from '@/types/command/Draft';
 import {
     ConfirmationResponse,
     DistributedTeam,
+    JoinTeamResponse,
+    LeaveTeamResponse,
     Members,
     RandomDistributionResponse,
     Team,
     TeamCreationResponse,
     TeamRequest,
+    TeamResponse,
     TeamValidation,
     UnAssignedStudents,
     ValidationDetails,
@@ -26,10 +29,10 @@ export const saveConfigParams = async (
 ): Promise<AxiosResponse<TeamConfig>> => {
     try {
         const response: AxiosResponse<TeamConfig> = await apiClient.put(
-            `${BASE_URL}/subjects/${subjectId}/teams/settings`,
+            `/subjects/${subjectId}/teams/settings`,
             {
                 ...params,
-                distributionMode: normalizeDistributionModeLegacy(params.distributionMode),
+                distributionMode: params.distributionMode,
             },
         );
         return response;
@@ -50,14 +53,13 @@ export const fetchConfig = async (subjectId: string): Promise<AxiosResponse<Team
     }
 };
 
-export const fetchSubjectTeams = async (
-    subjectId: string | undefined,
-): Promise<AxiosResponse<Team[]>> => {
+export const fetchSubjectTeams = async (subjectId: string | undefined): Promise<TeamResponse> => {
     try {
-        const response: AxiosResponse<Team[]> = await apiClient.get<Team[]>(
+        const response: AxiosResponse<TeamResponse> = await apiClient.get<TeamResponse>(
             `${BASE_URL}/subjects/${subjectId}/teams`,
         );
-        return response;
+
+        return response.data;
     } catch (error) {
         console.log(error);
         throw error;
@@ -102,10 +104,9 @@ export const fetchUnassignedStudents = async (
     subjectId: string | undefined,
 ): Promise<UnAssignedStudents> => {
     try {
-        const response: AxiosResponse<UnAssignedStudents> =
-            await apiClient.post<UnAssignedStudents>(
-                `${BASE_URL}/subjects/${subjectId}/teams/unassigned`,
-            );
+        const response: AxiosResponse<UnAssignedStudents> = await apiClient.get<UnAssignedStudents>(
+            `${BASE_URL}/subjects/${subjectId}/teams/unassigned`,
+        );
         return response.data;
     } catch (error) {
         console.log(error);
@@ -197,6 +198,30 @@ export const fetchSubjectTeamDraft = async (
             `${BASE_URL}/subjects/${subjectId}/teams/draft/state`,
         );
         return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const joinToTeam = async (subjectId: string, teamId: string): Promise<Team[]> => {
+    try {
+        const response: AxiosResponse<JoinTeamResponse> = await apiClient.post<JoinTeamResponse>(
+            `${BASE_URL}/subjects/${subjectId}/teams/${teamId}/join`,
+            null,
+        );
+        return response.data.teams;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const leaveTeam = async (subjectId: string, teamId: string): Promise<Team[]> => {
+    try {
+        const response: AxiosResponse<LeaveTeamResponse> = await apiClient.post<LeaveTeamResponse>(
+            `${BASE_URL}/subjects/${subjectId}/teams/${teamId}/leave`,
+            null,
+        );
+        return response.data.teams;
     } catch (error) {
         throw error;
     }

@@ -68,6 +68,7 @@ const refreshAccessToken = async (): Promise<string> => {
     } catch (error) {
         localStorage.removeItem(ACCESS_TOKEN);
         localStorage.removeItem(REFRESH_TOKEN);
+        console.log('FAILED REFRESH');
         window.location.href = '/login';
         throw error;
     }
@@ -88,6 +89,7 @@ apiClient.interceptors.response.use(
         if (originalRequest._retry) {
             localStorage.removeItem(ACCESS_TOKEN);
             localStorage.removeItem(REFRESH_TOKEN);
+            console.log('UNAUTH');
             window.location.href = '/login';
             return Promise.reject(error);
         }

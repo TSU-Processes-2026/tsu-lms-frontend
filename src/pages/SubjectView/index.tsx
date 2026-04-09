@@ -115,7 +115,7 @@ const SubjectView = () => {
     };
     const userRole: 'admin' | 'teacher' | 'student' = handleRole();
     const navigate = useNavigate();
-    const { teams, isTeamLoading, setTeams } = useLoadTeams(subjectId);
+    const { teams, loadedDistributionMode, isTeamLoading, setTeams } = useLoadTeams(subjectId);
     const {
         config,
         isConfigLoading,
@@ -456,7 +456,7 @@ const SubjectView = () => {
                             )}
                             <div className='p-4 bg-slate-50 border border-slate-100 rounded-xl backdrop-blur-sm shadow-md'>
                                 <p className='text-sm text-slate-700 font-semibold'>
-                                    Режим: {config.distributionMode}
+                                    Режим: {loadedDistributionMode}
                                 </p>
                                 <p className='text-xs text-slate-500 mt-1'>
                                     {config.captainEnabled
@@ -522,27 +522,30 @@ const SubjectView = () => {
                             </div>
                         ) : teams && teams.length > 0 ? (
                             <ul className='grid sm:grid-cols-1 md:grid-col </ul>s-2 lg:grid-cols-2 gap-4 mt-4'>
-                                {teams.map((item, index) => (
-                                    <CommandCard
-                                        index={index}
-                                        key={item.id}
-                                        participants={item.members || []}
-                                        captainName={
-                                            item.members.find(
-                                                (participant) =>
-                                                    participant.userId === item.captainId,
-                                            )?.username ?? null
-                                        }
-                                        decisionInfo={
-                                            item.finalDecision
-                                                ? `Итог: ${item.finalDecision.approved ? 'принято' : 'не принято'} (${item.finalDecision.method === 'CaptainDecision' ? 'капитан' : 'голосование'})`
-                                                : config.captainEnabled
-                                                  ? 'Финальное решение принимает капитан'
-                                                  : 'Финальное решение принимает голосование команды'
-                                        }
-                                        onClick={() => handleSelectCommand(item.id, index)}
-                                    />
-                                ))}
+                                {teams.map((item, index) => {
+                                    console.log(item);
+                                    return (
+                                        <CommandCard
+                                            index={index}
+                                            key={item.id}
+                                            participants={item.members || []}
+                                            captainName={
+                                                item.members.find(
+                                                    (participant) =>
+                                                        participant.userId === item.captainId,
+                                                )?.username ?? null
+                                            }
+                                            decisionInfo={
+                                                item.finalDecision
+                                                    ? `Итог: ${item.finalDecision.approved ? 'принято' : 'не принято'} (${item.finalDecision.method === 'CaptainDecision' ? 'капитан' : 'голосование'})`
+                                                    : config.captainEnabled
+                                                      ? 'Финальное решение принимает капитан'
+                                                      : 'Финальное решение принимает голосование команды'
+                                            }
+                                            onClick={() => handleSelectCommand(item.id, index)}
+                                        />
+                                    );
+                                })}
                             </ul>
                         ) : (
                             <div className='my-4 font-medium text-xl w-full h-48 text-center text-gray-500 flex flex-col items-center justify-center bg-white rounded-2xl shadow-md border border-slate-100'>
@@ -569,6 +572,7 @@ const SubjectView = () => {
                     commandId={selectedCommand}
                     role={userRole}
                     config={config}
+                    currentDistributionMode={loadedDistributionMode}
                     onTeamUpdate={handleTeamUpdate}
                 />
             )}

@@ -1,8 +1,9 @@
+import { useStudentsDistribution } from '@/hooks/command/useStudentDistribution';
 import { TeamConfig } from '@/types/command/CommandConfig';
 import { Team } from '@/types/command/Team';
 import { buildRandomVotes, resolveCaptainVoting } from '@/utils/captainVoting';
 import { Crown, UserIcon } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 interface CommandParticipantsModalProps {
@@ -13,6 +14,7 @@ interface CommandParticipantsModalProps {
     commandId: string;
     role: string;
     config: TeamConfig;
+    currentDistributionMode: string;
     onTeamUpdate: (teamId: string, updater: (team: Team) => Team) => void;
 }
 
@@ -24,6 +26,7 @@ const CommandParticipantsModal = ({
     commandId,
     role,
     config,
+    currentDistributionMode,
     onTeamUpdate,
 }: CommandParticipantsModalProps) => {
     const members: Team = useMemo(
@@ -39,18 +42,67 @@ const CommandParticipantsModal = ({
                   },
         [teams, commandId],
     );
+    const subjectId: string = config.subjectId;
+    const { handleJoin, errorMessage, handleLeave } = useStudentsDistribution(subjectId, commandId);
+    const [isMember, setIsMember] = useState<boolean>(false);
+    const [isMemberOfAnyTeam, setIsMemberOfAnyTeam] = useState<boolean>(false);
+
+    const checkIsInAnyTeam = () => {
+        const isInAnyTeam = teams.some((team) => {
+            return (
+                team.members.some((member) => member.userId == currentUserId) ||
+                team.memberIds.some((id) => id === currentUserId)
+            );
+        });
+        setIsMemberOfAnyTeam(isInAnyTeam);
+    };
+
+    const handleInTeam = () => {
+        const found = members.members.filter((member) => member.userId === currentUserId);
+        setIsMember(found && found.length > 0);
+    };
+
+    useEffect(() => {
+        handleInTeam();
+    }, [members]);
+
+    useEffect(() => {
+        checkIsInAnyTeam();
+    }, [teams]);
 
     const [message, setMessage] = useState<string | null>(null);
     const navigate = useNavigate();
 
     const isTeacher = role !== 'student';
+    const isStudent = role === 'student';
     const isFinalized = config.isFinalized;
+    const isStudentsModeEnabled = currentDistributionMode === 'Students';
+    const couldViewJoinInterface = isStudent && isStudentsModeEnabled && !isFinalized;
     const isCaptainVotingMode =
         config.captainEnabled &&
         (config.distributionMode === 'Random' || config.distributionMode === 'Manual');
 
+    const handleJoinClick = async (): Promise<void> => {
+        try {
+            const updatedTeam: Team = await handleJoin();
+            onTeamUpdate(updatedTeam.id, () => {
+                return { ...updatedTeam };
+            });
+        } catch (error) {}
+    };
+
+    const handleLeaveClick = async (): Promise<void> => {
+        try {
+            const updatedTeam: Team = await handleLeave();
+            onTeamUpdate(updatedTeam.id, () => {
+                return { ...updatedTeam };
+            });
+        } catch (error) {}
+    };
+
     const captain = useMemo(
-        () => members.members.find((participant) => participant.userId === members.captainId) ?? null,
+        () =>
+            members.members.find((participant) => participant.userId === members.captainId) ?? null,
         [members.members, members.captainId],
     );
 
@@ -81,10 +133,7 @@ const CommandParticipantsModal = ({
             setMessage('Команды уже финализированы. Голосование за капитана недоступно.');
             return;
         }
-        if (
-            config.captainVotingDeadline &&
-            Date.now() > Date.parse(config.captainVotingDeadline)
-        ) {
+        if (config.captainVotingDeadline && Date.now() > Date.parse(config.captainVotingDeadline)) {
             setMessage('Срок голосования за капитана истек.');
             return;
         }
@@ -97,7 +146,9 @@ const CommandParticipantsModal = ({
 
         onTeamUpdate(members.id, (team) => {
             const teamCaptain =
-                team.members.find((member) => member.userId === voting.winnerId) ?? team.captain ?? null;
+                team.members.find((member) => member.userId === voting.winnerId) ??
+                team.captain ??
+                null;
             return {
                 ...team,
                 captainId: voting.winnerId,
@@ -108,7 +159,9 @@ const CommandParticipantsModal = ({
         });
 
         if (voting.tieResolvedByRandom) {
-            setMessage('Есть ничья в голосовании. Победитель выбран случайно и отмечен как капитан.');
+            setMessage(
+                'Есть ничья в голосовании. Победитель выбран случайно и отмечен как капитан.',
+            );
         } else {
             setMessage('Голосование завершено. Капитан выбран большинством голосов.');
         }
@@ -119,15 +172,15 @@ const CommandParticipantsModal = ({
             setMessage('Команды уже финализированы. Итоговое голосование недоступно.');
             return;
         }
-        if (
-            config.finalDecisionDeadline &&
-            Date.now() > Date.parse(config.finalDecisionDeadline)
-        ) {
+        if (config.finalDecisionDeadline && Date.now() > Date.parse(config.finalDecisionDeadline)) {
             setMessage('Срок итогового решения истек.');
             return;
         }
         const threshold = config.finalDecisionThreshold ?? members.members.length;
-        const approvals = members.members.reduce((count) => (Math.random() > 0.5 ? count + 1 : count), 0);
+        const approvals = members.members.reduce(
+            (count) => (Math.random() > 0.5 ? count + 1 : count),
+            0,
+        );
         onTeamUpdate(members.id, (team) => ({
             ...team,
             finalDecision: {
@@ -147,10 +200,7 @@ const CommandParticipantsModal = ({
             setMessage('Команды уже финализированы. Итоговое решение недоступно.');
             return;
         }
-        if (
-            config.finalDecisionDeadline &&
-            Date.now() > Date.parse(config.finalDecisionDeadline)
-        ) {
+        if (config.finalDecisionDeadline && Date.now() > Date.parse(config.finalDecisionDeadline)) {
             setMessage('Срок итогового решения истек.');
             return;
         }
@@ -187,6 +237,14 @@ const CommandParticipantsModal = ({
                     ></button>
                 </div>
                 <div className='flex-1 overflow-y-auto p-8 space-y-4'>
+                    {errorMessage && (
+                        <div className='mb-5 p-4 bg-red-100 rounded-2xl border border-red-100 flex flex-row items-center gap-4'>
+                            ⚠️
+                            <p className='font-medium text-lg text-red-700'>
+                                {'Состав команды уже полный. Выберите другую'}
+                            </p>
+                        </div>
+                    )}
                     {config.captainEnabled ? (
                         captain ? (
                             <div className='mb-5 p-4 bg-amber-100 rounded-2xl border border-amber-100 flex flex-row items-center gap-4'>
@@ -210,7 +268,11 @@ const CommandParticipantsModal = ({
                     )}
                     {config.isFinalized && (
                         <div className='mb-5 p-4 bg-amber-50 rounded-2xl border border-amber-100 text-amber-700 text-sm'>
-                            Команда финализирована {config.finalizedAt ? `(${new Date(config.finalizedAt).toLocaleString('ru-RU')})` : ''}. Изменения отключены.
+                            Команда финализирована{' '}
+                            {config.finalizedAt
+                                ? `(${new Date(config.finalizedAt).toLocaleString('ru-RU')})`
+                                : ''}
+                            . Изменения отключены.
                         </div>
                     )}
 
@@ -224,7 +286,9 @@ const CommandParticipantsModal = ({
                                     <button
                                         key={participant.userId}
                                         type='button'
-                                        onClick={() => handleAssignCaptainManually(participant.userId)}
+                                        onClick={() =>
+                                            handleAssignCaptainManually(participant.userId)
+                                        }
                                         disabled={isFinalized}
                                         className='px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm hover:bg-slate-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed'
                                     >
@@ -250,7 +314,8 @@ const CommandParticipantsModal = ({
                             </button>
                             {config.captainVotingDeadline && (
                                 <p className='mt-2 text-xs text-purple-700'>
-                                    Дедлайн: {new Date(config.captainVotingDeadline).toLocaleString('ru-RU')}
+                                    Дедлайн:{' '}
+                                    {new Date(config.captainVotingDeadline).toLocaleString('ru-RU')}
                                 </p>
                             )}
                             {members.captainVoting && (
@@ -275,7 +340,8 @@ const CommandParticipantsModal = ({
                         </p>
                         {config.finalDecisionDeadline && (
                             <p className='text-xs text-slate-500 mb-3'>
-                                Дедлайн: {new Date(config.finalDecisionDeadline).toLocaleString('ru-RU')}
+                                Дедлайн:{' '}
+                                {new Date(config.finalDecisionDeadline).toLocaleString('ru-RU')}
                             </p>
                         )}
                         {isTeacher && !config.captainEnabled && (
@@ -300,9 +366,13 @@ const CommandParticipantsModal = ({
                         )}
                         {members.finalDecision && (
                             <p className='mt-3 text-xs text-slate-600'>
-                                Статус: {members.finalDecision.approved ? 'принято' : 'не принято'} •
-                                метод: {members.finalDecision.method === 'CaptainDecision' ? 'капитан' : 'голосование'} •
-                                голоса: {members.finalDecision.approvals}/{members.finalDecision.threshold}
+                                Статус: {members.finalDecision.approved ? 'принято' : 'не принято'}{' '}
+                                • метод:{' '}
+                                {members.finalDecision.method === 'CaptainDecision'
+                                    ? 'капитан'
+                                    : 'голосование'}{' '}
+                                • голоса: {members.finalDecision.approvals}/
+                                {members.finalDecision.threshold}
                             </p>
                         )}
                     </div>
@@ -368,6 +438,28 @@ const CommandParticipantsModal = ({
                         >
                             Изменить состав команды
                         </button>
+                    )}
+                    {couldViewJoinInterface && (
+                        <>
+                            {!isMember && (
+                                <button
+                                    disabled={isFinalized || isMemberOfAnyTeam}
+                                    className='bg-linear-to-r from-green-600 to-green-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all w-full disabled:opacity-50 disabled:hover:translate-y-0 disabled:cursor-not-allowed'
+                                    onClick={handleJoinClick}
+                                >
+                                    Вступить в команду
+                                </button>
+                            )}
+                            {isMember && (
+                                <button
+                                    disabled={isFinalized}
+                                    className='bg-linear-to-r from-red-600 to-red-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all w-full disabled:opacity-50 disabled:hover:translate-y-0 disabled:cursor-not-allowed'
+                                    onClick={handleLeaveClick}
+                                >
+                                    Покинуть команду
+                                </button>
+                            )}
+                        </>
                     )}
                 </div>
             </div>

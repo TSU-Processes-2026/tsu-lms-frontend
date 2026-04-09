@@ -10,6 +10,12 @@ export interface Team {
     finalDecision?: TeamFinalDecision | null;
 }
 
+export interface TeamResponse {
+    teams: Team[];
+    distributionMode: string;
+    isFinalized: boolean;
+}
+
 export interface TeamRequest {
     teams: Members[];
 }
@@ -85,3 +91,10 @@ export interface ConfirmationResponse {
     isFinalized: boolean;
     finalizedAt: string | null;
 }
+
+export interface JoinTeamResponse {
+    teams: Team[];
+    warnings: string[];
+}
+
+export interface LeaveTeamResponse extends JoinTeamResponse {}
