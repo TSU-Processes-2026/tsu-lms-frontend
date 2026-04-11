@@ -152,7 +152,8 @@ const StudentsModal = ({
                                                     {roleBadge[validRole] || roleBadge['student']}
                                                     {isSelf && (
                                                         <span className='text-xs text-slate-400'>
-                                                            (вы)
+                                                            {' '}
+                                                            (Вы)
                                                         </span>
                                                     )}
                                                 </div>
