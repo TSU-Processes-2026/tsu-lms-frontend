@@ -2,12 +2,16 @@ import {
     approveSubmissionByCaptain,
     fetchSubmissionDecisionStatus,
     fetchSubmissionDecisionVotesStatus,
+    initiateVoting,
     rejectSubmissionByCaptain,
+    sendVote,
 } from '@/api/decision/submissionDecision';
 import {
     CaptainDecision,
     SubmissionDecisionInitResponse,
     SubmissionDecisionStatus,
+    SubmissionDecisionVote,
+    SubmissionDecisionVoteResponse,
     SubmissionDecisionVotesStatus,
 } from '@/types/decision/SubmissionDecision';
 
@@ -72,12 +76,49 @@ export const useCaptainDecision = (submissionId: string) => {
 };
 
 export const useTeamMembersDecision = (submissionId: string) => {
+    const [initVotingResult, setInitVotingResult] = useState<SubmissionDecisionInitResponse | null>(
+        null,
+    );
+    const [selectedVote, setVote] = useState<SubmissionDecisionVote>({ decision: '', comment: '' });
+    const [userVoteResult, setVoteResult] = useState<SubmissionDecisionVoteResponse | null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
     const { errorMessage, handleError, clearError } = useErrorHandler();
 
-    const handleInitVoting = async () => {};
-    const handleVote = async () => {};
+    const handleSelectVote = useCallback((vote: SubmissionDecisionVote) => {
+        setVote((prev) => ({ ...prev, ...vote }));
+    }, []);
+
+    const handleInitVoting = async () => {
+        setIsLoading(true);
+        try {
+            const res: SubmissionDecisionInitResponse = await initiateVoting(submissionId);
+            setInitVotingResult({ ...res });
+            clearError();
+        } catch (error) {
+            handleError(error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleVote = async () => {
+        try {
+            const res: SubmissionDecisionVoteResponse = await sendVote(submissionId, selectedVote);
+            setVoteResult({ ...res });
+            clearError();
+        } catch (error) {
+            handleError(error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return {
+        initVotingResult,
+        userVoteResult,
+        isLoading,
+        selectedVote,
+        handleSelectVote,
         errorMessage,
         handleInitVoting,
         handleVote,
@@ -87,7 +128,7 @@ export const useTeamMembersDecision = (submissionId: string) => {
 export const useDecisionDetails = (submissionId: string) => {
     const [decisionStatus, setDecisionStatus] = useState<SubmissionDecisionStatus | null>(null);
     const [votes, setVotes] = useState<SubmissionDecisionVotesStatus | null>(null);
-    const [isDetailsLoading, setIsLoading] = useState<boolean>(false);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const { errorMessage, handleError, clearError } = useErrorHandler();
 
@@ -135,6 +176,6 @@ export const useDecisionDetails = (submissionId: string) => {
         decisionStatus,
         votes,
         errorMessage,
-        isDetailsLoading,
+        isLoading,
     };
 };
