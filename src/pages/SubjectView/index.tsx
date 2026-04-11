@@ -27,13 +27,14 @@ import CommandParticipantsModal from '@/components/modals/ShowCommadParticipants
 import { useEffect, useState } from 'react';
 import { useLoadTeams } from '@/hooks/command/useLoadTeams';
 import { CreateTeamManually } from '@/components/modals/CreateTeamManually';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useValidateTeams } from '@/hooks/command/useValidateTeams';
 import { useGetProfile } from '@/hooks/profile/useProfile';
 import { Team } from '@/types/command/Team';
 import { useLoadConfig } from '@/hooks/command/useCommandConfig';
 import { useConfirmation } from '@/hooks/command/useConfirmDistribution';
 import { errorMessageMapper, warningMessageMapper } from '@/utils/messageMapper';
+import { useDelayedLoader } from '@/hooks/loader/useLoader';
 
 interface MaterialPostCardData extends MaterialPostResponse {
     authorUsername: string;
@@ -123,6 +124,8 @@ const SubjectView = () => {
         setConfig,
     } = useLoadConfig(subjectId ?? '', userRole);
 
+    const { showLoader } = useDelayedLoader(isConfigLoading);
+
     const { details, handleValidateTeams, handleErrorMessages, handleWarningMessages } =
         useValidateTeams();
     const { confirmation, validationDetails, handleFinalize } = useConfirmation(subjectId ?? '');
@@ -139,7 +142,7 @@ const SubjectView = () => {
 
     useEffect(() => {
         if (activeTab === 'commands' && userRole != 'student') {
-            if (subjectId && teams && teams.length > 0) {
+            if (subjectId && teams && teams.length > 0 && !config.isFinalized) {
                 handleValidateTeams(subjectId, teams);
             }
         }
@@ -447,7 +450,7 @@ const SubjectView = () => {
                                     </p>
                                 </div>
                             )}
-                            {isConfigLoading && (
+                            {showLoader && (
                                 <div className='p-4 bg-blue-50 border-b-blue-50 rounded-xl border border-blue-100 backdrop-blur-sm shadow-md'>
                                     <p className='text-sm text-blue-700'>
                                         Загрузка настроек команд...
@@ -516,7 +519,7 @@ const SubjectView = () => {
                                 </div>
                             )}
                         </div>
-                        {isTeamLoading ? (
+                        {showLoader ? (
                             <div className='my-4 font-medium text-2xl w-full h-48 text-center text-gray-500 flex flex-col items-center justify-center bg-white rounded-2xl shadow-md border border-slate-100'>
                                 <p className='font-normal text-lg'>Загрузка списка команд...</p>
                             </div>

@@ -7,7 +7,7 @@ import { PostResponse, CommentResponse, AssignmentResponse } from '@/types/subje
 import { useProfile } from '@/hooks/profile/useProfile';
 import { CommentItem } from '@/components/ui/CommentSection.tsx';
 import { addPostComment, downloadPostFile, fetchPostComments } from '@/api/subject/subjectView';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 /**
  * useSubjectView hook return type.
@@ -182,9 +182,20 @@ export function useSubjectView(): UseSubjectViewResult {
     const handleShowAssignmentModal = () => setShowAssignmentModal(true);
     const handleCloseAssignmentModal = () => setShowAssignmentModal(false);
     const handleActiveTab = (tab: 'feed' | 'students' | 'commands' | string) => {
-        setSearchParams({ tab: tab });
+        setSearchParams((prev) => {
+            const newParams = new URLSearchParams(prev);
+            newParams.set('tab', tab);
+            return newParams;
+        });
         setActiveTab(tab);
     };
+
+    useEffect(() => {
+        const tabFromUrl = searchParams.get('tab');
+        if (tabFromUrl && tabFromUrl !== activeTab) {
+            setActiveTab(tabFromUrl);
+        }
+    }, [searchParams]);
 
     const { subjectId } = useParams();
     const feed = useSubjectFeed(subjectId ?? '');

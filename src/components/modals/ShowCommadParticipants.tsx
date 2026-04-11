@@ -1,3 +1,4 @@
+import { useAssignCaptain } from '@/hooks/captain/useCaptainVoting';
 import { useStudentsDistribution } from '@/hooks/command/useStudentDistribution';
 import { TeamConfig } from '@/types/command/CommandConfig';
 import { Team } from '@/types/command/Team';
@@ -70,6 +71,12 @@ const CommandParticipantsModal = ({
         checkIsInAnyTeam();
     }, [teams]);
 
+    const {
+        errorMessage: manualAssignmentError,
+        handleSelectCaptainId,
+        handleAssignManually,
+    } = useAssignCaptain(subjectId, commandId);
+
     const [message, setMessage] = useState<string | null>(null);
     const navigate = useNavigate();
 
@@ -115,17 +122,22 @@ const CommandParticipantsModal = ({
             setMessage('Команды уже финализированы. Изменение капитана недоступно.');
             return;
         }
-        onTeamUpdate(members.id, (team) => {
-            const teamCaptain = team.members.find((member) => member.userId === captainId) ?? null;
-            return {
-                ...team,
-                captainId,
-                captain: teamCaptain,
-                captainSelectionMethod: 'Manual',
-                captainVoting: null,
-            };
-        });
-        setMessage('Капитан назначен вручную');
+        handleSelectCaptainId(captainId);
+        handleAssignManually();
+        if (manualAssignmentError == null) {
+            onTeamUpdate(members.id, (team) => {
+                const teamCaptain =
+                    team.members.find((member) => member.userId === captainId) ?? null;
+                return {
+                    ...team,
+                    captainId,
+                    captain: teamCaptain,
+                    captainSelectionMethod: 'Manual',
+                    captainVoting: null,
+                };
+            });
+            setMessage('Капитан назначен вручную');
+        }
     };
 
     const handleCaptainVoting = () => {

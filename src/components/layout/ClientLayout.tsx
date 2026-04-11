@@ -1,6 +1,6 @@
 import { BookOpen, ClipboardCheck, Key, LogOut, Plus, UserIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useSearchParams } from 'react-router-dom';
 import { useLogout } from '@/hooks/logout/useLogout';
 import { CreateSubjectModal } from '../modals/SubjectModal';
 import { useProfile } from '@/hooks/profile/useProfile';
@@ -21,6 +21,7 @@ export const ClientLayout = () => {
     const [pageTitle, setPageTitle] = useState<string>('Главная');
     const [showSubjectModal, setShowSubjectModal] = useState<boolean>(false);
     const [showJoinSubject, setShowJoinSubject] = useState<boolean>();
+    const [searchParams, setSearchParams] = useSearchParams();
     const { logout } = useLogout();
     const { profile, getCurrentUser } = useProfile();
     const navigate = useNavigate();
@@ -29,6 +30,12 @@ export const ClientLayout = () => {
         getCurrentUser();
     }, []);
 
+    useEffect(() => {
+        const subjectName: string | null = searchParams.get('subjectName');
+        if (subjectName) {
+            setPageTitle(subjectName);
+        }
+    }, [searchParams]);
     return (
         <div className='min-h-screen bg-linear-to-br from-slate-50 to-blue-50/30 flex text-slate-800 font-sans'>
             <aside className='w-64 bg-white/80 backdrop-blur-xl border-r border-slate-200/60 hidden md:flex flex-col shadow-sm'>

@@ -56,7 +56,7 @@ const refreshAccessToken = async (): Promise<string> => {
     try {
         const response: AxiosResponse<TokenResponse> = await axios.post<TokenResponse>(
             `${BASE_URL}/auth/refresh`,
-            refreshToken,
+            { refreshToken: refreshToken },
         );
 
         const { accessToken, refreshToken: newRefreshToken } = response.data;
@@ -66,10 +66,12 @@ const refreshAccessToken = async (): Promise<string> => {
 
         return accessToken;
     } catch (error) {
+        console.log('FAILED REFRESH');
+
         localStorage.removeItem(ACCESS_TOKEN);
         localStorage.removeItem(REFRESH_TOKEN);
-        console.log('FAILED REFRESH');
         window.location.href = '/login';
+
         throw error;
     }
 };
@@ -87,10 +89,12 @@ apiClient.interceptors.response.use(
         }
 
         if (originalRequest._retry) {
+            console.log('UNAUTH');
+
             localStorage.removeItem(ACCESS_TOKEN);
             localStorage.removeItem(REFRESH_TOKEN);
-            console.log('UNAUTH');
             window.location.href = '/login';
+
             return Promise.reject(error);
         }
 

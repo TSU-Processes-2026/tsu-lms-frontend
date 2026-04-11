@@ -183,11 +183,11 @@ export const useCommandConfig = (
                 decisionMethod: normalizeDecisionMethod(config.captainEnabled),
             };
 
-            const error: string | null = validateParams(participantsCount, preparedConfig);
-            if (error) {
-                setIsSuccess(false);
-                return setErrorMessage(error);
-            }
+            // const error: string | null = validateParams(participantsCount, preparedConfig);
+            // if (error) {
+            //     setIsSuccess(false);
+            //     return setErrorMessage(error);
+            // }
 
             const response: AxiosResponse<TeamConfig> = await saveConfigParams(subjectId, {
                 distributionMode: normalizeDistributionMode(preparedConfig.distributionMode),
