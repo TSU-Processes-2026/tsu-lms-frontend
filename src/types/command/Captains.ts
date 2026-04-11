@@ -12,3 +12,25 @@ export interface CaptainAssignmentResponse {
 export interface CaptainAssignment {
     captainUserId: string;
 }
+
+export interface CaptainVote {
+    votedForUserId: string;
+}
+
+export interface CaptainVoteResponse {
+    sessionCompleted: boolean;
+    selectedCaptainId: string;
+}
+
+export interface CaptainVotingStatus {
+    sessionId: string;
+    teamId: string;
+    startedAt: string | null;
+    deadlineAt: string | null;
+    isClosed: boolean;
+    closedAt: string | null;
+    winnerId: string | null;
+    totalMembers: 0;
+    votesCast: 0;
+    hasCurrentUserVoted: boolean;
+}
