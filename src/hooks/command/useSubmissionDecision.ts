@@ -1,30 +1,84 @@
 import {
+    approveSubmissionByCaptain,
     fetchSubmissionDecisionStatus,
     fetchSubmissionDecisionVotesStatus,
+    rejectSubmissionByCaptain,
 } from '@/api/decision/submissionDecision';
 import {
+    CaptainDecision,
+    SubmissionDecisionInitResponse,
     SubmissionDecisionStatus,
     SubmissionDecisionVotesStatus,
 } from '@/types/decision/SubmissionDecision';
-import { isAxiosError } from 'axios';
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+
+import { useCallback, useEffect, useState } from 'react';
 import { useErrorHandler } from '../error/useErrorHandler';
 
 export const useCaptainDecision = (submissionId: string) => {
-    const handleApproveSubmissionByCaptain = async () => {};
-    const handleRejectSubmissionByCaptain = async () => {};
+    const [decision, setDecision] = useState<CaptainDecision>({ comment: '' });
+    const [decisionResult, setDecisionResult] = useState<SubmissionDecisionInitResponse | null>(
+        null,
+    );
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const { errorMessage, handleError, clearError } = useErrorHandler();
+
+    const handleDecision = useCallback((selectedDecision: CaptainDecision) => {
+        setDecision((prev) => ({ ...prev, ...selectedDecision }));
+    }, []);
+
+    const handleApproveSubmissionByCaptain = useCallback(async () => {
+        setDecisionResult(null);
+        setIsLoading(true);
+        try {
+            const res: SubmissionDecisionInitResponse = await approveSubmissionByCaptain(
+                submissionId,
+                decision,
+            );
+            setDecisionResult({ ...res });
+            clearError();
+        } catch (error) {
+            handleError(error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [submissionId, decision]);
+
+    const handleRejectSubmissionByCaptain = useCallback(async () => {
+        setDecisionResult(null);
+        setIsLoading(true);
+        try {
+            const res: SubmissionDecisionInitResponse = await rejectSubmissionByCaptain(
+                submissionId,
+                decision,
+            );
+            setDecisionResult({ ...res });
+            clearError();
+        } catch (error) {
+            handleError(error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [submissionId, decision]);
 
     return {
+        decision,
+        decisionResult,
+        errorMessage,
+        isLoading,
+        handleDecision,
         handleApproveSubmissionByCaptain,
         handleRejectSubmissionByCaptain,
     };
 };
 
 export const useTeamMembersDecision = (submissionId: string) => {
+    const { errorMessage, handleError, clearError } = useErrorHandler();
+
     const handleInitVoting = async () => {};
     const handleVote = async () => {};
 
     return {
+        errorMessage,
         handleInitVoting,
         handleVote,
     };
