@@ -140,7 +140,10 @@ export function useRandomDistribution(subjectId: string) {
                         break;
                     }
                     case 401: {
-                        navigate(LOGIN_PAGE_URL);
+                        console.log(
+                            'Failed randomly distribute teams in useRandomDistribution: ',
+                            error.response?.data,
+                        );
                         break;
                     }
                     case 403: {

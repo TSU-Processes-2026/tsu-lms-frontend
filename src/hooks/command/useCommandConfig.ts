@@ -207,42 +207,39 @@ export const useCommandConfig = (
                 decisionMethod: normalizeDecisionMethod(preparedConfig.captainEnabled),
                 finalDecisionDeadline: preparedConfig.finalDecisionDeadline,
             });
-            // const loadedMode = normalizeDistributionMode(response.data.distributionMode);
-            // setConfig({
-            //     ...createDefaultConfig(subjectId),
-            //     ...response.data,
-            //     distributionMode: loadedMode,
-            //     captainEnabled: Boolean(response.data.captainEnabled),
-            //     captainSelectionMethod:
-            //         response.data.captainSelectionMethod &&
-            //         response.data.captainSelectionMethod === 'Voting'
-            //             ? 'Voting'
-            //             : loadedMode === 'Random' || loadedMode === 'Manual'
-            //               ? 'Voting'
-            //               : 'Manual',
-            //     captainVotingDeadline: response.data.captainVotingDeadline ?? null,
-            //     finalDecisionThreshold:
-            //         Number(response.data.finalDecisionThreshold) || participantsCount || 1,
-            //     decisionMethod: normalizeLoadedDecisionMethod(
-            //         response.data.decisionMethod,
-            //         Boolean(response.data.captainEnabled),
-            //     ),
-            //     finalDecisionDeadline: response.data.finalDecisionDeadline ?? null,
-            // });
+            const loadedMode = normalizeDistributionMode(response.data.distributionMode);
+            setConfig({
+                ...createDefaultConfig(subjectId),
+                ...response.data,
+                distributionMode: loadedMode,
+                captainEnabled: Boolean(response.data.captainEnabled),
+                captainSelectionMethod:
+                    response.data.captainSelectionMethod &&
+                    response.data.captainSelectionMethod === 'Voting'
+                        ? 'Voting'
+                        : loadedMode === 'Random' || loadedMode === 'Manual'
+                          ? 'Voting'
+                          : 'Manual',
+                captainVotingDeadline: response.data.captainVotingDeadline ?? null,
+                finalDecisionThreshold:
+                    Number(response.data.finalDecisionThreshold) || participantsCount || 1,
+                decisionMethod: normalizeLoadedDecisionMethod(
+                    response.data.decisionMethod,
+                    Boolean(response.data.captainEnabled),
+                ),
+                finalDecisionDeadline: response.data.finalDecisionDeadline ?? null,
+            });
             setErrorMessage(null);
             setIsSuccess(true);
             onClose();
         } catch (error) {
             if (isAxiosError(error)) {
                 if (error.response?.status === 400) {
-                    console.log('error: ', error.response.data);
                     setErrorMessage(error.response.data.detail || 'Переданы неверные параметры');
                 } else if (error.response?.status === 401) {
                     setErrorMessage(
                         error.response.data.detail || 'Требуется повторная авторизация',
                     );
-                    localStorage.clear();
-                    navigate(LOGIN_PAGE_URL);
                 } else {
                     setErrorMessage(error.response?.data.detail || 'Ошибка сервера');
                 }
@@ -292,9 +289,15 @@ export const useCommandConfig = (
             } catch (error) {
                 if (isAxiosError(error)) {
                     switch (error.status) {
+                        case 400: {
+                            console.log(error.response?.data);
+                            break;
+                        }
                         case 401: {
-                            localStorage.clear();
-                            navigate(LOGIN_PAGE_URL);
+                            console.log(
+                                'Failed create config in useCommandConfig: ',
+                                error.response?.data,
+                            );
                             break;
                         }
                         case 500: {
@@ -416,9 +419,15 @@ export const useLoadConfig = (subjectId: string, role: string) => {
             } catch (error) {
                 if (isAxiosError(error)) {
                     switch (error.status) {
+                        case 400: {
+                            console.log(error.response?.data);
+                            break;
+                        }
                         case 401: {
-                            localStorage.clear();
-                            navigate(LOGIN_PAGE_URL);
+                            console.log(
+                                'Failed load configuration in useLoadConfig: ',
+                                error.response?.data,
+                            );
                             break;
                         }
 

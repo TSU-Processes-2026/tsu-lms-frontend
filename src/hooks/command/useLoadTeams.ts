@@ -60,8 +60,10 @@ export const useLoadTeams = (subjectId: string | undefined): UseLoadTeams => {
                             break;
                         }
                         case 401: {
-                            localStorage.clear();
-                            navigate(LOGIN_PAGE_URL);
+                            console.log(
+                                'Failed fetch teams in useLoadTeams: ',
+                                error.response?.data,
+                            );
                             break;
                         }
 

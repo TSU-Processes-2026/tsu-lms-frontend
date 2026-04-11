@@ -42,8 +42,7 @@ export function useUpdateTeam(subjectId: string) {
                         break;
                     }
                     case 401: {
-                        localStorage.clear();
-                        navigate(LOGIN_PAGE_URL);
+                        console.log('Failed update team in useUseUpdate: ', error.response?.data);
                         break;
                     }
                     case 403: {

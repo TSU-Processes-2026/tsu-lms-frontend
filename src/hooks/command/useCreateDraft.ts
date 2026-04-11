@@ -51,11 +51,7 @@ export const useCreateDraft = (subjectId: string) => {
                         );
                         break;
                     }
-                    case 401: {
-                        localStorage.clear();
-                        navigate(LOGIN_PAGE_URL);
-                        break;
-                    }
+
                     case 403: {
                         navigate(FORBIDDEN_PAGE);
                         break;

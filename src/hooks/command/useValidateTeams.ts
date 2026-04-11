@@ -28,7 +28,6 @@ export const useValidateTeams = () => {
         subjectId: string | undefined,
         teamsDist: Team[],
     ): Promise<void> => {
-        console.log('here');
         const members: TeamValidation = {
             teams: teamsDist.map((team) => {
                 return { memberIds: team.memberIds };
@@ -36,20 +35,26 @@ export const useValidateTeams = () => {
         };
         try {
             const response = await validateManualDistribution(subjectId, members);
-            console.log(response);
             setDetails({ ...response });
-            console.log('success');
         } catch (error) {
-            console.log('error');
             if (isAxiosError(error)) {
                 switch (error.status) {
                     case 401: {
-                        localStorage.clear();
-                        navigate(LOGIN_PAGE_URL);
+                        console.log(
+                            'Failed validate teams distribution in useValidateTeams: ',
+                            error.response?.data,
+                        );
+                        break;
+                    }
+                    case 403: {
+                        console.log(
+                            'Failed validate teams distribution in useValidateTeams: ',
+                            error.response?.data,
+                        );
                         break;
                     }
                     default: {
-                        console.log(error);
+                        console.log(error.response?.data);
                         throw error;
                     }
                 }

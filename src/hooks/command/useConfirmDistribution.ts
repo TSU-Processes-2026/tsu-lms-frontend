@@ -38,6 +38,13 @@ export function useConfirmation(subjectId: string): UseConfirmation {
                         });
                         break;
                     }
+                    case 401: {
+                        console.log(
+                            'Failed finalize teams in useConfirmation: ',
+                            error.response?.data,
+                        );
+                        break;
+                    }
                     default:
                         console.log(error.response);
                 }

@@ -67,8 +67,10 @@ export function useCreateTeamManually(subjectId: string): UseCreateTeamManually 
                         break;
                     }
                     case 401: {
-                        localStorage.clear();
-                        navigate(LOGIN_PAGE_URL);
+                        console.log(
+                            'Failed create team in useCreateTeamManually: ',
+                            error.response?.data,
+                        );
                         break;
                     }
                     case 403: {
@@ -116,8 +118,10 @@ export function useCreateTeamManually(subjectId: string): UseCreateTeamManually 
                             break;
                         }
                         case 401: {
-                            localStorage.clear();
-                            navigate(LOGIN_PAGE_URL);
+                            console.log(
+                                'Failed load unassigned students in useCreateTeamManually: ',
+                                error.response?.data,
+                            );
                             break;
                         }
                         case 403: {
