@@ -29,7 +29,8 @@ export const assignCaptainManually = async (
     }
 };
 
-//применяется в том случае, если в рез-те голосования у кандидатов равное число голосов
+//применяется в том случае, если в рез-те голосования у кандидатов равное число голосов,
+//либо если при обязательном выборе капитана он не был указан при формированиии команды
 export const assignCaptainByRandom = async (
     subjectId: string,
     teamId: string,
@@ -49,6 +50,7 @@ export const assignCaptainByRandom = async (
     }
 };
 
+//только если к команды создаются с капитанами
 export const fetchTeamCaptain = async (
     subjectId: string,
     teamId: string,
@@ -67,14 +69,14 @@ export const fetchTeamCaptain = async (
     }
 };
 
-//для запуска голосования
+//только если назначен выбор голосованием
 export const initCaptainVoting = async (
     subjectId: string,
     teamId: string,
-): Promise<CaptainAssignmentResponse> => {
+): Promise<CaptainVotingStatus> => {
     try {
-        const response: AxiosResponse<CaptainAssignmentResponse> =
-            await apiClient.post<CaptainAssignmentResponse>(
+        const response: AxiosResponse<CaptainVotingStatus> =
+            await apiClient.post<CaptainVotingStatus>(
                 `/subjects/${subjectId}/teams/${teamId}/captain/initiate-voting`,
                 null,
             );
@@ -87,6 +89,7 @@ export const initCaptainVoting = async (
     }
 };
 
+//только при выборе капитана голосованием
 export const sendVoteForCaptain = async (
     subjectId: string,
     teamId: string,
@@ -103,6 +106,7 @@ export const sendVoteForCaptain = async (
     }
 };
 
+//получать только если выбрано назначение капитанов голосованием
 export const fetchVotingStatus = async (
     subjectId: string,
     teamId: string,
