@@ -86,7 +86,7 @@ const CommandParticipantsModal = ({
     const isStudentsModeEnabled = currentDistributionMode === 'Students';
     const couldViewJoinInterface = isStudent && isStudentsModeEnabled && !isFinalized;
     const isCaptainVotingMode =
-        config.captainEnabled &&
+        config.requiresCaptain &&
         (config.distributionMode === 'Random' || config.distributionMode === 'Manual');
 
     const handleJoinClick = async (): Promise<void> => {
@@ -257,7 +257,7 @@ const CommandParticipantsModal = ({
                             </p>
                         </div>
                     )}
-                    {config.captainEnabled ? (
+                    {config.requiresCaptain ? (
                         captain ? (
                             <div className='mb-5 p-4 bg-amber-100 rounded-2xl border border-amber-100 flex flex-row items-center gap-4'>
                                 <Crown className='text-amber-700' size={18} />
@@ -288,7 +288,7 @@ const CommandParticipantsModal = ({
                         </div>
                     )}
 
-                    {isTeacher && config.captainEnabled && (
+                    {isTeacher && config.requiresCaptain && (
                         <div className='rounded-2xl border border-slate-100 p-4 bg-slate-50'>
                             <p className='text-sm font-semibold text-slate-700 mb-3'>
                                 Назначение капитана преподавателем
@@ -346,7 +346,7 @@ const CommandParticipantsModal = ({
                             Итоговое решение команды
                         </p>
                         <p className='text-xs text-slate-500 mb-3'>
-                            {config.captainEnabled
+                            {config.requiresCaptain
                                 ? 'Метод: выбор капитаном'
                                 : `Метод: голосование (порог ${config.finalDecisionThreshold})`}
                         </p>
@@ -356,7 +356,7 @@ const CommandParticipantsModal = ({
                                 {new Date(config.finalDecisionDeadline).toLocaleString('ru-RU')}
                             </p>
                         )}
-                        {isTeacher && !config.captainEnabled && (
+                        {isTeacher && !config.requiresCaptain && (
                             <button
                                 type='button'
                                 onClick={handleFinalDecisionVoting}
@@ -366,7 +366,7 @@ const CommandParticipantsModal = ({
                                 Провести итоговое голосование
                             </button>
                         )}
-                        {isTeacher && config.captainEnabled && (
+                        {isTeacher && config.requiresCaptain && (
                             <button
                                 type='button'
                                 onClick={handleFinalDecisionByCaptain}

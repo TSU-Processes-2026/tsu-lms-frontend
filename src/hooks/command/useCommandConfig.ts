@@ -1,9 +1,5 @@
 import { fetchConfig, saveConfigParams } from '@/api/command/command';
-import {
-    FORBIDDEN_PAGE,
-    INTERNAL_SERVER_ERROR_PAGE_URL,
-    LOGIN_PAGE_URL,
-} from '@/constants/paths/paths';
+import { INTERNAL_SERVER_ERROR_PAGE_URL } from '@/constants/paths/paths';
 import {
     FinalDecisionMethod,
     TeamConfig,
@@ -14,7 +10,7 @@ import { AxiosResponse, isAxiosError } from 'axios';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useValidateCommandConfig } from './useValidateCommandConfig';
-import { normalizeDistributionMode, normalizeDistributionModeLegacy } from '@/utils/teamConfig';
+import { normalizeDistributionMode } from '@/utils/teamConfig';
 
 const createDefaultConfig = (subjectId: string): TeamConfig => ({
     subjectId,
@@ -23,33 +19,33 @@ const createDefaultConfig = (subjectId: string): TeamConfig => ({
     fixedTeamSize: null,
     minTeamSize: null,
     maxTeamSize: null,
-    captainEnabled: false,
-    captainSelectionMethod: 'Manual',
+    requiresCaptain: false,
+    captainSelectionMode: 'Manual',
     captainVotingDeadline: null,
     finalDecisionThreshold: 1,
-    decisionMethod: 'Voting',
+    decisionMode: 'Voting',
     finalDecisionDeadline: null,
     isFinalized: false,
     finalizedAt: null,
     warnings: [],
 });
 
-const normalizeDecisionMethod = (captainEnabled: boolean): FinalDecisionMethod =>
-    captainEnabled ? 'CaptainDecision' : 'Voting';
+const normalizeDecisionMethod = (requiresCaptain: boolean): FinalDecisionMethod =>
+    requiresCaptain ? 'CaptainDecides' : 'Voting';
 
 const normalizeLoadedDecisionMethod = (
     decisionMethod: FinalDecisionMethod | null | undefined,
-    captainEnabled: boolean,
+    requiresCaptain: boolean,
 ): FinalDecisionMethod => {
-    if (!captainEnabled) {
+    if (!requiresCaptain) {
         return 'Voting';
     }
 
-    if (decisionMethod === 'CaptainChoice' || decisionMethod === 'CaptainDecision') {
+    if (decisionMethod === 'CaptainDecides') {
         return decisionMethod;
     }
 
-    return 'CaptainDecision';
+    return 'CaptainDecides';
 };
 
 export const useCommandConfig = (
@@ -70,14 +66,14 @@ export const useCommandConfig = (
     const handleDistributionMode = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const nextMode = normalizeDistributionMode(e.target.value);
         setConfig((prev) => {
-            const captainEnabled = nextMode === 'Draft' ? true : prev.captainEnabled;
+            const requiresCaptain = nextMode === 'Draft' ? true : prev.requiresCaptain;
             return {
                 ...prev,
                 distributionMode: nextMode,
-                captainEnabled,
-                captainSelectionMethod:
+                requiresCaptain,
+                captainSelectionMode:
                     nextMode === 'Random' || nextMode === 'Manual' ? 'Voting' : 'Manual',
-                decisionMethod: normalizeDecisionMethod(captainEnabled),
+                decisionMode: normalizeDecisionMethod(requiresCaptain),
             };
         });
         setErrorMessage(null);
@@ -133,19 +129,19 @@ export const useCommandConfig = (
         setIsSuccess(false);
     };
 
-    const handleCaptainEnabled = (enabled: boolean) => {
+    const handleRequiresCaptain = (enabled: boolean) => {
         setConfig((prev) => {
             const mode = normalizeDistributionMode(prev.distributionMode);
-            const captainEnabled = mode === 'Draft' ? true : enabled;
+            const requiresCaptain = mode === 'Draft' ? true : enabled;
             return {
                 ...prev,
-                captainEnabled,
-                captainSelectionMethod:
-                    captainEnabled && (mode === 'Random' || mode === 'Manual')
+                requiresCaptain,
+                captainSelectionMode:
+                    requiresCaptain && (mode === 'Random' || mode === 'Manual')
                         ? 'Voting'
                         : 'Manual',
-                decisionMethod: normalizeDecisionMethod(captainEnabled),
-                captainVotingDeadline: captainEnabled ? prev.captainVotingDeadline : null,
+                decisionMode: normalizeDecisionMethod(requiresCaptain),
+                captainVotingDeadline: requiresCaptain ? prev.captainVotingDeadline : null,
             };
         });
         setIsSuccess(false);
@@ -180,42 +176,38 @@ export const useCommandConfig = (
         try {
             const preparedConfig: TeamConfig = {
                 ...config,
-                decisionMethod: normalizeDecisionMethod(config.captainEnabled),
+                decisionMode: normalizeDecisionMethod(config.requiresCaptain),
             };
 
-            // const error: string | null = validateParams(participantsCount, preparedConfig);
-            // if (error) {
-            //     setIsSuccess(false);
-            //     return setErrorMessage(error);
-            // }
-
+            console.log('Request config: ', preparedConfig);
             const response: AxiosResponse<TeamConfig> = await saveConfigParams(subjectId, {
                 distributionMode: normalizeDistributionMode(preparedConfig.distributionMode),
                 fixedTeamsCount: preparedConfig.fixedTeamsCount,
                 fixedTeamSize: segregationType === 'fixed' ? preparedConfig.fixedTeamSize : null,
                 minTeamSize: segregationType === 'range' ? preparedConfig.minTeamSize : null,
                 maxTeamSize: segregationType === 'range' ? preparedConfig.maxTeamSize : null,
-                captainEnabled: preparedConfig.captainEnabled,
-                captainSelectionMethod:
-                    preparedConfig.captainEnabled &&
+                requiresCaptain: preparedConfig.requiresCaptain,
+                captainSelectionMode:
+                    preparedConfig.requiresCaptain &&
                     (preparedConfig.distributionMode === 'Random' ||
                         preparedConfig.distributionMode === 'Manual')
                         ? 'Voting'
                         : 'Manual',
                 captainVotingDeadline: preparedConfig.captainVotingDeadline,
                 finalDecisionThreshold: preparedConfig.finalDecisionThreshold,
-                decisionMethod: normalizeDecisionMethod(preparedConfig.captainEnabled),
+                decisionMode: normalizeDecisionMethod(preparedConfig.requiresCaptain),
                 finalDecisionDeadline: preparedConfig.finalDecisionDeadline,
             });
             const loadedMode = normalizeDistributionMode(response.data.distributionMode);
+            console.log('Loaded response after update config: ', response.data);
             setConfig({
                 ...createDefaultConfig(subjectId),
                 ...response.data,
                 distributionMode: loadedMode,
-                captainEnabled: Boolean(response.data.captainEnabled),
-                captainSelectionMethod:
-                    response.data.captainSelectionMethod &&
-                    response.data.captainSelectionMethod === 'Voting'
+                requiresCaptain: Boolean(response.data.requiresCaptain),
+                captainSelectionMode:
+                    response.data.captainSelectionMode &&
+                    response.data.captainSelectionMode === 'Voting'
                         ? 'Voting'
                         : loadedMode === 'Random' || loadedMode === 'Manual'
                           ? 'Voting'
@@ -223,9 +215,9 @@ export const useCommandConfig = (
                 captainVotingDeadline: response.data.captainVotingDeadline ?? null,
                 finalDecisionThreshold:
                     Number(response.data.finalDecisionThreshold) || participantsCount || 1,
-                decisionMethod: normalizeLoadedDecisionMethod(
-                    response.data.decisionMethod,
-                    Boolean(response.data.captainEnabled),
+                decisionMode: normalizeLoadedDecisionMethod(
+                    response.data.decisionMode,
+                    Boolean(response.data.requiresCaptain),
                 ),
                 finalDecisionDeadline: response.data.finalDecisionDeadline ?? null,
             });
@@ -235,6 +227,7 @@ export const useCommandConfig = (
         } catch (error) {
             if (isAxiosError(error)) {
                 if (error.response?.status === 400) {
+                    console.log(error.response.data);
                     setErrorMessage(error.response.data.detail || 'Переданы неверные параметры');
                 } else if (error.response?.status === 401) {
                     setErrorMessage(
@@ -259,8 +252,8 @@ export const useCommandConfig = (
                     const fixedTeamSize = Number(response.data.fixedTeamSize) || null;
                     const minTeamSize = Number(response.data.minTeamSize) || null;
                     const maxTeamSize = Number(response.data.maxTeamSize) || null;
-                    const captainEnabled =
-                        loadedMode === 'Draft' ? true : Boolean(response.data.captainEnabled);
+                    const requiresCaptain =
+                        loadedMode === 'Draft' ? true : Boolean(response.data.requiresCaptain);
                     setType(fixedTeamSize ? 'fixed' : 'range');
                     setConfig({
                         ...createDefaultConfig(subjectId),
@@ -271,17 +264,17 @@ export const useCommandConfig = (
                         fixedTeamSize,
                         minTeamSize,
                         maxTeamSize,
-                        captainEnabled,
-                        captainSelectionMethod:
-                            captainEnabled && (loadedMode === 'Random' || loadedMode === 'Manual')
+                        requiresCaptain,
+                        captainSelectionMode:
+                            requiresCaptain && (loadedMode === 'Random' || loadedMode === 'Manual')
                                 ? 'Voting'
                                 : 'Manual',
                         captainVotingDeadline: response.data.captainVotingDeadline ?? null,
                         finalDecisionThreshold:
                             Number(response.data.finalDecisionThreshold) || participantsCount || 1,
-                        decisionMethod: normalizeLoadedDecisionMethod(
-                            response.data.decisionMethod,
-                            captainEnabled,
+                        decisionMode: normalizeLoadedDecisionMethod(
+                            response.data.decisionMode,
+                            requiresCaptain,
                         ),
                         finalDecisionDeadline: response.data.finalDecisionDeadline ?? null,
                     });
@@ -333,7 +326,7 @@ export const useCommandConfig = (
         handleTeamSize,
         handleMinSize,
         handleMaxSize,
-        handleCaptainEnabled,
+        handleRequiresCaptain,
         handleFinalDecisionThreshold,
         handleCaptainVotingDeadline,
         handleFinalDecisionDeadline,
@@ -357,8 +350,8 @@ export const useLoadConfig = (subjectId: string, role: string) => {
                     const loadedMode: TeamDistributionMode = normalizeDistributionMode(
                         response.data.distributionMode,
                     );
-                    const captainEnabled =
-                        loadedMode === 'Draft' ? true : Boolean(response.data.captainEnabled);
+                    const requiresCaptain =
+                        loadedMode === 'Draft' ? true : Boolean(response.data.requiresCaptain);
                     setConfig({
                         ...createDefaultConfig(subjectId),
                         ...response.data,
@@ -368,16 +361,16 @@ export const useLoadConfig = (subjectId: string, role: string) => {
                         fixedTeamSize: Number(response.data.fixedTeamSize) || null,
                         minTeamSize: Number(response.data.minTeamSize) || null,
                         maxTeamSize: Number(response.data.maxTeamSize) || null,
-                        captainEnabled,
-                        captainSelectionMethod:
-                            captainEnabled && (loadedMode === 'Random' || loadedMode === 'Manual')
+                        requiresCaptain,
+                        captainSelectionMode:
+                            requiresCaptain && (loadedMode === 'Random' || loadedMode === 'Manual')
                                 ? 'Voting'
                                 : 'Manual',
                         captainVotingDeadline: response.data.captainVotingDeadline ?? null,
                         finalDecisionThreshold: Number(response.data.finalDecisionThreshold) || 1,
-                        decisionMethod: normalizeLoadedDecisionMethod(
-                            response.data.decisionMethod,
-                            captainEnabled,
+                        decisionMode: normalizeLoadedDecisionMethod(
+                            response.data.decisionMode,
+                            requiresCaptain,
                         ),
                         finalDecisionDeadline: response.data.finalDecisionDeadline ?? null,
                     });
@@ -394,12 +387,14 @@ export const useLoadConfig = (subjectId: string, role: string) => {
                         minTeamSize: response.data.minTeamSize ?? null,
                         maxTeamSize: response.data.maxTeamSize ?? null,
 
-                        captainEnabled:
-                            loadedMode === 'Draft' ? true : (response.data.captainEnabled ?? false),
+                        requiresCaptain:
+                            loadedMode === 'Draft'
+                                ? true
+                                : (response.data.requiresCaptain ?? false),
 
-                        captainSelectionMethod:
-                            response.data.captainSelectionMethod ??
-                            ((loadedMode === 'Random' || loadedMode === 'Manual') && captainEnabled
+                        captainSelectionMode:
+                            response.data.captainSelectionMode ??
+                            ((loadedMode === 'Random' || loadedMode === 'Manual') && requiresCaptain
                                 ? 'Voting'
                                 : 'Manual'),
                         captainVotingDeadline: response.data.captainVotingDeadline ?? null,
@@ -410,9 +405,9 @@ export const useLoadConfig = (subjectId: string, role: string) => {
                                 ? Number(response.data.finalDecisionThreshold)
                                 : 1,
                         // decisionMethod: берём с сервера, если есть, иначе вычисляем
-                        decisionMethod:
-                            response.data.decisionMethod ??
-                            (captainEnabled ? 'CaptainDecision' : 'Voting'),
+                        decisionMode:
+                            response.data.decisionMode ??
+                            (requiresCaptain ? 'CaptainDecision' : 'Voting'),
                         finalDecisionDeadline: response.data.finalDecisionDeadline ?? null,
                     });
                 }

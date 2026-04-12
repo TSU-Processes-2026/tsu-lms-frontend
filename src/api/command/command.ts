@@ -17,7 +17,7 @@ import {
     UnAssignedStudents,
     ValidationDetails,
 } from '@/types/command/Team';
-import { normalizeDistributionModeLegacy } from '@/utils/teamConfig';
+
 import { AxiosResponse } from 'axios';
 import { apiClient } from '../axios-client';
 
@@ -37,7 +37,6 @@ export const saveConfigParams = async (
         );
         return response;
     } catch (error) {
-        console.log(error);
         throw error;
     }
 };

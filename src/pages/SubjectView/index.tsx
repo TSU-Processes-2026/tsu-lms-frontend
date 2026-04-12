@@ -462,7 +462,7 @@ const SubjectView = () => {
                                     Режим: {loadedDistributionMode}
                                 </p>
                                 <p className='text-xs text-slate-500 mt-1'>
-                                    {config.captainEnabled
+                                    {config.requiresCaptain
                                         ? `Капитан включен, метод решения: выбор капитана, порог: ${config.finalDecisionThreshold}`
                                         : `Капитан выключен, метод решения: голосование, порог: ${config.finalDecisionThreshold}`}
                                 </p>
@@ -526,7 +526,6 @@ const SubjectView = () => {
                         ) : teams && teams.length > 0 ? (
                             <ul className='grid sm:grid-cols-1 md:grid-col </ul>s-2 lg:grid-cols-2 gap-4 mt-4'>
                                 {teams.map((item, index) => {
-                                    console.log(item);
                                     return (
                                         <CommandCard
                                             index={index}
@@ -541,7 +540,7 @@ const SubjectView = () => {
                                             decisionInfo={
                                                 item.finalDecision
                                                     ? `Итог: ${item.finalDecision.approved ? 'принято' : 'не принято'} (${item.finalDecision.method === 'CaptainDecision' ? 'капитан' : 'голосование'})`
-                                                    : config.captainEnabled
+                                                    : config.requiresCaptain
                                                       ? 'Финальное решение принимает капитан'
                                                       : 'Финальное решение принимает голосование команды'
                                             }

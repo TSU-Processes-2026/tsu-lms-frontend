@@ -66,7 +66,6 @@ export const useLoadTeams = (subjectId: string | undefined): UseLoadTeams => {
                             );
                             break;
                         }
-
                         case 404: {
                             navigate('*');
                             break;

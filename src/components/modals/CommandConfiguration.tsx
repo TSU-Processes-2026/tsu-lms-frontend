@@ -42,7 +42,7 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
         handleSubmit,
         handleTeamSize,
         handleTeamsCount,
-        handleCaptainEnabled,
+        handleRequiresCaptain,
         handleFinalDecisionThreshold,
         handleCaptainVotingDeadline,
         handleFinalDecisionDeadline,
@@ -221,9 +221,9 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                             </div>
                             <input
                                 type='checkbox'
-                                checked={config.captainEnabled}
+                                checked={config.requiresCaptain}
                                 disabled={isDraftMode || isFinalized}
-                                onChange={(e) => handleCaptainEnabled(e.target.checked)}
+                                onChange={(e) => handleRequiresCaptain(e.target.checked)}
                                 className='h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 disabled:opacity-60'
                             />
                         </div>
@@ -231,7 +231,7 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                             <p>
                                 Способ выбора капитана:{' '}
                                 <span className='font-semibold'>
-                                    {config.captainEnabled
+                                    {config.requiresCaptain
                                         ? isCaptainVotingMode
                                             ? 'Голосование команды'
                                             : 'Ручное назначение преподавателем'
@@ -248,7 +248,9 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                             type='datetime-local'
                             value={toInputDateTime(config.captainVotingDeadline)}
                             onChange={(e) => handleCaptainVotingDeadline(e.target.value)}
-                            disabled={isFinalized || !config.captainEnabled || !isCaptainVotingMode}
+                            disabled={
+                                isFinalized || !config.requiresCaptain || !isCaptainVotingMode
+                            }
                             className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all disabled:opacity-60'
                         />
                     </div>
@@ -285,7 +287,7 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                             Метод принятия решения
                         </p>
                         <p className='text-xs text-blue-600'>
-                            {config.captainEnabled
+                            {config.requiresCaptain
                                 ? 'Выбор капитана (капитан принимает финальное решение)'
                                 : 'Голосование участников команды'}
                         </p>

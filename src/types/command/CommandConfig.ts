@@ -2,7 +2,7 @@ import { ConfirmationResponse } from './Team';
 
 export type TeamDistributionMode = 'Manual' | 'Random' | 'Students' | 'Draft';
 export type CaptainSelectionMethod = 'Manual' | 'Voting';
-export type FinalDecisionMethod = 'Voting' | 'CaptainChoice' | 'CaptainDecision';
+export type FinalDecisionMethod = 'Voting' | 'CaptainDecides';
 
 export interface CommandConfig {
     distributionMode: TeamDistributionMode;
@@ -10,11 +10,11 @@ export interface CommandConfig {
     fixedTeamSize: number | null;
     minTeamSize: number | null;
     maxTeamSize: number | null;
-    captainEnabled: boolean;
-    captainSelectionMethod: CaptainSelectionMethod;
+    requiresCaptain: boolean;
+    captainSelectionMode: CaptainSelectionMethod;
     captainVotingDeadline: string | null;
     finalDecisionThreshold: number | null;
-    decisionMethod: FinalDecisionMethod;
+    decisionMode: FinalDecisionMethod;
     finalDecisionDeadline: string | null;
 }
 
