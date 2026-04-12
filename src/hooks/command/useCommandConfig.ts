@@ -10,7 +10,7 @@ import { AxiosResponse, isAxiosError } from 'axios';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useValidateCommandConfig } from './useValidateCommandConfig';
-import { normalizeDistributionMode } from '@/utils/teamConfig';
+import { normalizeCaptainSelectionMode, normalizeDistributionMode } from '@/utils/teamConfig';
 
 const createDefaultConfig = (subjectId: string): TeamConfig => ({
     subjectId,
@@ -67,12 +67,13 @@ export const useCommandConfig = (
         const nextMode = normalizeDistributionMode(e.target.value);
         setConfig((prev) => {
             const requiresCaptain = nextMode === 'Draft' ? true : prev.requiresCaptain;
+            const captainSelectionMode =
+                nextMode === 'Random' || nextMode === 'Manual' ? 'Voting' : 'Manual';
             return {
                 ...prev,
                 distributionMode: nextMode,
                 requiresCaptain,
-                captainSelectionMode:
-                    nextMode === 'Random' || nextMode === 'Manual' ? 'Voting' : 'Manual',
+                captainSelectionMode: captainSelectionMode,
                 decisionMode: normalizeDecisionMethod(requiresCaptain),
             };
         });
@@ -82,6 +83,22 @@ export const useCommandConfig = (
 
     const handleSegregationType = (e: React.ChangeEvent<HTMLSelectElement>): void => {
         setType(e.target.value === 'range' ? 'range' : 'fixed');
+        setErrorMessage(null);
+        setIsSuccess(false);
+    };
+
+    const handleCaptainSelectionMode = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setConfig((prev) => {
+            const distributionMode = normalizeDistributionMode(prev.distributionMode);
+            const mode = normalizeCaptainSelectionMode(e.target.value);
+            return {
+                ...prev,
+                captainSelectionMode:
+                    distributionMode === 'Manual' || distributionMode === 'Random'
+                        ? 'Voting'
+                        : mode,
+            };
+        });
         setErrorMessage(null);
         setIsSuccess(false);
     };
@@ -133,14 +150,13 @@ export const useCommandConfig = (
         setConfig((prev) => {
             const mode = normalizeDistributionMode(prev.distributionMode);
             const requiresCaptain = mode === 'Draft' ? true : enabled;
+            const captainSelectionMode =
+                mode === 'Random' || mode === 'Manual' ? 'Voting' : 'Manual';
             return {
                 ...prev,
                 requiresCaptain,
-                captainSelectionMode:
-                    requiresCaptain && (mode === 'Random' || mode === 'Manual')
-                        ? 'Voting'
-                        : 'Manual',
                 decisionMode: normalizeDecisionMethod(requiresCaptain),
+                captainSelectionMode: captainSelectionMode,
                 captainVotingDeadline: requiresCaptain ? prev.captainVotingDeadline : null,
             };
         });
@@ -179,7 +195,6 @@ export const useCommandConfig = (
                 decisionMode: normalizeDecisionMethod(config.requiresCaptain),
             };
 
-            console.log('Request config: ', preparedConfig);
             const response: AxiosResponse<TeamConfig> = await saveConfigParams(subjectId, {
                 distributionMode: normalizeDistributionMode(preparedConfig.distributionMode),
                 fixedTeamsCount: preparedConfig.fixedTeamsCount,
@@ -187,31 +202,21 @@ export const useCommandConfig = (
                 minTeamSize: segregationType === 'range' ? preparedConfig.minTeamSize : null,
                 maxTeamSize: segregationType === 'range' ? preparedConfig.maxTeamSize : null,
                 requiresCaptain: preparedConfig.requiresCaptain,
-                captainSelectionMode:
-                    preparedConfig.requiresCaptain &&
-                    (preparedConfig.distributionMode === 'Random' ||
-                        preparedConfig.distributionMode === 'Manual')
-                        ? 'Voting'
-                        : 'Manual',
+                captainSelectionMode: preparedConfig.captainSelectionMode,
                 captainVotingDeadline: preparedConfig.captainVotingDeadline,
                 finalDecisionThreshold: preparedConfig.finalDecisionThreshold,
                 decisionMode: normalizeDecisionMethod(preparedConfig.requiresCaptain),
                 finalDecisionDeadline: preparedConfig.finalDecisionDeadline,
             });
+
             const loadedMode = normalizeDistributionMode(response.data.distributionMode);
-            console.log('Loaded response after update config: ', response.data);
+
             setConfig({
                 ...createDefaultConfig(subjectId),
                 ...response.data,
                 distributionMode: loadedMode,
                 requiresCaptain: Boolean(response.data.requiresCaptain),
-                captainSelectionMode:
-                    response.data.captainSelectionMode &&
-                    response.data.captainSelectionMode === 'Voting'
-                        ? 'Voting'
-                        : loadedMode === 'Random' || loadedMode === 'Manual'
-                          ? 'Voting'
-                          : 'Manual',
+                captainSelectionMode: response.data.captainSelectionMode || 'Manual',
                 captainVotingDeadline: response.data.captainVotingDeadline ?? null,
                 finalDecisionThreshold:
                     Number(response.data.finalDecisionThreshold) || participantsCount || 1,
@@ -223,7 +228,6 @@ export const useCommandConfig = (
             });
             setErrorMessage(null);
             setIsSuccess(true);
-            onClose();
         } catch (error) {
             if (isAxiosError(error)) {
                 if (error.response?.status === 400) {
@@ -241,14 +245,17 @@ export const useCommandConfig = (
     };
 
     useEffect(() => {
-        if (role === 'student') return;
         let isMounted = true;
         setIsLoading(true);
         const processRequest = async () => {
             try {
                 const response: AxiosResponse<TeamConfig> = await fetchConfig(subjectId);
+
                 if (isMounted) {
                     const loadedMode = normalizeDistributionMode(response.data.distributionMode);
+                    const loadedCaptainSelectionMode = normalizeCaptainSelectionMode(
+                        response.data.captainSelectionMode,
+                    );
                     const fixedTeamSize = Number(response.data.fixedTeamSize) || null;
                     const minTeamSize = Number(response.data.minTeamSize) || null;
                     const maxTeamSize = Number(response.data.maxTeamSize) || null;
@@ -265,10 +272,7 @@ export const useCommandConfig = (
                         minTeamSize,
                         maxTeamSize,
                         requiresCaptain,
-                        captainSelectionMode:
-                            requiresCaptain && (loadedMode === 'Random' || loadedMode === 'Manual')
-                                ? 'Voting'
-                                : 'Manual',
+                        captainSelectionMode: loadedCaptainSelectionMode,
                         captainVotingDeadline: response.data.captainVotingDeadline ?? null,
                         finalDecisionThreshold:
                             Number(response.data.finalDecisionThreshold) || participantsCount || 1,
@@ -293,6 +297,7 @@ export const useCommandConfig = (
                             );
                             break;
                         }
+
                         case 500: {
                             navigate(INTERNAL_SERVER_ERROR_PAGE_URL);
                             break;
@@ -329,6 +334,7 @@ export const useCommandConfig = (
         handleRequiresCaptain,
         handleFinalDecisionThreshold,
         handleCaptainVotingDeadline,
+        handleCaptainSelectionMode,
         handleFinalDecisionDeadline,
         handleSubmit,
     };
@@ -346,6 +352,7 @@ export const useLoadConfig = (subjectId: string, role: string) => {
         const processRequest = async () => {
             try {
                 const response: AxiosResponse<TeamConfig> = await fetchConfig(subjectId);
+                console.log('Received config: ', response.data);
                 if (isMounted) {
                     const loadedMode: TeamDistributionMode = normalizeDistributionMode(
                         response.data.distributionMode,

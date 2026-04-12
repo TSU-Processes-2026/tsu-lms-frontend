@@ -11,7 +11,7 @@ export interface CommandConfig {
     minTeamSize: number | null;
     maxTeamSize: number | null;
     requiresCaptain: boolean;
-    captainSelectionMode: CaptainSelectionMethod;
+    captainSelectionMode: CaptainSelectionMethod | null;
     captainVotingDeadline: string | null;
     finalDecisionThreshold: number | null;
     decisionMode: FinalDecisionMethod;

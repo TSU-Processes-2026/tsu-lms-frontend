@@ -1,5 +1,4 @@
 import { validateManualDistribution } from '@/api/command/command';
-import { LOGIN_PAGE_URL } from '@/constants/paths/paths';
 import { Team, TeamValidation, ValidationDetails } from '@/types/command/Team';
 import { errorMessageMapper, warningMessageMapper } from '@/utils/messageMapper';
 import { isAxiosError } from 'axios';

@@ -45,6 +45,7 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
         handleRequiresCaptain,
         handleFinalDecisionThreshold,
         handleCaptainVotingDeadline,
+        handleCaptainSelectionMode,
         handleFinalDecisionDeadline,
     } = useCommandConfig(subjectId ?? '', participantsCount, role);
 
@@ -211,7 +212,7 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                         <div className='flex items-center justify-between gap-3'>
                             <div>
                                 <p className='text-sm font-semibold text-slate-700'>
-                                    Капитан команды
+                                    Включить назначение капитанов в команды
                                 </p>
                                 <p className='text-xs text-slate-500'>
                                     {isDraftMode
@@ -227,12 +228,13 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                                 className='h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 disabled:opacity-60'
                             />
                         </div>
+
                         <div className='mt-3 text-xs text-slate-600'>
                             <p>
                                 Способ выбора капитана:{' '}
                                 <span className='font-semibold'>
                                     {config.requiresCaptain
-                                        ? isCaptainVotingMode
+                                        ? config.captainSelectionMode == 'Voting'
                                             ? 'Голосование команды'
                                             : 'Ручное назначение преподавателем'
                                         : 'Капитан отключен'}
@@ -240,21 +242,39 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                             </p>
                         </div>
                     </div>
-                    <div>
-                        <label className='block text-sm font-semibold text-slate-700 mb-2'>
-                            Дедлайн голосования за капитана
-                        </label>
-                        <input
-                            type='datetime-local'
-                            value={toInputDateTime(config.captainVotingDeadline)}
-                            onChange={(e) => handleCaptainVotingDeadline(e.target.value)}
-                            disabled={
-                                isFinalized || !config.requiresCaptain || !isCaptainVotingMode
-                            }
-                            className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all disabled:opacity-60'
-                        />
-                    </div>
 
+                    {config.requiresCaptain &&
+                        config.distributionMode !== 'Manual' &&
+                        config.distributionMode !== 'Random' && (
+                            <div>
+                                <label className='block text-sm font-semibold text-slate-700 mb-2'>
+                                    Способ назначения капитана
+                                </label>
+                                <select
+                                    value={config.captainSelectionMode ?? ''}
+                                    onChange={handleCaptainSelectionMode}
+                                    disabled={isFinalized}
+                                    className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all appearance-none cursor-pointer'
+                                >
+                                    <option value='Manual'>Назначить самому</option>
+                                    <option value='Voting'>Голосованием</option>
+                                </select>
+                            </div>
+                        )}
+                    {config.captainSelectionMode === 'Voting' && (
+                        <div>
+                            <label className='block text-sm font-semibold text-slate-700 mb-2'>
+                                Дедлайн голосования за капитана
+                            </label>
+                            <input
+                                type='datetime-local'
+                                value={toInputDateTime(config.captainVotingDeadline)}
+                                onChange={(e) => handleCaptainVotingDeadline(e.target.value)}
+                                disabled={isFinalized || !config.requiresCaptain}
+                                className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all disabled:opacity-60'
+                            />
+                        </div>
+                    )}
                     <div>
                         <label className='block text-sm font-semibold text-slate-700 mb-2'>
                             Порог финального решения (1..{Math.max(1, participantsCount)})
@@ -313,14 +333,6 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                             <p className='text-xs text-green-600'>Конфигурация обновлена успешно</p>
                         </div>
                     )}
-                    <div className='p-4 bg-blue-50 border-b-blue-50 rounded-xl border border-blue-100'>
-                        <p className='text-xs text-blue-700 font-semibold mb-1'>
-                            ℹ️ После сохранения
-                        </p>
-                        <p className='text-xs text-blue-600'>
-                            Указанные параметры будут использованы при формировании команд.
-                        </p>
-                    </div>
                 </form>
                 <div className='px-8 py-5 border-t border-slate-100 flex justify-start gap-4 bg-slate-50/50 shrink-0'>
                     <button

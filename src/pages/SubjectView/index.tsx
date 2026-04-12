@@ -116,7 +116,7 @@ const SubjectView = () => {
     };
     const userRole: 'admin' | 'teacher' | 'student' = handleRole();
     const navigate = useNavigate();
-    const { teams, loadedDistributionMode, isTeamLoading, setTeams } = useLoadTeams(subjectId);
+    const { teams, loadedDistributionMode, setTeams } = useLoadTeams(subjectId);
     const {
         config,
         isConfigLoading,
@@ -152,6 +152,7 @@ const SubjectView = () => {
         userRole === 'student' || config.distributionMode !== 'Random' || config.isFinalized;
     const manualActionDisabled =
         userRole === 'student' || config.distributionMode !== 'Manual' || config.isFinalized;
+    const manualActionForStudentDisabled = config.isFinalized;
     const draftActionDisabled =
         userRole === 'student' || config.distributionMode !== 'Draft' || config.isFinalized;
     const configActionDisabled = userRole === 'student' || config.isFinalized;
@@ -159,7 +160,6 @@ const SubjectView = () => {
     const handleTeamUpdate = (teamId: string, updater: (team: Team) => Team) => {
         setTeams(teams.map((team) => (team.id === teamId ? updater(team) : team)));
     };
-
     return (
         <>
             <div className='max-w-4xl mx-auto'>
@@ -432,6 +432,16 @@ const SubjectView = () => {
                                     )}
                                 </div>
                             )}
+                            {userRole === 'student' && loadedDistributionMode === 'Students' && (
+                                <Plus
+                                    size={40}
+                                    className={`p-2 rounded-xl font-bold shadow-lg transition-all ${manualActionForStudentDisabled ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-linear-to-r from-green-600 to-green-700 text-white hover:-translate-y-0.5'}`}
+                                    onClick={() => {
+                                        if (manualActionForStudentDisabled) return;
+                                        setShowCreateTeamManually(true);
+                                    }}
+                                />
+                            )}
                         </div>
                         <div className='flex flex-col gap-2 my-2'>
                             {configError && (
@@ -531,6 +541,7 @@ const SubjectView = () => {
                                             index={index}
                                             key={item.id}
                                             participants={item.members || []}
+                                            teamName={item.name}
                                             captainName={
                                                 item.members.find(
                                                     (participant) =>
@@ -602,6 +613,7 @@ const SubjectView = () => {
                     }}
                     subjectId={subjectId ?? ''}
                     role={userRole}
+                    teamsCount={(teams && teams.length) || 0}
                 />
             )}
         </>

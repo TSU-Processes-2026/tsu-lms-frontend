@@ -14,6 +14,7 @@ export const assignCaptainManually = async (
     teamId: string,
     assignment: CaptainAssignment,
 ): Promise<CaptainAssignmentResponse> => {
+    console.log('Selected assignment: ', assignment);
     try {
         const response: AxiosResponse<CaptainAssignmentResponse> =
             await apiClient.post<CaptainAssignmentResponse>(

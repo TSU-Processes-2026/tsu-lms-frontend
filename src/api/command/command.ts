@@ -225,3 +225,18 @@ export const leaveTeam = async (subjectId: string, teamId: string): Promise<Team
         throw error;
     }
 };
+
+export const createTeamByStudent = async (
+    subjectId: string,
+    teamName: string,
+): Promise<TeamCreationResponse> => {
+    try {
+        const res: AxiosResponse<TeamCreationResponse> = await apiClient.post<TeamCreationResponse>(
+            `${BASE_URL}/subjects/${subjectId}/teams/student-create`,
+            { name: teamName },
+        );
+        return res.data;
+    } catch (error) {
+        throw error;
+    }
+};

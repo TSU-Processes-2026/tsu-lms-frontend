@@ -1,4 +1,4 @@
-import { TeamDistributionMode } from '@/types/command/CommandConfig';
+import { CaptainSelectionMethod, TeamDistributionMode } from '@/types/command/CommandConfig';
 import { mapToNumber } from './distributionModeMapper';
 
 const distributionModeByLegacyNumber: Record<number, TeamDistributionMode> = {
@@ -9,6 +9,7 @@ const distributionModeByLegacyNumber: Record<number, TeamDistributionMode> = {
 };
 
 const distributionModes = new Set<TeamDistributionMode>(['Manual', 'Random', 'Students', 'Draft']);
+const captainSelectionModes = new Set<CaptainSelectionMethod>(['Manual', 'Voting']);
 
 export const normalizeDistributionMode = (value: unknown): TeamDistributionMode => {
     if (typeof value === 'number' && distributionModeByLegacyNumber[value]) {
@@ -19,6 +20,17 @@ export const normalizeDistributionMode = (value: unknown): TeamDistributionMode 
         const normalized = value.trim();
         if (distributionModes.has(normalized as TeamDistributionMode)) {
             return normalized as TeamDistributionMode;
+        }
+    }
+
+    return 'Manual';
+};
+
+export const normalizeCaptainSelectionMode = (value: unknown): CaptainSelectionMethod => {
+    if (typeof value === 'string') {
+        const normalized = value.trim();
+        if (captainSelectionModes.has(normalized as CaptainSelectionMethod)) {
+            return normalized as CaptainSelectionMethod;
         }
     }
 

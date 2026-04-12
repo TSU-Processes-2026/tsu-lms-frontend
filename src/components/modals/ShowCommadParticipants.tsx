@@ -40,6 +40,7 @@ const CommandParticipantsModal = ({
                       memberIds: [],
                       members: [],
                       captainId: null,
+                      name: null,
                   },
         [teams, commandId],
     );
@@ -87,7 +88,18 @@ const CommandParticipantsModal = ({
     const couldViewJoinInterface = isStudent && isStudentsModeEnabled && !isFinalized;
     const isCaptainVotingMode =
         config.requiresCaptain &&
-        (config.distributionMode === 'Random' || config.distributionMode === 'Manual');
+        (config.distributionMode === 'Random' || config.distributionMode === 'Manual') &&
+        config.captainSelectionMode == 'Voting';
+    const isCaptainManualMode = config.requiresCaptain && config.captainSelectionMode == 'Manual';
+    const isOutMembersLimit = () => {
+        if (config.fixedTeamSize) {
+            return members.members.length >= config.fixedTeamSize;
+        }
+        if (config.maxTeamSize) {
+            return members.members.length >= config.maxTeamSize;
+        }
+        return true;
+    };
 
     const handleJoinClick = async (): Promise<void> => {
         try {
@@ -132,7 +144,7 @@ const CommandParticipantsModal = ({
                     ...team,
                     captainId,
                     captain: teamCaptain,
-                    captainSelectionMethod: 'Manual',
+                    captainSelectionMode: 'Manual',
                     captainVoting: null,
                 };
             });
@@ -165,7 +177,7 @@ const CommandParticipantsModal = ({
                 ...team,
                 captainId: voting.winnerId,
                 captain: teamCaptain,
-                captainSelectionMethod: 'Voting',
+                captainSelectionMode: 'Voting',
                 captainVoting: voting,
             };
         });
@@ -240,7 +252,7 @@ const CommandParticipantsModal = ({
                 <div className='px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0'>
                     <div>
                         <h3 className='text-xl font-bold text-slate-800'>
-                            Участники команды {commandNumber + 1}
+                            Участники команды {members.name ? members.name : commandNumber + 1}
                         </h3>
                     </div>
                     <button
@@ -249,15 +261,15 @@ const CommandParticipantsModal = ({
                     ></button>
                 </div>
                 <div className='flex-1 overflow-y-auto p-8 space-y-4'>
-                    {errorMessage && (
-                        <div className='mb-5 p-4 bg-red-100 rounded-2xl border border-red-100 flex flex-row items-center gap-4'>
+                    {isStudent && !isMember && isOutMembersLimit() && (
+                        <div className='mb-5 p-4 bg-amber-100 rounded-2xl border border-amber-100 flex flex-row items-center gap-4'>
                             ⚠️
-                            <p className='font-medium text-lg text-red-700'>
+                            <p className='font-medium text-lg text-amber-700'>
                                 {'Состав команды уже полный. Выберите другую'}
                             </p>
                         </div>
                     )}
-                    {config.requiresCaptain ? (
+                    {config.requiresCaptain || members.captainId ? (
                         captain ? (
                             <div className='mb-5 p-4 bg-amber-100 rounded-2xl border border-amber-100 flex flex-row items-center gap-4'>
                                 <Crown className='text-amber-700' size={18} />
@@ -288,7 +300,7 @@ const CommandParticipantsModal = ({
                         </div>
                     )}
 
-                    {isTeacher && config.requiresCaptain && (
+                    {isTeacher && isCaptainManualMode && (
                         <div className='rounded-2xl border border-slate-100 p-4 bg-slate-50'>
                             <p className='text-sm font-semibold text-slate-700 mb-3'>
                                 Назначение капитана преподавателем
@@ -346,9 +358,9 @@ const CommandParticipantsModal = ({
                             Итоговое решение команды
                         </p>
                         <p className='text-xs text-slate-500 mb-3'>
-                            {config.requiresCaptain
+                            {config.requiresCaptain || members.captainId
                                 ? 'Метод: выбор капитаном'
-                                : `Метод: голосование (порог ${config.finalDecisionThreshold})`}
+                                : `Метод: голосование`}
                         </p>
                         {config.finalDecisionDeadline && (
                             <p className='text-xs text-slate-500 mb-3'>
@@ -453,7 +465,7 @@ const CommandParticipantsModal = ({
                     )}
                     {couldViewJoinInterface && (
                         <>
-                            {!isMember && (
+                            {!isMember && !isOutMembersLimit() && (
                                 <button
                                     disabled={isFinalized || isMemberOfAnyTeam}
                                     className='bg-linear-to-r from-green-600 to-green-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all w-full disabled:opacity-50 disabled:hover:translate-y-0 disabled:cursor-not-allowed'

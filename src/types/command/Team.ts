@@ -4,6 +4,7 @@ export interface Team {
     memberIds: string[];
     members: TeamMember[];
     captainId?: string | null;
+    name?: string | null;
     captain?: TeamMember | null;
     captainSelectionMethod?: 'Manual' | 'Voting' | null;
     captainVoting?: CaptainVotingSummary | null;

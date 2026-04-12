@@ -20,6 +20,7 @@ const warningMap: Record<string, string> = {
 };
 
 const errorMap: Record<string, string> = {
+    'Each team must contain at least one member.': 'Найдены пустые команды.',
     'Total number of students cannot be evenly divided by FixedTeamSize.':
         'Общее число студентов не делится на количество студентов в команде',
     'Total number of students must be equal to FixedTeamsCount multiplied by FixedTeamSize.':

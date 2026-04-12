@@ -5,6 +5,7 @@ interface CommandCardProps {
     index?: number;
     participants: TeamMember[];
     captainName?: string | null;
+    teamName?: string | null;
     decisionInfo?: string;
     onClick: () => void;
 }
@@ -14,6 +15,7 @@ export const CommandCard = ({
     participants,
     captainName,
     decisionInfo,
+    teamName,
     onClick,
 }: CommandCardProps) => {
     const avatarLimit = 3;
@@ -28,7 +30,9 @@ export const CommandCard = ({
                 <div className='w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center'>
                     <Users size={16} className='text-blue-500' />
                 </div>
-                <h4 className='text-xl font-bold text-slate-800 mb-2'>Команда номер {index + 1}</h4>
+                <h4 className='text-xl font-bold text-slate-800 mb-2'>
+                    {teamName ? `${teamName}` : `Команда номер ${index + 1}`}
+                </h4>
             </div>
             <div className='w-full flex flex-col py-4 px-2 gap-2'>
                 <div className='flex -space-x-2'>

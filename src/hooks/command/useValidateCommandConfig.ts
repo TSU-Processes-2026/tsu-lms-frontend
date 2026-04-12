@@ -60,19 +60,15 @@ export const useValidateCommandConfig = () => {
 
     const validateCaptainAndDecisionRules = (form: TeamConfig): string | null => {
         const mode = normalizeDistributionMode(form.distributionMode);
-        if (mode === 'Draft' && !form.captainEnabled) {
+        if (mode === 'Draft' && !form.requiresCaptain) {
             return 'В режиме драфта капитан обязателен';
         }
 
-        if (!form.captainEnabled && form.decisionMethod !== 'Voting') {
+        if (!form.requiresCaptain && form.decisionMode !== 'Voting') {
             return 'Без капитана метод принятия решения должен быть "Голосование"';
         }
 
-        if (
-            form.captainEnabled &&
-            form.decisionMethod !== 'CaptainChoice' &&
-            form.decisionMethod !== 'CaptainDecision'
-        ) {
+        if (form.requiresCaptain && form.decisionMode !== 'CaptainDecides') {
             return 'При включенном капитане метод принятия решения должен быть "Выбор капитана"';
         }
 
@@ -80,7 +76,7 @@ export const useValidateCommandConfig = () => {
     };
 
     const validateDeadlines = (form: TeamConfig): string | null => {
-        if (form.captainEnabled && form.captainVotingDeadline) {
+        if (form.requiresCaptain && form.captainVotingDeadline) {
             if (Number.isNaN(Date.parse(form.captainVotingDeadline))) {
                 return 'Укажите корректный дедлайн голосования за капитана';
             }
