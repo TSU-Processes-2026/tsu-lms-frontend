@@ -227,12 +227,14 @@ const SubjectView = () => {
                                         style={{ display: 'none' }}
                                         onChange={handleFileChange}
                                     />
-                                    <button
-                                        className='px-4 py-2 hover:bg-purple-50 rounded-xl text-purple-600 flex items-center gap-2 text-sm font-semibold transition-all'
-                                        onClick={handleShowAssignmentModal}
-                                    >
-                                        <ClipboardCheck size={18} /> Задание
-                                    </button>
+                                    {userRole !== 'student' && (
+                                        <button
+                                            className='px-4 py-2 hover:bg-purple-50 rounded-xl text-purple-600 flex items-center gap-2 text-sm font-semibold transition-all'
+                                            onClick={handleShowAssignmentModal}
+                                        >
+                                            <ClipboardCheck size={18} /> Задание
+                                        </button>
+                                    )}
                                 </div>
                                 <button
                                     className={`bg-linear-to-r from-blue-600 to-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-xl shadow-blue-200/50 transition-all
