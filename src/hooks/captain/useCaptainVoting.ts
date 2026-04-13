@@ -65,6 +65,18 @@ export const useFetchCaptainVotingStatus = (
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const { errorMessage, handleError, clearError } = useErrorHandler();
 
+    const updateVotingRes = () => {
+        setVotingStatus((prev) => {
+            if (!prev) return null;
+
+            return {
+                ...prev,
+                votesCast: prev.votesCast + 1,
+                hasCurrentUserVoted: true,
+            };
+        });
+    };
+
     const handleFetchCaptainVotingStatus = async (): Promise<void> => {
         setIsLoading(true);
         try {
@@ -95,6 +107,7 @@ export const useFetchCaptainVotingStatus = (
         votingStatus,
         isLoading,
         errorMessage,
+        updateVotingRes,
     };
 };
 
@@ -159,8 +172,8 @@ export const useVoteForCaptain = (
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const { errorMessage, handleError, clearError } = useErrorHandler();
 
-    const handleVoteForCaptain = async (voteFor: string): Promise<void> => {
-        if (hasVoted) return;
+    const handleVoteForCaptain = async (voteFor: string): Promise<boolean> => {
+        if (hasVoted) return true;
 
         setIsLoading(true);
         try {
@@ -169,8 +182,10 @@ export const useVoteForCaptain = (
             });
             clearError();
             setVoteResponse({ ...res });
+            return true;
         } catch (error) {
             handleError(error);
+            return false;
         } finally {
             setIsLoading(false);
         }

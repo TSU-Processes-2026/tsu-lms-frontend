@@ -30,7 +30,7 @@ export interface CaptainVotingStatus {
     isClosed: boolean;
     closedAt: string | null;
     winnerId: string | null;
-    totalMembers: 0;
-    votesCast: 0;
+    totalMembers: number;
+    votesCast: number;
     hasCurrentUserVoted: boolean;
 }

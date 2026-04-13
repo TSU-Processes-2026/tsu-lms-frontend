@@ -24,6 +24,7 @@ import path from 'path';
 import { EditTeamPage } from '@/pages/Teams/EditTeamPage';
 import { RandomDistributionPage } from '@/pages/Teams/RandomDistributionPage';
 import { DraftPage } from '@/pages/Teams/DraftPage';
+import { CaptainVotingPage } from '@/pages/Teams/CaptainVotingPage';
 
 export const router = createBrowserRouter([
     {
@@ -71,6 +72,10 @@ export const router = createBrowserRouter([
                     {
                         path: '/subjects/:subjectId',
                         element: <SubjectsPage />,
+                    },
+                    {
+                        path: '/subjects/:subjectId/teams/:teamId/:currentUserId/captain-voting',
+                        element: <CaptainVotingPage />,
                     },
                     {
                         path: '/assignments',
