@@ -122,11 +122,11 @@ export const useAssignCaptain = (subjectId: string, teamId: string) => {
         setId(id);
     }, []);
 
-    const handleAssignManually = async (): Promise<void> => {
+    const handleAssignManually = async (captainId: string): Promise<void> => {
         setIsLoading(true);
         try {
             const res: CaptainAssignmentResponse = await assignCaptainManually(subjectId, teamId, {
-                captainUserId: selectedId,
+                captainUserId: captainId,
             });
             setCaptainResponse({ ...res });
             clearError();

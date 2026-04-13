@@ -7,14 +7,15 @@ import { ArrowLeft, UserIcon, X } from 'lucide-react';
 import { useState, useEffect, FormEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { DraftContent } from './DraftContent';
+import { useLoadConfig } from '@/hooks/command/useCommandConfig';
 
 export const DraftPage = () => {
-    const { subjectId, teamId } = useParams();
+    const { subjectId, teamId, role } = useParams();
     const { teams } = useLoadTeams(subjectId);
-
+    const { config } = useLoadConfig(subjectId ?? '', 'teacher');
     const selectedCaptains = teams.find((item) => item.id == teamId);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
-
+    const maxCaptainToSelect = config.fixedTeamsCount;
     const [captains, setCaptains] = useState(selectedCaptains?.members || []);
     const [studentsList, setStudentsList] = useState<any[]>([]);
 
@@ -54,7 +55,9 @@ export const DraftPage = () => {
     }, [students]);
 
     const handleSelectionChange = (newSelectedIds: string[]) => {
+        if (newSelectedIds.length > maxCaptainToSelect) return;
         setSelectedIds(newSelectedIds);
+
         setStudentsList((prev) =>
             prev.map((student) => ({
                 ...student,
@@ -86,7 +89,7 @@ export const DraftPage = () => {
         e.stopPropagation();
 
         const captainIds = captains.map((member) => member.userId);
-        console.log('Selected captains: ', captainIds);
+
         handleSelectTeamCaptains({ memberIds: captainIds });
         await handleCreateDraft();
     };
@@ -95,7 +98,7 @@ export const DraftPage = () => {
         return <div>Загрузка...</div>;
     }
 
-    if (draft) return <DraftContent navigate={navigate} draft={draft} />;
+    if (draft && role == 'student') return <DraftContent navigate={navigate} draft={draft} />;
 
     if (!isDraftSelected) {
         return (
@@ -136,77 +139,96 @@ export const DraftPage = () => {
                 <div className='flex border-b border-slate-200 mb-8 bg-white/60 backdrop-blur-sm rounded-3xl px-2 pt-2'>
                     <div className='flex-1 overflow-y-auto p-8'>
                         <form onSubmit={handleSubmit} className='space-y-5'>
-                            <div className='space-y-3'>
-                                {!studentsList || studentsList.length === 0 ? (
-                                    <div className='text-center py-8 text-gray-500'>
-                                        Нет доступных студентов для назначения
+                            {!draft && (
+                                <>
+                                    <div className='space-y-3'>
+                                        {!studentsList || studentsList.length === 0 ? (
+                                            <div className='text-center py-8 text-gray-500'>
+                                                Нет доступных студентов для назначения
+                                            </div>
+                                        ) : (
+                                            <div>
+                                                <MultipleSelect
+                                                    members={studentsList}
+                                                    selectedIds={selectedIds}
+                                                    onChange={handleSelectionChange}
+                                                    placeholder='Выберите капитанов'
+                                                />
+                                                <p className='mt-2 text-sm text-gray-500'>
+                                                    Выбрано: {selectedIds.length} из{' '}
+                                                    {maxCaptainToSelect}
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
-                                ) : (
-                                    <div>
-                                        <MultipleSelect
-                                            members={studentsList}
-                                            selectedIds={selectedIds}
-                                            onChange={handleSelectionChange}
-                                            placeholder='Выберите капитанов'
-                                        />
-                                        <p className='mt-2 text-sm text-gray-500'>
-                                            Всего студентов: {studentsList.length} | Выбрано:{' '}
-                                            {selectedIds.length}
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                            {studentsList && studentsList.length > 0 && (
-                                <div className='space-y-3'>
-                                    {!captains || captains.length === 0 ? (
-                                        <div className='text-slate-400 text-center py-4'>
-                                            Нет выбранных участников
-                                        </div>
-                                    ) : (
-                                        captains.map((participant) => {
-                                            return (
-                                                <div
-                                                    key={participant.userId}
-                                                    className='flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-white hover:shadow-sm transition-all'
-                                                >
-                                                    <div className='flex items-center gap-4'>
-                                                        <div className='w-11 h-11 bg-linear-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shadow-md shrink-0'>
-                                                            <UserIcon
-                                                                size={20}
-                                                                className='text-white'
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <div className='flex items-center gap-2 flex-wrap'>
-                                                                <p className='font-bold text-slate-800'>
-                                                                    {participant.username}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <button
-                                                        type='button'
-                                                        onClick={() => {
-                                                            handleDeleteMember(participant.userId);
-                                                        }}
-                                                        className='p-2 hover:bg-slate-100 rounded-full transition-colors'
-                                                    >
-                                                        <X size={16} className='text-slate-400' />
-                                                    </button>
+                                    {studentsList && studentsList.length > 0 && (
+                                        <div className='space-y-3'>
+                                            {!captains || captains.length === 0 ? (
+                                                <div className='text-slate-400 text-center py-4'>
+                                                    Нет выбранных капитанов
                                                 </div>
-                                            );
-                                        })
+                                            ) : (
+                                                captains.map((participant) => {
+                                                    return (
+                                                        <div
+                                                            key={participant.userId}
+                                                            className='flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-white hover:shadow-sm transition-all'
+                                                        >
+                                                            <div className='flex items-center gap-4'>
+                                                                <div className='w-11 h-11 bg-linear-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shadow-md shrink-0'>
+                                                                    <UserIcon
+                                                                        size={20}
+                                                                        className='text-white'
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <div className='flex items-center gap-2 flex-wrap'>
+                                                                        <p className='font-bold text-slate-800'>
+                                                                            {participant.username}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <button
+                                                                type='button'
+                                                                onClick={() => {
+                                                                    handleDeleteMember(
+                                                                        participant.userId,
+                                                                    );
+                                                                }}
+                                                                className='p-2 hover:bg-slate-100 rounded-full transition-colors'
+                                                            >
+                                                                <X
+                                                                    size={16}
+                                                                    className='text-slate-400'
+                                                                />
+                                                            </button>
+                                                        </div>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
                                     )}
-                                </div>
+                                </>
                             )}
 
                             {errorMessage && (
                                 <div className='p-4 bg-red-50 border-b-red-50 rounded-xl border border-red-100'>
-                                    <p className='text-xs text-red-700 font-semibold mb-1'>
+                                    <p className='text-md text-red-700 font-semibold mb-1'>
                                         ❌ Ошибка
                                     </p>
-                                    <p className='text-xs text-red-600'>
+                                    <p className='text-md text-red-600'>
                                         {mapErrorMessage(errorMessage)}
+                                    </p>
+                                </div>
+                            )}
+                            {draft && (
+                                <div className='p-4 bg-amber-50 border-b-amber-50 rounded-xl border border-amber-100'>
+                                    <p className='text-md text-amber-700 font-semibold mb-1'>
+                                        ⚠️ Внимание
+                                    </p>
+                                    <p className='text-md text-amber-600'>
+                                        {'Капитаны уже назначены. Распределение не завершено'}
                                     </p>
                                 </div>
                             )}
@@ -230,10 +252,12 @@ export const DraftPage = () => {
                                 </button>
                                 <button
                                     type='submit'
-                                    disabled={selectedIds.length === 0}
+                                    disabled={
+                                        selectedIds.length < maxCaptainToSelect || draft != null
+                                    }
                                     className='flex-1 bg-linear-to-r from-amber-600 to-amber-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-purple-200/50 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0'
                                 >
-                                    Создать
+                                    Создать({selectedIds.length})
                                 </button>
                             </div>
                         </form>

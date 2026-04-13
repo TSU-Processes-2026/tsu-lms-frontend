@@ -140,7 +140,7 @@ const CommandParticipantsModal = ({
             return;
         }
         handleSelectCaptainId(captainId);
-        handleAssignManually();
+        handleAssignManually(captainId);
         if (manualAssignmentError == null) {
             onTeamUpdate(members.id, (team) => {
                 const teamCaptain =

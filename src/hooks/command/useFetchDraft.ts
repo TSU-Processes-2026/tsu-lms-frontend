@@ -13,6 +13,7 @@ export const useFetchDraft = (subjectId: string) => {
         const findPrevDraft = async (subjectId: string) => {
             try {
                 const response: DraftResponse = await fetchSubjectTeamDraft(subjectId);
+                console.log('Fetched: ', response);
                 if (isMounted) {
                     draft
                         ? setDraft((prev) => ({

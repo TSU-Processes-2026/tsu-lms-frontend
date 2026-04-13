@@ -35,6 +35,19 @@ export const useProfile = () => {
         }
     };
 
+    useEffect(() => {
+        let isMounted = true;
+        const init = async () => {
+            if (isMounted) {
+                getCurrentUser();
+            }
+        };
+        init();
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
     return { profile, setProfile, getCurrentUser };
 };
 

@@ -10,7 +10,9 @@ import {
     INTERNAL_SERVER_ERROR_PAGE_URL,
     LOGIN_PAGE_URL,
 } from '@/constants/paths/paths';
-import { createDraft } from '@/api/command/command';
+import { createDraft, pickStudent } from '@/api/command/command';
+import { DraftResponse } from '@/types/command/Draft';
+import { useErrorHandler } from '../error/useErrorHandler';
 
 export const useCreateDraft = (subjectId: string) => {
     const [students, setStudents] = useState<Participant[]>([]);
@@ -121,4 +123,25 @@ export const useCreateDraft = (subjectId: string) => {
         handleCreateDraft,
         checkIsLoading,
     };
+};
+
+export const usePickStudent = (subjectId: string) => {
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const { errorMessage, handleError, clearError } = useErrorHandler();
+
+    const handlePickStudent = async (studentId: string): Promise<DraftResponse | null> => {
+        setIsLoading(true);
+        try {
+            const res: DraftResponse = await pickStudent(subjectId, studentId);
+            clearError();
+            return res;
+        } catch (error) {
+            handleError(error);
+            return null;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return { handlePickStudent };
 };

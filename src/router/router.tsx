@@ -66,7 +66,7 @@ export const router = createBrowserRouter([
                         element: <RandomDistributionPage />,
                     },
                     {
-                        path: '/subject/:subjectId/teams/draft',
+                        path: '/subject/:subjectId/:role/teams/draft',
                         element: <DraftPage />,
                     },
                     {

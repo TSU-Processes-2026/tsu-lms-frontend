@@ -240,3 +240,15 @@ export const createTeamByStudent = async (
         throw error;
     }
 };
+
+export const pickStudent = async (subjectId: string, studentId: string): Promise<DraftResponse> => {
+    try {
+        const res: AxiosResponse<DraftResponse> = await apiClient.post<DraftResponse>(
+            `${BASE_URL}/subjects/${subjectId}/teams/draft/pick`,
+            { studentId: studentId },
+        );
+        return res.data;
+    } catch (error) {
+        throw error;
+    }
+};

@@ -45,6 +45,8 @@ export const CaptainVotingPage = () => {
         setSelectedId(newSelectedId);
     };
 
+    const votingIsNonActivated = fetchError == 'No active voting session for this team.';
+
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         e.stopPropagation();
@@ -58,9 +60,6 @@ export const CaptainVotingPage = () => {
     };
 
     useEffect(() => {
-        const winner = findWinner();
-        if (winner) {
-        }
         if (votingStatus?.hasCurrentUserVoted)
             setMessage('Голос отправлен. Капитан будет назначен после завершения дедлайна.');
         if (selectedTeam?.members) {
@@ -84,7 +83,7 @@ export const CaptainVotingPage = () => {
         }
     }, [selectedTeam]);
 
-    if (isLoading) {
+    if (isLoading || fetchLoading) {
         return <div>Загрузка...</div>;
     }
 
@@ -100,32 +99,36 @@ export const CaptainVotingPage = () => {
                 <h2 className='font-bold text-4xl'>Голосование за назначение капитана</h2>
                 <div className='flex border-b border-slate-300 mb-8 bg-white backdrop-blur-sm rounded-3xl my-4 box-border overflow-hidden'>
                     <div className='flex-1 flex flex-row items-start'>
-                        <div className='flex flex-1 flex-col items-start box-border pl-4 pt-4'>
-                            <span className='text-lg font-semibold flex flex-row gap-2'>
-                                <p>Статус: </p>{' '}
-                                {votingStatus?.isClosed ? (
-                                    <p className='text-amber-700 font-bold'> Завершен</p>
-                                ) : (
-                                    <p className='text-green-600 font-bold'> Открыт</p>
-                                )}
-                            </span>
-                            <span className='text-lg font-semibold'>
-                                Начало: {dateTimeFormatter(votingStatus?.startedAt)}
-                            </span>
-                            <span className='text-lg font-semibold'>
-                                Дедлайн: {dateTimeFormatter(votingStatus?.deadlineAt)}
-                            </span>
-                            <span className='text-lg font-semibold'>
-                                Число голосов: {votingStatus?.votesCast} из{' '}
-                                {votingStatus?.totalMembers && votingStatus?.totalMembers - 1}
-                            </span>
-                            {winner && (
-                                <span className='text-lg font-semibold flex flex-row gap-2 mt-8'>
-                                    Победитель:{' '}
-                                    <p className='text-amber-700 font-bold'>{winner.username}</p>
+                        {!votingIsNonActivated && (
+                            <div className='flex flex-1 flex-col items-start box-border pl-4 pt-4'>
+                                <span className='text-lg font-semibold flex flex-row gap-2'>
+                                    <p>Статус: </p>{' '}
+                                    {votingStatus?.isClosed ? (
+                                        <p className='text-amber-700 font-bold'> Завершен</p>
+                                    ) : (
+                                        <p className='text-green-600 font-bold'> Открыт</p>
+                                    )}
                                 </span>
-                            )}
-                        </div>
+                                <span className='text-lg font-semibold'>
+                                    Начало: {dateTimeFormatter(votingStatus?.startedAt)}
+                                </span>
+                                <span className='text-lg font-semibold'>
+                                    Дедлайн: {dateTimeFormatter(votingStatus?.deadlineAt)}
+                                </span>
+                                <span className='text-lg font-semibold'>
+                                    Число голосов: {votingStatus?.votesCast} из{' '}
+                                    {votingStatus?.totalMembers && votingStatus?.totalMembers - 1}
+                                </span>
+                                {winner && (
+                                    <span className='text-lg font-semibold flex flex-row gap-2 mt-8'>
+                                        Победитель:{' '}
+                                        <p className='text-amber-700 font-bold'>
+                                            {winner.username}
+                                        </p>
+                                    </span>
+                                )}
+                            </div>
+                        )}
                         <div className='flex-2 px-4 py-4 h-full bg-blue-50  border border-blue-100'>
                             <p className='text-lg text-blue-700 font-semibold mb-1'>
                                 ℹ️ Правила голосования
@@ -158,23 +161,25 @@ export const CaptainVotingPage = () => {
                 <div className='flex border-b border-slate-300 mb-8 bg-white backdrop-blur-xl rounded-3xl px-2 pt-2'>
                     <div className='flex-1 overflow-y-auto p-8'>
                         <div className='space-y-5'>
-                            <div className='space-y-3'>
-                                <div>
-                                    <SingleSelect
-                                        members={studentsList}
-                                        selectedId={selectedId}
-                                        label='Укажите имя кандидата'
-                                        onChange={handleSelectionChange}
-                                        placeholder='Поиск по имени...'
-                                    />
+                            {!fetchLoading && (
+                                <div className='space-y-3'>
+                                    <div>
+                                        <SingleSelect
+                                            members={studentsList}
+                                            selectedId={selectedId}
+                                            label='Укажите имя кандидата'
+                                            onChange={handleSelectionChange}
+                                            placeholder='Поиск по имени...'
+                                        />
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                             {(errorMessage || fetchError) && (
-                                <div className='p-4 bg-red-50 border-b-red-50 rounded-xl border border-red-100'>
-                                    <p className='text-xs text-red-700 font-semibold mb-1'>
-                                        ❌ Ошибка
+                                <div className='p-4 bg-amber-50 border-b-amber-50 rounded-xl border border-amber-100'>
+                                    <p className='text-xs text-amber-700 font-semibold mb-1'>
+                                        ⚠️ Внимание
                                     </p>
-                                    <p className='text-xs text-red-600'>
+                                    <p className='text-xs text-amber-600'>
                                         {mapErrorMessage(errorMessage || fetchError)}
                                     </p>
                                 </div>
@@ -197,16 +202,18 @@ export const CaptainVotingPage = () => {
                                 >
                                     Назад
                                 </button>
-                                {!votingStatus?.hasCurrentUserVoted && !votingStatus?.isClosed && (
-                                    <button
-                                        type='button'
-                                        onClick={handleSubmit}
-                                        disabled={!selectedId}
-                                        className='flex-1 bg-linear-to-r from-purple-600 to-purple-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-purple-200/50 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0'
-                                    >
-                                        Проголосовать
-                                    </button>
-                                )}
+                                {!votingIsNonActivated &&
+                                    !votingStatus?.hasCurrentUserVoted &&
+                                    !votingStatus?.isClosed && (
+                                        <button
+                                            type='button'
+                                            onClick={handleSubmit}
+                                            disabled={!selectedId}
+                                            className='flex-1 bg-linear-to-r from-purple-600 to-purple-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-purple-200/50 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0'
+                                        >
+                                            Проголосовать
+                                        </button>
+                                    )}
                             </div>
                         </div>
                     </div>

@@ -53,6 +53,8 @@ const errorMap: Record<string, string> = {
     'MinTeamSize must be less than or equal to MaxTeamSize.':
         'Минимальный размер команды должен быть не больше максимального',
     'A draft is already in progress.': 'Черновик команд уже создан',
+    'No active voting session for this team.':
+        'Голосование пока закрыто. Свяжитесь с преподавателем курса.',
 };
 
 export const warningMessageMapper = (warnings: string[]): string[] => {

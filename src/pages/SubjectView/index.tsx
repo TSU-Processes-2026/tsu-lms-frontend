@@ -156,7 +156,7 @@ const SubjectView = () => {
     const draftActionDisabled =
         userRole === 'student' || config.distributionMode !== 'Draft' || config.isFinalized;
     const configActionDisabled = userRole === 'student' || config.isFinalized;
-
+    const isCaptain = teams.some((team) => team.captainId === profile.id);
     const handleTeamUpdate = (teamId: string, updater: (team: Team) => Team) => {
         setTeams(teams.map((team) => (team.id === teamId ? updater(team) : team)));
     };
@@ -384,16 +384,16 @@ const SubjectView = () => {
                             {userRole !== 'student' && (
                                 <div className='flex flex-col gap-3 items-end'>
                                     <div className='flex flex-row items-center gap-2 w-full justify-between'>
-                                        {false && (
-                                            <Brackets
-                                                size={40}
-                                                className={`p-2 rounded-xl font-bold shadow-lg transition-all ${draftActionDisabled ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-linear-to-r from-slate-700 to-slate-800 text-white hover:-translate-y-0.5'}`}
-                                                onClick={() => {
-                                                    if (draftActionDisabled) return;
-                                                    navigate(`/subject/${subjectId}/teams/draft`);
-                                                }}
-                                            />
-                                        )}
+                                        <Brackets
+                                            size={40}
+                                            className={`p-2 rounded-xl font-bold shadow-lg transition-all ${draftActionDisabled ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-linear-to-r from-slate-700 to-slate-800 text-white hover:-translate-y-0.5'}`}
+                                            onClick={() => {
+                                                if (draftActionDisabled) return;
+                                                navigate(
+                                                    `/subject/${subjectId}/${userRole}/teams/draft`,
+                                                );
+                                            }}
+                                        />
                                         <Dices
                                             size={40}
                                             className={`p-2 rounded-xl font-bold shadow-lg transition-all ${randomActionDisabled ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-linear-to-r from-purple-600 to-purple-700 text-white hover:-translate-y-0.5'}`}
@@ -432,6 +432,19 @@ const SubjectView = () => {
                                     )}
                                 </div>
                             )}
+                            {userRole === 'student' &&
+                                loadedDistributionMode === 'Draft' &&
+                                isCaptain && (
+                                    <Brackets
+                                        size={40}
+                                        className={`p-2 rounded-xl font-bold shadow-lg transition-all bg-linear-to-r from-slate-700 to-slate-800 text-white hover:-translate-y-0.5'}`}
+                                        onClick={() => {
+                                            navigate(
+                                                `/subject/${subjectId}/${userRole}/teams/draft`,
+                                            );
+                                        }}
+                                    />
+                                )}
                             {userRole === 'student' && loadedDistributionMode === 'Students' && (
                                 <Plus
                                     size={40}
