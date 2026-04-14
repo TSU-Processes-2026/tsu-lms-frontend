@@ -9,7 +9,6 @@ import {
 import { AxiosResponse, isAxiosError } from 'axios';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useValidateCommandConfig } from './useValidateCommandConfig';
 import { normalizeCaptainSelectionMode, normalizeDistributionMode } from '@/utils/teamConfig';
 
 const createDefaultConfig = (subjectId: string): TeamConfig => ({
@@ -21,22 +20,35 @@ const createDefaultConfig = (subjectId: string): TeamConfig => ({
     maxTeamSize: null,
     requiresCaptain: false,
     captainSelectionMode: 'Manual',
-    captainVotingDeadline: null,
-    finalDecisionThreshold: 1,
-    decisionMode: 'Voting',
-    finalDecisionDeadline: null,
+    captainVotingDeadlineDays: null,
+    requiresDecision: false,
+    decisionMode: null,
+    decisionDeadlineDays: null,
     isFinalized: false,
     finalizedAt: null,
     warnings: [],
 });
 
-const normalizeDecisionMethod = (requiresCaptain: boolean): FinalDecisionMethod =>
-    requiresCaptain ? 'CaptainDecides' : 'Voting';
+const normalizeDecisionMethod = (
+    requiresCaptain: boolean,
+    requiresDecision: boolean,
+): FinalDecisionMethod | null => {
+    if (!requiresDecision) {
+        return null;
+    }
+
+    return requiresCaptain ? 'CaptainDecides' : 'Voting';
+};
 
 const normalizeLoadedDecisionMethod = (
     decisionMethod: FinalDecisionMethod | null | undefined,
     requiresCaptain: boolean,
-): FinalDecisionMethod => {
+    requiresDecision: boolean,
+): FinalDecisionMethod | null => {
+    if (!requiresDecision) {
+        return null;
+    }
+
     if (!requiresCaptain) {
         return 'Voting';
     }
@@ -61,8 +73,6 @@ export const useCommandConfig = (
 
     const navigate = useNavigate();
 
-    const { validateParams } = useValidateCommandConfig();
-
     const handleDistributionMode = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const nextMode = normalizeDistributionMode(e.target.value);
         setConfig((prev) => {
@@ -74,7 +84,7 @@ export const useCommandConfig = (
                 distributionMode: nextMode,
                 requiresCaptain,
                 captainSelectionMode: captainSelectionMode,
-                decisionMode: normalizeDecisionMethod(requiresCaptain),
+                decisionMode: normalizeDecisionMethod(requiresCaptain, prev.requiresDecision),
             };
         });
         setErrorMessage(null);
@@ -155,34 +165,36 @@ export const useCommandConfig = (
             return {
                 ...prev,
                 requiresCaptain,
-                decisionMode: normalizeDecisionMethod(requiresCaptain),
+                decisionMode: normalizeDecisionMethod(requiresCaptain, prev.requiresDecision),
                 captainSelectionMode: captainSelectionMode,
-                captainVotingDeadline: requiresCaptain ? prev.captainVotingDeadline : null,
+                captainVotingDeadlineDays: requiresCaptain ? prev.captainVotingDeadlineDays : null,
             };
         });
         setIsSuccess(false);
     };
 
-    const handleFinalDecisionThreshold = (value: string) => {
+    const handleRequiresDecision = (enabled: boolean) => {
         setConfig((prev) => ({
             ...prev,
-            finalDecisionThreshold: parsePositiveNumber(value),
+            requiresDecision: enabled,
+            decisionMode: normalizeDecisionMethod(prev.requiresCaptain, enabled),
+            decisionDeadlineDays: enabled ? prev.decisionDeadlineDays : null,
         }));
         setIsSuccess(false);
     };
 
-    const handleCaptainVotingDeadline = (value: string) => {
+    const handleCaptainVotingDeadlineDays = (value: string) => {
         setConfig((prev) => ({
             ...prev,
-            captainVotingDeadline: value || null,
+            captainVotingDeadlineDays: parsePositiveNumber(value),
         }));
         setIsSuccess(false);
     };
 
-    const handleFinalDecisionDeadline = (value: string) => {
+    const handleDecisionDeadlineDays = (value: string) => {
         setConfig((prev) => ({
             ...prev,
-            finalDecisionDeadline: value || null,
+            decisionDeadlineDays: parsePositiveNumber(value),
         }));
         setIsSuccess(false);
     };
@@ -192,7 +204,10 @@ export const useCommandConfig = (
         try {
             const preparedConfig: TeamConfig = {
                 ...config,
-                decisionMode: normalizeDecisionMethod(config.requiresCaptain),
+                decisionMode: normalizeDecisionMethod(
+                    config.requiresCaptain,
+                    config.requiresDecision,
+                ),
             };
 
             const response: AxiosResponse<TeamConfig> = await saveConfigParams(subjectId, {
@@ -203,28 +218,33 @@ export const useCommandConfig = (
                 maxTeamSize: segregationType === 'range' ? preparedConfig.maxTeamSize : null,
                 requiresCaptain: preparedConfig.requiresCaptain,
                 captainSelectionMode: preparedConfig.captainSelectionMode,
-                captainVotingDeadline: preparedConfig.captainVotingDeadline,
-                finalDecisionThreshold: preparedConfig.finalDecisionThreshold,
-                decisionMode: normalizeDecisionMethod(preparedConfig.requiresCaptain),
-                finalDecisionDeadline: preparedConfig.finalDecisionDeadline,
+                captainVotingDeadlineDays: preparedConfig.captainVotingDeadlineDays,
+                requiresDecision: preparedConfig.requiresDecision,
+                decisionMode: normalizeDecisionMethod(
+                    preparedConfig.requiresCaptain,
+                    preparedConfig.requiresDecision,
+                ),
+                decisionDeadlineDays: preparedConfig.decisionDeadlineDays,
             });
 
             const loadedMode = normalizeDistributionMode(response.data.distributionMode);
+            const requiresCaptain = loadedMode === 'Draft' ? true : Boolean(response.data.requiresCaptain);
+            const requiresDecision = Boolean(response.data.requiresDecision);
 
             setConfig({
                 ...createDefaultConfig(subjectId),
                 ...response.data,
                 distributionMode: loadedMode,
-                requiresCaptain: Boolean(response.data.requiresCaptain),
+                requiresCaptain,
                 captainSelectionMode: response.data.captainSelectionMode || 'Manual',
-                captainVotingDeadline: response.data.captainVotingDeadline ?? null,
-                finalDecisionThreshold:
-                    Number(response.data.finalDecisionThreshold) || participantsCount || 1,
+                captainVotingDeadlineDays: response.data.captainVotingDeadlineDays ?? null,
+                requiresDecision,
                 decisionMode: normalizeLoadedDecisionMethod(
                     response.data.decisionMode,
-                    Boolean(response.data.requiresCaptain),
+                    requiresCaptain,
+                    requiresDecision,
                 ),
-                finalDecisionDeadline: response.data.finalDecisionDeadline ?? null,
+                decisionDeadlineDays: response.data.decisionDeadlineDays ?? null,
             });
             setErrorMessage(null);
             setIsSuccess(true);
@@ -261,6 +281,7 @@ export const useCommandConfig = (
                     const maxTeamSize = Number(response.data.maxTeamSize) || null;
                     const requiresCaptain =
                         loadedMode === 'Draft' ? true : Boolean(response.data.requiresCaptain);
+                    const requiresDecision = Boolean(response.data.requiresDecision);
                     setType(fixedTeamSize ? 'fixed' : 'range');
                     setConfig({
                         ...createDefaultConfig(subjectId),
@@ -273,14 +294,14 @@ export const useCommandConfig = (
                         maxTeamSize,
                         requiresCaptain,
                         captainSelectionMode: loadedCaptainSelectionMode,
-                        captainVotingDeadline: response.data.captainVotingDeadline ?? null,
-                        finalDecisionThreshold:
-                            Number(response.data.finalDecisionThreshold) || participantsCount || 1,
+                        captainVotingDeadlineDays: response.data.captainVotingDeadlineDays ?? null,
+                        requiresDecision,
                         decisionMode: normalizeLoadedDecisionMethod(
                             response.data.decisionMode,
                             requiresCaptain,
+                            requiresDecision,
                         ),
-                        finalDecisionDeadline: response.data.finalDecisionDeadline ?? null,
+                        decisionDeadlineDays: response.data.decisionDeadlineDays ?? null,
                     });
                 }
             } catch (error) {
@@ -332,10 +353,10 @@ export const useCommandConfig = (
         handleMinSize,
         handleMaxSize,
         handleRequiresCaptain,
-        handleFinalDecisionThreshold,
-        handleCaptainVotingDeadline,
+        handleRequiresDecision,
+        handleCaptainVotingDeadlineDays,
         handleCaptainSelectionMode,
-        handleFinalDecisionDeadline,
+        handleDecisionDeadlineDays,
         handleSubmit,
     };
 };
@@ -359,6 +380,7 @@ export const useLoadConfig = (subjectId: string, role: string) => {
                     );
                     const requiresCaptain =
                         loadedMode === 'Draft' ? true : Boolean(response.data.requiresCaptain);
+                    const requiresDecision = Boolean(response.data.requiresDecision);
                     setConfig({
                         ...createDefaultConfig(subjectId),
                         ...response.data,
@@ -373,13 +395,14 @@ export const useLoadConfig = (subjectId: string, role: string) => {
                             requiresCaptain && (loadedMode === 'Random' || loadedMode === 'Manual')
                                 ? 'Voting'
                                 : 'Manual',
-                        captainVotingDeadline: response.data.captainVotingDeadline ?? null,
-                        finalDecisionThreshold: Number(response.data.finalDecisionThreshold) || 1,
+                        captainVotingDeadlineDays: response.data.captainVotingDeadlineDays ?? null,
+                        requiresDecision,
                         decisionMode: normalizeLoadedDecisionMethod(
                             response.data.decisionMode,
                             requiresCaptain,
+                            requiresDecision,
                         ),
-                        finalDecisionDeadline: response.data.finalDecisionDeadline ?? null,
+                        decisionDeadlineDays: response.data.decisionDeadlineDays ?? null,
                     });
 
                     setConfig({
@@ -404,18 +427,14 @@ export const useLoadConfig = (subjectId: string, role: string) => {
                             ((loadedMode === 'Random' || loadedMode === 'Manual') && requiresCaptain
                                 ? 'Voting'
                                 : 'Manual'),
-                        captainVotingDeadline: response.data.captainVotingDeadline ?? null,
-                        // finalDecisionThreshold: если сервер прислал число (даже 0) — оставляем его
-                        finalDecisionThreshold:
-                            response.data.finalDecisionThreshold !== undefined &&
-                            response.data.finalDecisionThreshold !== null
-                                ? Number(response.data.finalDecisionThreshold)
-                                : 1,
-                        // decisionMethod: берём с сервера, если есть, иначе вычисляем
-                        decisionMode:
-                            response.data.decisionMode ??
-                            (requiresCaptain ? 'CaptainDecision' : 'Voting'),
-                        finalDecisionDeadline: response.data.finalDecisionDeadline ?? null,
+                        captainVotingDeadlineDays: response.data.captainVotingDeadlineDays ?? null,
+                        requiresDecision,
+                        decisionMode: normalizeLoadedDecisionMethod(
+                            response.data.decisionMode,
+                            requiresCaptain,
+                            requiresDecision,
+                        ),
+                        decisionDeadlineDays: response.data.decisionDeadlineDays ?? null,
                     });
                 }
             } catch (error) {

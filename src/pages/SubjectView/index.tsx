@@ -27,7 +27,7 @@ import CommandParticipantsModal from '@/components/modals/ShowCommadParticipants
 import { useEffect, useState } from 'react';
 import { useLoadTeams } from '@/hooks/command/useLoadTeams';
 import { CreateTeamManually } from '@/components/modals/CreateTeamManually';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useValidateTeams } from '@/hooks/command/useValidateTeams';
 import { useGetProfile } from '@/hooks/profile/useProfile';
 import { Team } from '@/types/command/Team';
@@ -487,24 +487,20 @@ const SubjectView = () => {
                                     Режим: {loadedDistributionMode}
                                 </p>
                                 <p className='text-xs text-slate-500 mt-1'>
-                                    {config.requiresCaptain
-                                        ? `Капитан включен, метод решения: выбор капитана, порог: ${config.finalDecisionThreshold}`
-                                        : `Капитан выключен, метод решения: голосование, порог: ${config.finalDecisionThreshold}`}
+                                    {!config.requiresDecision
+                                        ? 'Выбор итогового решения отключен'
+                                        : config.requiresCaptain
+                                          ? 'Капитан включен, метод решения: выбор капитана'
+                                          : 'Капитан выключен, метод решения: голосование'}
                                 </p>
-                                {config.captainVotingDeadline && (
+                                {config.captainVotingDeadlineDays && (
                                     <p className='text-xs text-slate-500 mt-1'>
-                                        Дедлайн голосования за капитана:{' '}
-                                        {new Date(config.captainVotingDeadline).toLocaleString(
-                                            'ru-RU',
-                                        )}
+                                        Срок голосования за капитана: {config.captainVotingDeadlineDays} дн.
                                     </p>
                                 )}
-                                {config.finalDecisionDeadline && (
+                                {config.decisionDeadlineDays && (
                                     <p className='text-xs text-slate-500 mt-1'>
-                                        Дедлайн итогового решения:{' '}
-                                        {new Date(config.finalDecisionDeadline).toLocaleString(
-                                            'ru-RU',
-                                        )}
+                                        Срок итогового решения: {config.decisionDeadlineDays} дн.
                                     </p>
                                 )}
                                 {config.isFinalized && (

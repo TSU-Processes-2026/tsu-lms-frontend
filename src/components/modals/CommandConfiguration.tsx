@@ -15,17 +15,6 @@ interface ConfigModalProps extends ModalProps {
 }
 
 const modeOptions: TeamDistributionMode[] = ['Draft', 'Random', 'Students', 'Manual'];
-const toInputDateTime = (value: string | null): string => {
-    if (!value) return '';
-    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) {
-        return value;
-    }
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return '';
-    const offset = date.getTimezoneOffset();
-    const localDate = new Date(date.getTime() - offset * 60_000);
-    return localDate.toISOString().slice(0, 16);
-};
 
 export const CommandConfiguration = (props: ConfigModalProps) => {
     const { subjectId, participantsCount, role, onClose } = props;
@@ -43,15 +32,14 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
         handleTeamSize,
         handleTeamsCount,
         handleRequiresCaptain,
-        handleFinalDecisionThreshold,
-        handleCaptainVotingDeadline,
+        handleRequiresDecision,
+        handleCaptainVotingDeadlineDays,
         handleCaptainSelectionMode,
-        handleFinalDecisionDeadline,
+        handleDecisionDeadlineDays,
     } = useCommandConfig(subjectId ?? '', participantsCount, role);
 
     const mode = config.distributionMode;
     const isDraftMode = mode === 'Draft';
-    const isCaptainVotingMode = mode === 'Random' || mode === 'Manual';
     const isFinalized = config.isFinalized;
 
     if (isLoading) {
@@ -264,50 +252,61 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                     {config.captainSelectionMode === 'Voting' && (
                         <div>
                             <label className='block text-sm font-semibold text-slate-700 mb-2'>
-                                Дедлайн голосования за капитана
+                                Срок голосования за капитана, дней
                             </label>
                             <input
-                                type='datetime-local'
-                                value={toInputDateTime(config.captainVotingDeadline)}
-                                onChange={(e) => handleCaptainVotingDeadline(e.target.value)}
+                                type='number'
+                                value={config.captainVotingDeadlineDays ?? ''}
+                                onChange={(e) => handleCaptainVotingDeadlineDays(e.target.value)}
+                                min={1}
                                 disabled={isFinalized || !config.requiresCaptain}
                                 className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all disabled:opacity-60'
                             />
                         </div>
                     )}
-                    <div>
-                        <label className='block text-sm font-semibold text-slate-700 mb-2'>
-                            Порог финального решения (1..{Math.max(1, participantsCount)})
-                        </label>
-                        <input
-                            type='number'
-                            value={config.finalDecisionThreshold ?? ''}
-                            onChange={(e) => handleFinalDecisionThreshold(e.target.value)}
-                            min={1}
-                            max={Math.max(1, participantsCount)}
-                            disabled={isFinalized}
-                            className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all'
-                        />
+                    <div className='p-4 bg-slate-50 rounded-xl border border-slate-200'>
+                        <div className='flex items-center justify-between gap-3'>
+                            <div>
+                                <p className='text-sm font-semibold text-slate-700'>
+                                    Требуется выбор итогового решения
+                                </p>
+                                <p className='text-xs text-slate-500'>
+                                    Если выключено, команда может отправлять решения без внутреннего согласования
+                                </p>
+                            </div>
+                            <input
+                                type='checkbox'
+                                checked={config.requiresDecision}
+                                disabled={isFinalized}
+                                onChange={(e) => handleRequiresDecision(e.target.checked)}
+                                className='h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 disabled:opacity-60'
+                            />
+                        </div>
                     </div>
-                    <div>
-                        <label className='block text-sm font-semibold text-slate-700 mb-2'>
-                            Дедлайн итогового решения
-                        </label>
-                        <input
-                            type='datetime-local'
-                            value={toInputDateTime(config.finalDecisionDeadline)}
-                            onChange={(e) => handleFinalDecisionDeadline(e.target.value)}
-                            disabled={isFinalized}
-                            className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all disabled:opacity-60'
-                        />
-                    </div>
+                    {config.requiresDecision && (
+                        <div>
+                            <label className='block text-sm font-semibold text-slate-700 mb-2'>
+                                Срок выбора итогового решения, дней
+                            </label>
+                            <input
+                                type='number'
+                                value={config.decisionDeadlineDays ?? ''}
+                                onChange={(e) => handleDecisionDeadlineDays(e.target.value)}
+                                min={1}
+                                disabled={isFinalized}
+                                className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all disabled:opacity-60'
+                            />
+                        </div>
+                    )}
 
                     <div className='p-4 bg-blue-50 border-b-blue-50 rounded-xl border border-blue-100'>
                         <p className='text-xs text-blue-700 font-semibold mb-1'>
                             Метод принятия решения
                         </p>
                         <p className='text-xs text-blue-600'>
-                            {config.requiresCaptain
+                            {!config.requiresDecision
+                                ? 'Итоговое решение не требуется'
+                                : config.requiresCaptain
                                 ? 'Выбор капитана (капитан принимает финальное решение)'
                                 : 'Голосование участников команды'}
                         </p>
@@ -345,7 +344,6 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                     <button
                         type='submit'
                         disabled={isFinalized}
-                        onClick={handleSubmit}
                         className='flex-1 bg-linear-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-300/150 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0 disabled:cursor-not-allowed'
                     >
                         Сохранить

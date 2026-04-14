@@ -9,7 +9,7 @@ const distributionModeByLegacyNumber: Record<number, TeamDistributionMode> = {
 };
 
 const distributionModes = new Set<TeamDistributionMode>(['Manual', 'Random', 'Students', 'Draft']);
-const captainSelectionModes = new Set<CaptainSelectionMethod>(['Manual', 'Voting']);
+const captainSelectionModes = new Set<CaptainSelectionMethod>(['Manual', 'Voting', 'Random']);
 
 export const normalizeDistributionMode = (value: unknown): TeamDistributionMode => {
     if (typeof value === 'number' && distributionModeByLegacyNumber[value]) {

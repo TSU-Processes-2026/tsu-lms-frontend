@@ -1,12 +1,12 @@
 export interface SubmissionDecisionInitResponse {
     sessionId: string;
     submissionId: string;
-    mode: 'Manual' | 'Voting' | string;
+    mode: 'Voting' | 'CaptainDecides' | string;
     startedAt: string | null;
     deadlineAt: string | null;
     isClosed: boolean;
     closedAt: string | null;
-    result: 'Approved' | 'Rejected' | string;
+    result: 'Approved' | 'Rejected' | 'Expired' | string | null;
 }
 
 export interface SubmissionDecisionStatus extends SubmissionDecisionInitResponse {
@@ -20,23 +20,23 @@ export interface SubmissionDecisionStatus extends SubmissionDecisionInitResponse
 export interface SubmissionDecisionVotesStatus {
     sessionId: string;
     submissionId: string;
-    totalTeamMembers: 0;
-    totalDecisions: 0;
-    approvalsCount: 0;
-    rejectionsCount: 0;
+    totalTeamMembers: number;
+    totalDecisions: number;
+    approvalsCount: number;
+    rejectionsCount: number;
     majorityReached: boolean;
     isClosed: boolean;
-    result: 'Approved' | 'Rejected' | string;
+    result: 'Approved' | 'Rejected' | 'Expired' | string | null;
 }
 
 export interface SubmissionDecisionVote {
-    decision: string;
+    decision: 'Approve' | 'Reject' | '';
     comment: string | null;
 }
 
 export interface SubmissionDecisionVoteResponse {
     sessionCompleted: boolean;
-    finalResult: string;
+    finalResult: 'Approved' | 'Rejected' | 'Expired' | string | null;
 }
 
 export interface CaptainDecision {

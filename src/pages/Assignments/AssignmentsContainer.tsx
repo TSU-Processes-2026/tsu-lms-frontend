@@ -9,6 +9,8 @@ import { DEV_URL, MOCK_URL, PROD_URL } from '@/constants/config/config';
 import { ACCESS_TOKEN } from '@/constants/auth/auth';
 import { transformAnswersToApi } from '@/utils/answerTransformer';
 import { ApiGrade, ApiSubmission, mapSubmission } from '@/utils/submissionMapper';
+import { Team } from '@/types/command/Team';
+import { TeamDecisionModal } from './TeamDecisionModal';
 
 interface Participant {
     userId: string;
@@ -19,19 +21,18 @@ interface Participant {
 export const AssignmentsContainer: React.FC = () => {
     const { profile, getCurrentUser } = useProfile();
     const [online, setOnline] = useState<boolean | null>(null);
-    const [subjects, setSubjects] = useState<
-        Array<{ id: string; title: string; description: string }>
-    >([]);
     const [assignments, setAssignments] = useState<Assignment[]>([]);
     const [submissions, setSubmissions] = useState<Submission[]>([]);
     const [subjectRoles, setSubjectRoles] = useState<Record<string, Role>>({});
     const [participantsBySubject, setParticipantsBySubject] = useState<
         Record<string, Participant[]>
     >({});
+    const [teamsBySubject, setTeamsBySubject] = useState<Record<string, Team[]>>({});
 
     const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
     const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
     const [showSolutionsList, setShowSolutionsList] = useState<Assignment | null>(null);
+    const [teamDecisionAssignment, setTeamDecisionAssignment] = useState<Assignment | null>(null);
     const [reviewing, setReviewing] = useState<Submission | null>(null);
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -52,7 +53,7 @@ export const AssignmentsContainer: React.FC = () => {
         return (await res.json()) as ApiGrade;
     };
 
-    const getRoleForSubject = (subjectId: string, participants: Participant[]): Role => {
+    const getRoleForSubject = (participants: Participant[]): Role => {
         const current = participants.find((p) => p.userId === profile.id);
         const roleValue = current?.role?.toLowerCase();
         if (roleValue === 'teacher' || roleValue === 'admin') return 'teacher';
@@ -76,10 +77,9 @@ export const AssignmentsContainer: React.FC = () => {
             }
             setOnline(true);
             const subjectsData = await subjRes.json();
-            setSubjects(subjectsData);
-
             const nextParticipants: Record<string, Participant[]> = {};
             const nextRoles: Record<string, Role> = {};
+            const nextTeams: Record<string, Team[]> = {};
 
             for (const subject of subjectsData) {
                 const partRes = await fetch(
@@ -89,15 +89,34 @@ export const AssignmentsContainer: React.FC = () => {
                 if (partRes.ok) {
                     const participants = await partRes.json();
                     nextParticipants[subject.id] = participants;
-                    nextRoles[subject.id] = getRoleForSubject(subject.id, participants);
+                    nextRoles[subject.id] = getRoleForSubject(participants);
                 } else {
                     nextParticipants[subject.id] = [];
                     nextRoles[subject.id] = 'student';
+                }
+
+                const teamsRes = await fetch(`${API_BASE}/subjects/${subject.id}/teams`, {
+                    headers,
+                });
+
+                if (teamsRes.ok) {
+                    const teamsPayload = await teamsRes.json();
+                    nextTeams[subject.id] = (teamsPayload.teams ?? []).map((team: Team) => ({
+                        ...team,
+                        memberIds:
+                            team.memberIds && team.memberIds.length > 0
+                                ? team.memberIds
+                                : (team.members || []).map((member) => member.userId),
+                        captainId: team.captainId ?? null,
+                    }));
+                } else {
+                    nextTeams[subject.id] = [];
                 }
             }
 
             setParticipantsBySubject(nextParticipants);
             setSubjectRoles(nextRoles);
+            setTeamsBySubject(nextTeams);
 
             let allAssignments: Assignment[] = [];
             let allSubmissions: Submission[] = [];
@@ -440,6 +459,7 @@ export const AssignmentsContainer: React.FC = () => {
         setSelectedAssignment(null);
         setSelectedSubmission(null);
         setShowSolutionsList(null);
+        setTeamDecisionAssignment(null);
         setReviewing(null);
     };
 
@@ -489,9 +509,11 @@ export const AssignmentsContainer: React.FC = () => {
                     submissions={submissions}
                     currentUserId={profile.id}
                     subjectRoles={subjectRoles}
+                    teamsBySubject={teamsBySubject}
                     onOpenAssignment={openAssignment}
                     onOpenSolution={openSubmission}
                     onOpenSolutionsList={(a) => setShowSolutionsList(a)}
+                    onOpenTeamDecision={(a) => setTeamDecisionAssignment(a)}
                 />
             )}
 
@@ -504,6 +526,7 @@ export const AssignmentsContainer: React.FC = () => {
                     onSaveDraft={async (questions, answers) => {
                         const success = await saveDraft(selectedAssignment.id, questions, answers);
                         if (success) closeAll();
+                        return success;
                     }}
                     onSubmit={async (questions, answers) => {
                         const success = await submitAssignment(
@@ -512,10 +535,12 @@ export const AssignmentsContainer: React.FC = () => {
                             answers,
                         );
                         if (success) closeAll();
+                        return success;
                     }}
                     onWithdraw={async (submissionId) => {
                         const success = await withdrawSubmission(submissionId);
                         if (success) closeAll();
+                        return success;
                     }}
                 />
             )}
@@ -539,6 +564,25 @@ export const AssignmentsContainer: React.FC = () => {
                     onGradeDelete={deleteGrade}
                     onLoadComments={loadSubmissionComments}
                     onAddComment={addSubmissionComment}
+                />
+            )}
+
+            {teamDecisionAssignment && (
+                <TeamDecisionModal
+                    assignment={teamDecisionAssignment}
+                    team={
+                        teamsBySubject[teamDecisionAssignment.subjectId]?.find((team) =>
+                            team.members.some((member) => member.userId === profile.id),
+                        ) ?? {
+                            id: '',
+                            subjectId: teamDecisionAssignment.subjectId,
+                            memberIds: [],
+                            members: [],
+                            captainId: null,
+                        }
+                    }
+                    currentUserId={profile.id}
+                    onClose={closeAll}
                 />
             )}
         </div>
