@@ -64,6 +64,10 @@ export const useValidateCommandConfig = () => {
             return 'В режиме драфта капитан обязателен';
         }
 
+        if (!form.requiresDecision) {
+            return null;
+        }
+
         if (!form.requiresCaptain && form.decisionMode !== 'Voting') {
             return 'Без капитана метод принятия решения должен быть "Голосование"';
         }
@@ -76,40 +80,53 @@ export const useValidateCommandConfig = () => {
     };
 
     const validateDeadlines = (form: TeamConfig): string | null => {
-        if (form.requiresCaptain && form.captainVotingDeadline) {
-            if (Number.isNaN(Date.parse(form.captainVotingDeadline))) {
-                return 'Укажите корректный дедлайн голосования за капитана';
-            }
+        if (
+            form.requiresCaptain &&
+            form.captainSelectionMode === 'Voting' &&
+            form.captainVotingDeadlineDays != null &&
+            form.captainVotingDeadlineDays < 1
+        ) {
+            return 'Укажите корректный срок голосования за капитана';
         }
 
-        if (form.finalDecisionDeadline) {
-            if (Number.isNaN(Date.parse(form.finalDecisionDeadline))) {
-                return 'Укажите корректный дедлайн итогового решения';
-            }
+        if (form.requiresDecision && form.decisionDeadlineDays != null && form.decisionDeadlineDays < 1) {
+            return 'Укажите корректный срок итогового решения';
         }
 
-        if (form.captainVotingDeadline && form.finalDecisionDeadline) {
-            const captainDeadline = Date.parse(form.captainVotingDeadline);
-            const finalDecisionDeadline = Date.parse(form.finalDecisionDeadline);
-
-            if (captainDeadline > finalDecisionDeadline) {
-                return 'Дедлайн выбора капитана должен быть раньше дедлайна итогового решения';
-            }
+        if (
+            form.requiresCaptain &&
+            form.requiresDecision &&
+            form.captainVotingDeadlineDays != null &&
+            form.decisionDeadlineDays != null &&
+            form.captainVotingDeadlineDays > form.decisionDeadlineDays
+        ) {
+            return 'Срок выбора капитана должен быть раньше срока итогового решения';
         }
 
         return null;
     };
 
-    const validateFinalDecisionThreshold = (
-        totalStudentsCount: number,
-        form: TeamConfig,
-    ): string | null => {
-        if (form.finalDecisionThreshold == null) {
-            return 'Укажите порог принятия финального решения';
+    const validateDecisionRequirement = (form: TeamConfig): string | null => {
+        if (form.requiresDecision && !form.decisionMode) {
+            return 'Укажите способ принятия итогового решения';
         }
-        if (form.finalDecisionThreshold < 1 || form.finalDecisionThreshold > totalStudentsCount) {
-            return `Порог принятия решения должен быть в диапазоне от 1 до ${totalStudentsCount}`;
+
+        if (!form.requiresDecision) {
+            return null;
         }
+
+        if (form.decisionDeadlineDays == null) {
+            return 'Укажите срок принятия итогового решения';
+        }
+
+        if (
+            form.requiresCaptain &&
+            form.captainSelectionMode === 'Voting' &&
+            form.captainVotingDeadlineDays == null
+        ) {
+            return 'Укажите срок голосования за капитана';
+        }
+
         return null;
     };
 
@@ -124,10 +141,10 @@ export const useValidateCommandConfig = () => {
         validationResult = validateTeamBounds(totalStudentsCount, form);
         if (validationResult) return validationResult;
 
-        validationResult = validateFinalDecisionThreshold(totalStudentsCount, form);
+        validationResult = validateCaptainAndDecisionRules(form);
         if (validationResult) return validationResult;
 
-        validationResult = validateCaptainAndDecisionRules(form);
+        validationResult = validateDecisionRequirement(form);
         if (validationResult) return validationResult;
 
         validationResult = validateDeadlines(form);

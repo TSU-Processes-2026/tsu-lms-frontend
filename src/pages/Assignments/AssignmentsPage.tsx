@@ -7,15 +7,18 @@ import {
     Role,
 } from '../../types/assignments/assignments';
 import ReactMarkdown from 'react-markdown';
+import { Team } from '@/types/command/Team';
 
 interface Props {
     assignments: Assignment[];
     submissions: Submission[];
     currentUserId: string;
     subjectRoles: Record<string, Role>;
+    teamsBySubject: Record<string, Team[]>;
     onOpenAssignment: (a: Assignment) => void;
     onOpenSolution: (s: Submission) => void;
     onOpenSolutionsList: (a: Assignment) => void;
+    onOpenTeamDecision: (a: Assignment) => void;
 }
 
 export const AssignmentsPage: React.FC<Props> = ({
@@ -23,11 +26,13 @@ export const AssignmentsPage: React.FC<Props> = ({
     submissions,
     currentUserId,
     subjectRoles,
+    teamsBySubject,
     onOpenAssignment,
     onOpenSolution,
     onOpenSolutionsList,
+    onOpenTeamDecision,
 }) => {
-    const [filter] = useState<AssignmentFilter>('all');
+    const [_filter] = useState<AssignmentFilter>('all');
 
     const filtered = assignments.filter((a) => {
         const sols = submissions.filter((s) => s.assignmentId === a.id);
@@ -43,6 +48,10 @@ export const AssignmentsPage: React.FC<Props> = ({
                 {filtered.map((a) => {
                     const role = subjectRoles[a.subjectId] ?? 'student';
                     const isTeacher = role === 'teacher';
+                    const currentUserTeam =
+                        teamsBySubject[a.subjectId]?.find((team) =>
+                            team.members.some((member) => member.userId === currentUserId),
+                        ) ?? null;
                     const mySub = submissions.find(
                         (s) => s.assignmentId === a.id && s.authorId === currentUserId,
                     );
@@ -140,6 +149,14 @@ export const AssignmentsPage: React.FC<Props> = ({
                                                 onClick={() => onOpenSolution(mySub)}
                                             >
                                                 Посмотреть свою работу
+                                            </button>
+                                        )}
+                                        {currentUserTeam && (
+                                            <button
+                                                className='px-4 py-2 bg-blue-100 text-blue-700 rounded-xl text-xs font-bold mt-2'
+                                                onClick={() => onOpenTeamDecision(a)}
+                                            >
+                                                Выбрать решение команды
                                             </button>
                                         )}
                                     </div>

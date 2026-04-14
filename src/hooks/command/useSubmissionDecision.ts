@@ -30,14 +30,16 @@ export const useCaptainDecision = (submissionId: string) => {
         setDecision((prev) => ({ ...prev, ...selectedDecision }));
     }, []);
 
-    const handleApproveSubmissionByCaptain = useCallback(async () => {
+    const handleApproveSubmissionByCaptain = useCallback(async (selectedDecision?: CaptainDecision) => {
         setDecisionResult(null);
         setIsLoading(true);
         try {
+            const payload = selectedDecision ?? decision;
             const res: SubmissionDecisionInitResponse = await approveSubmissionByCaptain(
                 submissionId,
-                decision,
+                payload,
             );
+            setDecision(payload);
             setDecisionResult({ ...res });
             clearError();
         } catch (error) {
@@ -47,14 +49,16 @@ export const useCaptainDecision = (submissionId: string) => {
         }
     }, [submissionId, decision]);
 
-    const handleRejectSubmissionByCaptain = useCallback(async () => {
+    const handleRejectSubmissionByCaptain = useCallback(async (selectedDecision?: CaptainDecision) => {
         setDecisionResult(null);
         setIsLoading(true);
         try {
+            const payload = selectedDecision ?? decision;
             const res: SubmissionDecisionInitResponse = await rejectSubmissionByCaptain(
                 submissionId,
-                decision,
+                payload,
             );
+            setDecision(payload);
             setDecisionResult({ ...res });
             clearError();
         } catch (error) {
@@ -101,9 +105,12 @@ export const useTeamMembersDecision = (submissionId: string) => {
         }
     };
 
-    const handleVote = async () => {
+    const handleVote = async (vote?: SubmissionDecisionVote) => {
+        setIsLoading(true);
         try {
-            const res: SubmissionDecisionVoteResponse = await sendVote(submissionId, selectedVote);
+            const payload = vote ?? selectedVote;
+            const res: SubmissionDecisionVoteResponse = await sendVote(submissionId, payload);
+            setVote(payload);
             setVoteResult({ ...res });
             clearError();
         } catch (error) {
@@ -133,6 +140,12 @@ export const useDecisionDetails = (submissionId: string) => {
     const { errorMessage, handleError, clearError } = useErrorHandler();
 
     const fetchDetails = async (): Promise<void> => {
+        if (!submissionId) {
+            setDecisionStatus(null);
+            setVotes(null);
+            return;
+        }
+
         setIsLoading(true);
         clearError();
 
@@ -177,5 +190,6 @@ export const useDecisionDetails = (submissionId: string) => {
         votes,
         errorMessage,
         isLoading,
+        refetchDetails: fetchDetails,
     };
 };

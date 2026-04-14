@@ -162,10 +162,6 @@ const CommandParticipantsModal = ({
             setMessage('Команды уже финализированы. Голосование за капитана недоступно.');
             return;
         }
-        if (config.captainVotingDeadline && Date.now() > Date.parse(config.captainVotingDeadline)) {
-            setMessage('Срок голосования за капитана истек.');
-            return;
-        }
         if (members.members.length === 0) {
             return;
         }
@@ -196,61 +192,6 @@ const CommandParticipantsModal = ({
         } else {
             setMessage('Голосование завершено. Капитан выбран большинством голосов.');
         }
-    };
-
-    const handleFinalDecisionVoting = () => {
-        if (isFinalized) {
-            setMessage('Команды уже финализированы. Итоговое голосование недоступно.');
-            return;
-        }
-        if (config.finalDecisionDeadline && Date.now() > Date.parse(config.finalDecisionDeadline)) {
-            setMessage('Срок итогового решения истек.');
-            return;
-        }
-        const threshold = config.finalDecisionThreshold ?? members.members.length;
-        const approvals = members.members.reduce(
-            (count) => (Math.random() > 0.5 ? count + 1 : count),
-            0,
-        );
-        onTeamUpdate(members.id, (team) => ({
-            ...team,
-            finalDecision: {
-                method: 'Voting',
-                approvals,
-                threshold,
-                approved: approvals >= threshold,
-                selectedBy: null,
-                selectedAt: new Date().toISOString(),
-            },
-        }));
-        setMessage('Итоговое решение зафиксировано голосованием команды.');
-    };
-
-    const handleFinalDecisionByCaptain = () => {
-        if (isFinalized) {
-            setMessage('Команды уже финализированы. Итоговое решение недоступно.');
-            return;
-        }
-        if (config.finalDecisionDeadline && Date.now() > Date.parse(config.finalDecisionDeadline)) {
-            setMessage('Срок итогового решения истек.');
-            return;
-        }
-        if (!members.captainId) {
-            setMessage('Нельзя принять решение капитаном, пока капитан не выбран.');
-            return;
-        }
-        onTeamUpdate(members.id, (team) => ({
-            ...team,
-            finalDecision: {
-                method: 'CaptainDecision',
-                approvals: Math.max(config.finalDecisionThreshold ?? 1, 1),
-                threshold: config.finalDecisionThreshold ?? 1,
-                approved: true,
-                selectedBy: members.captainId ?? null,
-                selectedAt: new Date().toISOString(),
-            },
-        }));
-        setMessage('Итоговое решение подтверждено капитаном.');
     };
 
     return (
@@ -343,10 +284,9 @@ const CommandParticipantsModal = ({
                             >
                                 Проголосовать за выбор капитана
                             </button>
-                            {config.captainVotingDeadline && (
+                            {config.captainVotingDeadlineDays && (
                                 <p className='mt-2 text-xs text-purple-700'>
-                                    Дедлайн:{' '}
-                                    {new Date(config.captainVotingDeadline).toLocaleString('ru-RU')}
+                                    Срок: {config.captainVotingDeadlineDays} дн.
                                 </p>
                             )}
                             {members.captainVoting && (
@@ -373,10 +313,9 @@ const CommandParticipantsModal = ({
                             >
                                 Открыть голосование
                             </button>
-                            {config.captainVotingDeadline && (
+                            {config.captainVotingDeadlineDays && (
                                 <p className='mt-2 text-xs text-purple-700'>
-                                    Дедлайн:{' '}
-                                    {new Date(config.captainVotingDeadline).toLocaleString('ru-RU')}
+                                    Срок: {config.captainVotingDeadlineDays} дн.
                                 </p>
                             )}
                             {members.captainVoting && (
@@ -395,45 +334,29 @@ const CommandParticipantsModal = ({
                             Итоговое решение команды
                         </p>
                         <p className='text-xs text-slate-500 mb-3'>
-                            {config.requiresCaptain || members.captainId
+                            {!config.requiresDecision
+                                ? 'Выбор итогового решения отключен в настройках предмета'
+                                : config.requiresCaptain || members.captainId
                                 ? 'Метод: выбор капитаном'
                                 : `Метод: голосование`}
                         </p>
-                        {config.finalDecisionDeadline && (
+                        {config.requiresDecision && config.decisionDeadlineDays && (
                             <p className='text-xs text-slate-500 mb-3'>
-                                Дедлайн:{' '}
-                                {new Date(config.finalDecisionDeadline).toLocaleString('ru-RU')}
+                                Срок: {config.decisionDeadlineDays} дн.
                             </p>
                         )}
-                        {isTeacher && !config.requiresCaptain && (
+                        {config.requiresDecision && (
                             <button
                                 type='button'
-                                onClick={handleFinalDecisionVoting}
-                                disabled={isFinalized}
+                                onClick={() => navigate('/assignments')}
                                 className='px-4 py-2 rounded-xl bg-linear-to-r from-blue-600 to-blue-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed'
                             >
-                                Провести итоговое голосование
+                                Перейти к решениям заданий
                             </button>
                         )}
-                        {isTeacher && config.requiresCaptain && (
-                            <button
-                                type='button'
-                                onClick={handleFinalDecisionByCaptain}
-                                disabled={isFinalized || !members.captainId}
-                                className='px-4 py-2 rounded-xl bg-linear-to-r from-blue-600 to-blue-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed'
-                            >
-                                Подтвердить решение капитаном
-                            </button>
-                        )}
-                        {members.finalDecision && (
+                        {config.requiresDecision && (
                             <p className='mt-3 text-xs text-slate-600'>
-                                Статус: {members.finalDecision.approved ? 'принято' : 'не принято'}{' '}
-                                • метод:{' '}
-                                {members.finalDecision.method === 'CaptainDecision'
-                                    ? 'капитан'
-                                    : 'голосование'}{' '}
-                                • голоса: {members.finalDecision.approvals}/
-                                {members.finalDecision.threshold}
+                                Выбор итогового решения выполняется на странице заданий по конкретной работе команды.
                             </p>
                         )}
                     </div>

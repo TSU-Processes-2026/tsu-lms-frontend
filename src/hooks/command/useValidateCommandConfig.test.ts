@@ -9,12 +9,12 @@ const buildConfig = (overrides: Partial<TeamConfig> = {}): TeamConfig => ({
     fixedTeamSize: 3,
     minTeamSize: null,
     maxTeamSize: null,
-    captainEnabled: false,
-    captainSelectionMethod: 'Manual',
-    captainVotingDeadline: null,
-    finalDecisionThreshold: 2,
-    decisionMethod: 'Voting',
-    finalDecisionDeadline: null,
+    requiresCaptain: false,
+    captainSelectionMode: 'Manual',
+    captainVotingDeadlineDays: null,
+    requiresDecision: false,
+    decisionMode: null,
+    decisionDeadlineDays: null,
     isFinalized: false,
     finalizedAt: null,
     warnings: [],
@@ -35,39 +35,44 @@ describe('useValidateCommandConfig', () => {
 
         const error = result.current.validateParams(
             6,
-            buildConfig({ distributionMode: 'Draft', captainEnabled: false }),
+            buildConfig({ distributionMode: 'Draft', requiresCaptain: false }),
         );
 
         expect(error).toBe('В режиме драфта капитан обязателен');
     });
 
-    it('validates final decision threshold bounds', () => {
+    it('requires decision deadline when final decision is enabled', () => {
         const { result } = renderHook(() => useValidateCommandConfig());
 
         const error = result.current.validateParams(
             5,
-            buildConfig({ fixedTeamSize: 5, fixedTeamsCount: 1, finalDecisionThreshold: 7 }),
+            buildConfig({
+                fixedTeamSize: 5,
+                fixedTeamsCount: 1,
+                requiresDecision: true,
+                decisionMode: 'Voting',
+            }),
         );
 
-        expect(error).toBe('Порог принятия решения должен быть в диапазоне от 1 до 5');
+        expect(error).toBe('Укажите срок принятия итогового решения');
     });
 
-    it('validates captain voting deadline is before final decision deadline', () => {
+    it('validates captain voting period is before decision period', () => {
         const { result } = renderHook(() => useValidateCommandConfig());
 
         const error = result.current.validateParams(
             6,
             buildConfig({
                 distributionMode: 'Random',
-                captainEnabled: true,
-                decisionMethod: 'CaptainDecision',
-                captainVotingDeadline: '2026-01-10T15:00:00.000Z',
-                finalDecisionDeadline: '2026-01-09T15:00:00.000Z',
+                requiresCaptain: true,
+                requiresDecision: true,
+                decisionMode: 'CaptainDecides',
+                captainSelectionMode: 'Voting',
+                captainVotingDeadlineDays: 10,
+                decisionDeadlineDays: 9,
             }),
         );
 
-        expect(error).toBe(
-            'Дедлайн выбора капитана должен быть раньше дедлайна итогового решения',
-        );
+        expect(error).toBe('Срок выбора капитана должен быть раньше срока итогового решения');
     });
 });
