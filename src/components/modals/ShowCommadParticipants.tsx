@@ -93,6 +93,7 @@ const CommandParticipantsModal = ({
     const isFinalized = config.isFinalized;
     const isStudentsModeEnabled = currentDistributionMode === 'Students';
     const couldViewJoinInterface = isStudent && isStudentsModeEnabled && !isFinalized;
+    const couldSeeTeamInterface = isStudent && isMember;
     const isCaptainVotingMode = config.requiresCaptain && config.captainSelectionMode == 'Voting';
     const isCaptainManualMode = config.requiresCaptain && config.captainSelectionMode == 'Manual';
 
@@ -271,7 +272,7 @@ const CommandParticipantsModal = ({
                         </div>
                     )}
 
-                    {isStudent && isCaptainVotingMode && isMember && !hasCaptain && (
+                    {couldSeeTeamInterface && isCaptainVotingMode && !hasCaptain && (
                         <div className='rounded-2xl border border-purple-100 p-4 bg-purple-50'>
                             <p className='text-sm font-semibold text-purple-700 mb-2'>
                                 Выбор капитана голосованием команды
@@ -329,37 +330,40 @@ const CommandParticipantsModal = ({
                             )}
                         </div>
                     )}
-                    <div className='rounded-2xl border border-slate-100 p-4 bg-slate-50'>
-                        <p className='text-sm font-semibold text-slate-700 mb-2'>
-                            Итоговое решение команды
-                        </p>
-                        <p className='text-xs text-slate-500 mb-3'>
-                            {!config.requiresDecision
-                                ? 'Выбор итогового решения отключен в настройках предмета'
-                                : config.requiresCaptain || members.captainId
-                                ? 'Метод: выбор капитаном'
-                                : `Метод: голосование`}
-                        </p>
-                        {config.requiresDecision && config.decisionDeadlineDays && (
+                    {couldSeeTeamInterface && (
+                        <div className='rounded-2xl border border-slate-100 p-4 bg-slate-50'>
+                            <p className='text-sm font-semibold text-slate-700 mb-2'>
+                                Итоговое решение команды
+                            </p>
                             <p className='text-xs text-slate-500 mb-3'>
-                                Срок: {config.decisionDeadlineDays} дн.
+                                {!config.requiresDecision
+                                    ? 'Выбор итогового решения отключен в настройках предмета'
+                                    : config.requiresCaptain || members.captainId
+                                      ? 'Метод: выбор капитаном'
+                                      : `Метод: голосование`}
                             </p>
-                        )}
-                        {config.requiresDecision && (
-                            <button
-                                type='button'
-                                onClick={() => navigate('/assignments')}
-                                className='px-4 py-2 rounded-xl bg-linear-to-r from-blue-600 to-blue-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed'
-                            >
-                                Перейти к решениям заданий
-                            </button>
-                        )}
-                        {config.requiresDecision && (
-                            <p className='mt-3 text-xs text-slate-600'>
-                                Выбор итогового решения выполняется на странице заданий по конкретной работе команды.
-                            </p>
-                        )}
-                    </div>
+                            {config.requiresDecision && config.decisionDeadlineDays && (
+                                <p className='text-xs text-slate-500 mb-3'>
+                                    Срок: {config.decisionDeadlineDays} дн.
+                                </p>
+                            )}
+                            {config.requiresDecision && (
+                                <button
+                                    type='button'
+                                    onClick={() => navigate('/assignments')}
+                                    className='px-4 py-2 rounded-xl bg-linear-to-r from-blue-600 to-blue-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed'
+                                >
+                                    Перейти к решениям заданий
+                                </button>
+                            )}
+                            {config.requiresDecision && (
+                                <p className='mt-3 text-xs text-slate-600'>
+                                    Выбор итогового решения выполняется на странице заданий по
+                                    конкретной работе команды.
+                                </p>
+                            )}
+                        </div>
+                    )}
 
                     {message && (
                         <div className='p-4 bg-green-50 border border-green-100 rounded-xl text-green-700 text-sm'>
