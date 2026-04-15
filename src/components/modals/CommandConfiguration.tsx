@@ -324,7 +324,7 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                         <p className='text-xs text-blue-600'>
                             {!config.requiresDecision
                                 ? 'Итоговое решение не требуется'
-                                : config.requiresCaptain
+                                : config.decisionMode === 'CaptainDecides'
                                   ? 'Выбор капитана (капитан принимает финальное решение)'
                                   : 'Голосование участников команды'}
                         </p>

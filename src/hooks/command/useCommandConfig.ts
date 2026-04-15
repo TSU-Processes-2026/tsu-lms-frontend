@@ -31,34 +31,26 @@ const createDefaultConfig = (subjectId: string): TeamConfig => ({
 });
 
 const normalizeDecisionMethod = (
-    requiresCaptain: boolean,
+    _requiresCaptain: boolean,
     requiresDecision: boolean,
 ): FinalDecisionMethod | null => {
     if (!requiresDecision) {
         return null;
     }
 
-    return requiresCaptain ? 'CaptainDecides' : 'Voting';
+    return 'Voting';
 };
 
 const normalizeLoadedDecisionMethod = (
     decisionMethod: FinalDecisionMethod | null | undefined,
-    requiresCaptain: boolean,
+    _requiresCaptain: boolean,
     requiresDecision: boolean,
 ): FinalDecisionMethod | null => {
     if (!requiresDecision) {
         return null;
     }
 
-    if (!requiresCaptain) {
-        return 'Voting';
-    }
-
-    if (decisionMethod === 'CaptainDecides') {
-        return decisionMethod;
-    }
-
-    return 'CaptainDecides';
+    return decisionMethod ?? 'Voting';
 };
 
 export const useCommandConfig = (
