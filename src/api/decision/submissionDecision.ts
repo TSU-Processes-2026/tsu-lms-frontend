@@ -43,6 +43,7 @@ export const sendVote = async (
 export const fetchSubmissionDecisionStatus = async (
     submissionId: string,
 ): Promise<SubmissionDecisionStatus> => {
+    console.log('id:', submissionId);
     try {
         const response: AxiosResponse<SubmissionDecisionStatus> =
             await apiClient.get<SubmissionDecisionStatus>(

@@ -6,7 +6,7 @@ import {
     useCaptainDecision,
     useDecisionDetails,
     useTeamMembersDecision,
-} from '@/hooks/command/useSubmissionDecision';
+} from '@/hooks/submissionDecision/useSubmissionDecision';
 import { ACCESS_TOKEN } from '@/constants/auth/auth';
 import { DEV_URL, MOCK_URL, PROD_URL } from '@/constants/config/config';
 import { ApiSubmission, mapSubmission } from '@/utils/submissionMapper';
@@ -40,7 +40,10 @@ export const TeamDecisionModal: React.FC<TeamDecisionModalProps> = ({
     );
     const isCaptain = team.captainId === currentUserId;
     const decisionMode = team.captainId ? 'CaptainDecides' : 'Voting';
-    const teamMemberIds = useMemo(() => new Set(team.members.map((member) => member.userId)), [team]);
+    const teamMemberIds = useMemo(
+        () => new Set(team.members.map((member) => member.userId)),
+        [team],
+    );
 
     const {
         decisionStatus,
@@ -94,15 +97,13 @@ export const TeamDecisionModal: React.FC<TeamDecisionModalProps> = ({
                 }
 
                 const payload = (await response.json()) as ApiSubmission[];
-                const authorNameMap = new Map(team.members.map((member) => [member.userId, member.username]));
+                const authorNameMap = new Map(
+                    team.members.map((member) => [member.userId, member.username]),
+                );
                 const teamSubmissions = payload
                     .filter((submission) => teamMemberIds.has(submission.authorId))
                     .map((submission) =>
-                        mapSubmission(
-                            submission,
-                            null,
-                            authorNameMap.get(submission.authorId),
-                        ),
+                        mapSubmission(submission, null, authorNameMap.get(submission.authorId)),
                     );
 
                 setSubmissions(teamSubmissions);
@@ -149,9 +150,7 @@ export const TeamDecisionModal: React.FC<TeamDecisionModalProps> = ({
 
         await refetchDetails();
         setMessage(
-            decision === 'Approve'
-                ? 'Капитан подтвердил решение.'
-                : 'Капитан отклонил решение.',
+            decision === 'Approve' ? 'Капитан подтвердил решение.' : 'Капитан отклонил решение.',
         );
     };
 
@@ -164,9 +163,9 @@ export const TeamDecisionModal: React.FC<TeamDecisionModalProps> = ({
         isCaptainActionLoading;
     const canInitiateDecision = Boolean(
         selectedSubmission &&
-            selectedSubmission.status === 'Draft' &&
-            !decisionStatus &&
-            decisionMode === 'Voting',
+        selectedSubmission.status === 'Draft' &&
+        !decisionStatus &&
+        decisionMode === 'Voting',
     );
     const canVote =
         decisionMode === 'Voting' &&
@@ -185,7 +184,9 @@ export const TeamDecisionModal: React.FC<TeamDecisionModalProps> = ({
             <div className='bg-white w-full max-w-6xl max-h-[90vh] rounded-[2.5rem] shadow-2xl z-10 flex flex-col overflow-hidden'>
                 <div className='px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/30 shrink-0'>
                     <div>
-                        <h3 className='text-xl font-bold text-slate-800'>Выбор итогового решения команды</h3>
+                        <h3 className='text-xl font-bold text-slate-800'>
+                            Выбор итогового решения команды
+                        </h3>
                         <p className='text-sm text-slate-500 mt-1'>
                             {assignment.content.split('\n')[0] || 'Задание'} •{' '}
                             {decisionMode === 'CaptainDecides'
@@ -268,7 +269,10 @@ export const TeamDecisionModal: React.FC<TeamDecisionModalProps> = ({
                         <div className='rounded-2xl border border-slate-100 bg-slate-50 p-5 space-y-2'>
                             <h4 className='font-bold text-slate-800'>Текущий статус</h4>
                             <p className='text-sm text-slate-600'>
-                                Режим: {decisionMode === 'CaptainDecides' ? 'Выбор капитаном' : 'Голосование'}
+                                Режим:{' '}
+                                {decisionMode === 'CaptainDecides'
+                                    ? 'Выбор капитаном'
+                                    : 'Голосование'}
                             </p>
                             <p className='text-sm text-slate-600'>
                                 Сессия:{' '}
@@ -299,9 +303,13 @@ export const TeamDecisionModal: React.FC<TeamDecisionModalProps> = ({
                         {selectedSubmission && (
                             <div className='rounded-2xl border border-slate-100 bg-white p-5 space-y-4'>
                                 <div>
-                                    <h4 className='font-bold text-slate-800'>Действие по решению</h4>
+                                    <h4 className='font-bold text-slate-800'>
+                                        Действие по решению
+                                    </h4>
                                     <p className='text-sm text-slate-500 mt-1'>
-                                        Автор: {selectedSubmission.authorName || selectedSubmission.authorId}
+                                        Автор:{' '}
+                                        {selectedSubmission.authorName ||
+                                            selectedSubmission.authorId}
                                     </p>
                                 </div>
 
@@ -376,11 +384,12 @@ export const TeamDecisionModal: React.FC<TeamDecisionModalProps> = ({
                                     </div>
                                 )}
 
-                                {decisionMode === 'Voting' && decisionStatus?.hasCurrentUserDecided && (
-                                    <div className='p-4 rounded-xl border border-green-100 bg-green-50 text-green-700 text-sm'>
-                                        Ваш голос по этому решению уже учтен.
-                                    </div>
-                                )}
+                                {decisionMode === 'Voting' &&
+                                    decisionStatus?.hasCurrentUserDecided && (
+                                        <div className='p-4 rounded-xl border border-green-100 bg-green-50 text-green-700 text-sm'>
+                                            Ваш голос по этому решению уже учтен.
+                                        </div>
+                                    )}
                             </div>
                         )}
 
@@ -399,7 +408,10 @@ export const TeamDecisionModal: React.FC<TeamDecisionModalProps> = ({
                         {(userVoteResult || decisionResult) && (
                             <div className='p-4 rounded-xl border border-blue-100 bg-blue-50 text-blue-700 text-sm flex items-center gap-2'>
                                 <Vote size={16} />
-                                Финальный результат: {userVoteResult?.finalResult ?? decisionResult?.result ?? 'ожидается'}
+                                Финальный результат:{' '}
+                                {userVoteResult?.finalResult ??
+                                    decisionResult?.result ??
+                                    'ожидается'}
                             </div>
                         )}
                     </div>
