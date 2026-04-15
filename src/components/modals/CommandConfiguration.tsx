@@ -36,6 +36,7 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
         handleCaptainVotingDeadlineDays,
         handleCaptainSelectionMode,
         handleDecisionDeadlineDays,
+        handleRequiredDecisionVotes,
     } = useCommandConfig(subjectId ?? '', participantsCount, role);
 
     const mode = config.distributionMode;
@@ -285,18 +286,34 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                         </div>
                     </div>
                     {config.requiresDecision && (
-                        <div>
-                            <label className='block text-sm font-semibold text-slate-700 mb-2'>
-                                Срок выбора итогового решения, дней
-                            </label>
-                            <input
-                                type='number'
-                                value={config.decisionDeadlineDays ?? ''}
-                                onChange={(e) => handleDecisionDeadlineDays(e.target.value)}
-                                min={1}
-                                disabled={isFinalized}
-                                className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all disabled:opacity-60'
-                            />
+                        <div className='space-y-4'>
+                            <div>
+                                <label className='block text-sm font-semibold text-slate-700 mb-2'>
+                                    Срок выбора итогового решения, дней
+                                </label>
+                                <input
+                                    type='number'
+                                    value={config.decisionDeadlineDays ?? ''}
+                                    onChange={(e) => handleDecisionDeadlineDays(e.target.value)}
+                                    min={1}
+                                    disabled={isFinalized}
+                                    className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all disabled:opacity-60'
+                                />
+                            </div>
+                            <div>
+                                <label className='block text-sm font-semibold text-slate-700 mb-2'>
+                                    Количество решений в команде
+                                </label>
+                                <input
+                                    type='number'
+                                    value={config.requiredDecisionVotes ?? ''}
+                                    onChange={(e) => handleRequiredDecisionVotes(e.target.value)}
+                                    min={1}
+                                    max={participantsCount}
+                                    disabled={isFinalized}
+                                    className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all disabled:opacity-60'
+                                />
+                            </div>
                         </div>
                     )}
 

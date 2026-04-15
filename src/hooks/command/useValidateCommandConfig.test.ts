@@ -15,6 +15,7 @@ const buildConfig = (overrides: Partial<TeamConfig> = {}): TeamConfig => ({
     requiresDecision: false,
     decisionMode: null,
     decisionDeadlineDays: null,
+    requiredDecisionVotes: null,
     isFinalized: false,
     finalizedAt: null,
     warnings: [],
@@ -51,6 +52,7 @@ describe('useValidateCommandConfig', () => {
                 fixedTeamsCount: 1,
                 requiresDecision: true,
                 decisionMode: 'Voting',
+                requiredDecisionVotes: 3,
             }),
         );
 
@@ -70,6 +72,7 @@ describe('useValidateCommandConfig', () => {
                 captainSelectionMode: 'Voting',
                 captainVotingDeadlineDays: 10,
                 decisionDeadlineDays: 9,
+                requiredDecisionVotes: 1,
             }),
         );
 

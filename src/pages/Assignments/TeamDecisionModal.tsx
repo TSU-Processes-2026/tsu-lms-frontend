@@ -39,7 +39,6 @@ export const TeamDecisionModal: React.FC<TeamDecisionModalProps> = ({
         [selectedSubmissionId, submissions],
     );
     const isCaptain = team.captainId === currentUserId;
-    const decisionMode = team.captainId ? 'CaptainDecides' : 'Voting';
     const teamMemberIds = useMemo(
         () => new Set(team.members.map((member) => member.userId)),
         [team],
@@ -121,7 +120,11 @@ export const TeamDecisionModal: React.FC<TeamDecisionModalProps> = ({
     const handleInitiateDecision = async () => {
         await handleInitVoting();
         await refetchDetails();
-        setMessage('Процедура выбора решения запущена.');
+        setMessage(
+            decisionMode === 'CaptainDecides'
+                ? 'Процедура выбора капитаном запущена.'
+                : 'Процедура голосования запущена.',
+        );
     };
 
     const handleVoteAction = async (decision: 'Approve' | 'Reject') => {
@@ -156,6 +159,7 @@ export const TeamDecisionModal: React.FC<TeamDecisionModalProps> = ({
 
     const activeError = loadError ?? voteError ?? captainError ?? statusError;
     const activeSession = decisionStatus ?? initVotingResult ?? decisionResult;
+    const decisionMode = activeSession?.mode ?? (team.captainId ? 'CaptainDecides' : 'Voting');
     const isActionLoading =
         isLoadingSolutions ||
         isLoadingDecisionStatus ||
@@ -163,20 +167,19 @@ export const TeamDecisionModal: React.FC<TeamDecisionModalProps> = ({
         isCaptainActionLoading;
     const canInitiateDecision = Boolean(
         selectedSubmission &&
-        selectedSubmission.status === 'Draft' &&
-        !decisionStatus &&
-        decisionMode === 'Voting',
+        selectedSubmission.status !== 'Graded' &&
+        !activeSession,
     );
     const canVote =
         decisionMode === 'Voting' &&
-        Boolean(decisionStatus) &&
-        !decisionStatus?.isClosed &&
+        Boolean(activeSession) &&
+        !activeSession?.isClosed &&
         !decisionStatus?.hasCurrentUserDecided;
     const canCaptainDecide =
         decisionMode === 'CaptainDecides' &&
         isCaptain &&
-        Boolean(decisionStatus) &&
-        !decisionStatus?.isClosed;
+        Boolean(activeSession) &&
+        !activeSession?.isClosed;
 
     return (
         <div className='fixed inset-0 z-50 flex items-center justify-center p-4'>
@@ -285,8 +288,8 @@ export const TeamDecisionModal: React.FC<TeamDecisionModalProps> = ({
                             {decisionStatus && (
                                 <>
                                     <p className='text-sm text-slate-600'>
-                                        Голоса: {decisionStatus.decisionCast} из{' '}
-                                        {decisionStatus.totalTeamMembers}
+                                        Голоса: {decisionStatus.decisionsCast} из{' '}
+                                        {decisionStatus.requiredDecisionsCount}
                                     </p>
                                     <p className='text-sm text-slate-600'>
                                         Итог: {decisionStatus.result ?? 'еще не определен'}
@@ -328,7 +331,9 @@ export const TeamDecisionModal: React.FC<TeamDecisionModalProps> = ({
                                         disabled={isActionLoading}
                                         className='w-full px-4 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all disabled:opacity-50'
                                     >
-                                        Запустить голосование по выбранному решению
+                                        {decisionMode === 'CaptainDecides'
+                                            ? 'Запустить выбор капитаном'
+                                            : 'Запустить голосование по выбранному решению'}
                                     </button>
                                 )}
 

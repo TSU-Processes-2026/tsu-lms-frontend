@@ -2,6 +2,7 @@ export interface SubmissionDecisionInitResponse {
     sessionId: string;
     submissionId: string;
     mode: 'Voting' | 'CaptainDecides' | string;
+    requiredDecisionsCount: number;
     startedAt: string | null;
     deadlineAt: string | null;
     isClosed: boolean;
@@ -21,10 +22,11 @@ export interface SubmissionDecisionVotesStatus {
     sessionId: string;
     submissionId: string;
     totalTeamMembers: number;
+    requiredDecisionsCount: number;
     totalDecisions: number;
     approvalsCount: number;
     rejectionsCount: number;
-    majorityReached: boolean;
+    requiredDecisionsReached: boolean;
     isClosed: boolean;
     result: 'Approved' | 'Rejected' | 'Expired' | string | null;
 }

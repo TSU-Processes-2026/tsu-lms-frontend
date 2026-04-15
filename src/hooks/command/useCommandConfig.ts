@@ -24,6 +24,7 @@ const createDefaultConfig = (subjectId: string): TeamConfig => ({
     requiresDecision: false,
     decisionMode: null,
     decisionDeadlineDays: null,
+    requiredDecisionVotes: null,
     isFinalized: false,
     finalizedAt: null,
     warnings: [],
@@ -179,6 +180,7 @@ export const useCommandConfig = (
             requiresDecision: enabled,
             decisionMode: normalizeDecisionMethod(prev.requiresCaptain, enabled),
             decisionDeadlineDays: enabled ? prev.decisionDeadlineDays : null,
+            requiredDecisionVotes: enabled ? prev.requiredDecisionVotes : null,
         }));
         setIsSuccess(false);
     };
@@ -195,6 +197,14 @@ export const useCommandConfig = (
         setConfig((prev) => ({
             ...prev,
             decisionDeadlineDays: parsePositiveNumber(value),
+        }));
+        setIsSuccess(false);
+    };
+
+    const handleRequiredDecisionVotes = (value: string) => {
+        setConfig((prev) => ({
+            ...prev,
+            requiredDecisionVotes: parsePositiveNumber(value),
         }));
         setIsSuccess(false);
     };
@@ -225,6 +235,7 @@ export const useCommandConfig = (
                     preparedConfig.requiresDecision,
                 ),
                 decisionDeadlineDays: preparedConfig.decisionDeadlineDays,
+                requiredDecisionVotes: preparedConfig.requiredDecisionVotes,
             });
 
             const loadedMode = normalizeDistributionMode(response.data.distributionMode);
@@ -245,6 +256,7 @@ export const useCommandConfig = (
                     requiresDecision,
                 ),
                 decisionDeadlineDays: response.data.decisionDeadlineDays ?? null,
+                requiredDecisionVotes: response.data.requiredDecisionVotes ?? null,
             });
             setErrorMessage(null);
             setIsSuccess(true);
@@ -302,6 +314,7 @@ export const useCommandConfig = (
                             requiresDecision,
                         ),
                         decisionDeadlineDays: response.data.decisionDeadlineDays ?? null,
+                        requiredDecisionVotes: response.data.requiredDecisionVotes ?? null,
                     });
                 }
             } catch (error) {
@@ -357,6 +370,7 @@ export const useCommandConfig = (
         handleCaptainVotingDeadlineDays,
         handleCaptainSelectionMode,
         handleDecisionDeadlineDays,
+        handleRequiredDecisionVotes,
         handleSubmit,
     };
 };
@@ -403,6 +417,7 @@ export const useLoadConfig = (subjectId: string, role: string) => {
                             requiresDecision,
                         ),
                         decisionDeadlineDays: response.data.decisionDeadlineDays ?? null,
+                        requiredDecisionVotes: response.data.requiredDecisionVotes ?? null,
                     });
 
                     setConfig({

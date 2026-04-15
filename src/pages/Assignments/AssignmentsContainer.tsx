@@ -3,7 +3,14 @@ import { AssignmentsPage } from './AssignmentsPage';
 import { AssignmentModal } from './AssignmentModal';
 import { SolutionsListPage } from './SolutionsPage';
 import { TeacherReviewModal } from './TeacherReviewModal';
-import { Assignment, Submission, Role, Question, Grade } from '../../types/assignments/assignments';
+import {
+    Assignment,
+    Submission,
+    Role,
+    Question,
+    Grade,
+    TeamMemberGrade,
+} from '../../types/assignments/assignments';
 import { useProfile } from '@/hooks/profile/useProfile';
 import { DEV_URL, MOCK_URL, PROD_URL } from '@/constants/config/config';
 import { ACCESS_TOKEN } from '@/constants/auth/auth';
@@ -17,6 +24,38 @@ interface Participant {
     userId: string;
     username: string;
     role?: string;
+}
+
+interface TeamGradeRequestOptions {
+    teamId?: string | null;
+    assignmentId: string;
+    redistributeTotalScore?: boolean;
+    totalScore?: number | null;
+}
+
+interface ApiTeamGrade {
+    id: string;
+    teamId: string;
+    assignmentId: string;
+    submissionId: string;
+    score: number;
+    redistributeTotalScore: boolean;
+    totalScore: number | null;
+    verdictText: string;
+    verdictedAt: string;
+}
+
+interface ApiTeamMemberGrade {
+    id?: string;
+    teamGradeId: string;
+    teamId: string;
+    assignmentId: string;
+    studentId: string;
+    username: string;
+    baseScore: number;
+    score: number;
+    isAdjusted: boolean;
+    adjustedAt?: string | null;
 }
 
 export const AssignmentsContainer: React.FC = () => {
@@ -44,15 +83,70 @@ export const AssignmentsContainer: React.FC = () => {
         getCurrentUser();
     }, []);
 
-    const fetchGrade = async (
-        submissionId: string,
-        headers: HeadersInit,
-    ): Promise<ApiGrade | null> => {
-        const res = await fetch(`${API_BASE}/submissions/${submissionId}/grade`, { headers });
-        if (res.status === 404) return null;
-        if (!res.ok) return null;
-        return (await res.json()) as ApiGrade;
-    };
+    const findTeamForAuthor = useCallback(
+        (subjectId: string, authorId: string): Team | null =>
+            teamsBySubject[subjectId]?.find((team) =>
+                team.members.some((member) => member.userId === authorId),
+            ) ?? null,
+        [teamsBySubject],
+    );
+
+    const mapTeamGradeToApiGrade = useCallback(
+        (teamGrade: ApiTeamGrade): ApiGrade => ({
+            id: teamGrade.id,
+            teamId: teamGrade.teamId,
+            assignmentId: teamGrade.assignmentId,
+            submissionId: teamGrade.submissionId,
+            score: teamGrade.score,
+            redistributeTotalScore: teamGrade.redistributeTotalScore,
+            totalScore: teamGrade.totalScore,
+            verdictText: teamGrade.verdictText,
+            verdictedAt: teamGrade.verdictedAt,
+        }),
+        [],
+    );
+
+    const fetchGrade = useCallback(
+        async (
+            submissionId: string,
+            assignmentId: string,
+            subjectId: string,
+            authorId: string,
+            headers: HeadersInit,
+            teamsLookup?: Record<string, Team[]>,
+        ): Promise<ApiGrade | null> => {
+            const teams = teamsLookup?.[subjectId] ?? teamsBySubject[subjectId] ?? [];
+            const team = teams.find((candidateTeam) =>
+                candidateTeam.members.some((member) => member.userId === authorId),
+            );
+
+            if (team) {
+                const teamGradeResponse = await fetch(
+                    `${API_BASE}/teams/${team.id}/assignments/${assignmentId}/grade`,
+                    { headers },
+                );
+
+                if (teamGradeResponse.ok) {
+                    const teamGrade = (await teamGradeResponse.json()) as ApiTeamGrade;
+                    return teamGrade.submissionId === submissionId
+                        ? mapTeamGradeToApiGrade(teamGrade)
+                        : null;
+                }
+
+                if (teamGradeResponse.status !== 404) {
+                    return null;
+                }
+            }
+
+            const gradeResponse = await fetch(`${API_BASE}/submissions/${submissionId}/grade`, {
+                headers,
+            });
+            if (gradeResponse.status === 404) return null;
+            if (!gradeResponse.ok) return null;
+            return (await gradeResponse.json()) as ApiGrade;
+        },
+        [API_BASE, teamsBySubject, mapTeamGradeToApiGrade],
+    );
 
     const getRoleForSubject = (participants: Participant[]): Role => {
         const current = participants.find((p) => p.userId === profile.id);
@@ -148,7 +242,16 @@ export const AssignmentsContainer: React.FC = () => {
 
                     const submissionsData: ApiSubmission[] = await subRes.data;
                     const grades = await Promise.all(
-                        submissionsData.map((s) => fetchGrade(s.id, headers)),
+                        submissionsData.map((s) =>
+                            fetchGrade(
+                                s.id,
+                                assignment.id,
+                                assignment.subjectId,
+                                s.authorId,
+                                headers,
+                                nextTeams,
+                            ),
+                        ),
                     );
 
                     submissionsData.forEach((s, idx) => {
@@ -164,7 +267,7 @@ export const AssignmentsContainer: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    }, [API_BASE, profile.id]);
+    }, [API_BASE, profile.id, fetchGrade]);
 
     useEffect(() => {
         if (profile.id) {
@@ -191,7 +294,15 @@ export const AssignmentsContainer: React.FC = () => {
 
                 const submissionsData: ApiSubmission[] = await subRes.json();
                 const grades = await Promise.all(
-                    submissionsData.map((s) => fetchGrade(s.id, headers)),
+                    submissionsData.map((s) =>
+                        fetchGrade(
+                            s.id,
+                            assignment.id,
+                            assignment.subjectId,
+                            s.authorId,
+                            headers,
+                        ),
+                    ),
                 );
                 const nameMap = new Map(
                     (participantsBySubject[assignment.subjectId] ?? []).map((p: Participant) => [
@@ -209,7 +320,7 @@ export const AssignmentsContainer: React.FC = () => {
         } catch {
             return;
         }
-    }, [API_BASE, assignments, subjectRoles, participantsBySubject]);
+    }, [API_BASE, assignments, subjectRoles, participantsBySubject, fetchGrade]);
 
     const upsertDraftSubmission = useCallback(
         async (assignmentId: string, questions: Question[], answers: Record<string, any>) => {
@@ -325,17 +436,38 @@ export const AssignmentsContainer: React.FC = () => {
     );
 
     const createGrade = useCallback(
-        async (submissionId: string, score: number, verdictText: string): Promise<Grade | null> => {
+        async (
+            submissionId: string,
+            score: number,
+            verdictText: string,
+            options?: TeamGradeRequestOptions,
+        ): Promise<Grade | null> => {
             const accessToken = localStorage.getItem(ACCESS_TOKEN);
             if (!accessToken) return null;
 
-            const response = await fetch(`${API_BASE}/submissions/${submissionId}/grade`, {
+            const isTeamGrade = Boolean(options?.teamId);
+            const endpoint = isTeamGrade
+                ? `${API_BASE}/teams/${options!.teamId}/assignments/${options!.assignmentId}/grade`
+                : `${API_BASE}/submissions/${submissionId}/grade`;
+            const payload = isTeamGrade
+                ? {
+                      submissionId,
+                      score,
+                      verdictText,
+                      redistributeTotalScore: options?.redistributeTotalScore ?? false,
+                      totalScore: options?.redistributeTotalScore
+                          ? options?.totalScore ?? 0
+                          : null,
+                  }
+                : { score, verdictText };
+
+            const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${accessToken}`,
                 },
-                body: JSON.stringify({ score, verdictText }),
+                body: JSON.stringify(payload),
             });
 
             if (!response.ok) {
@@ -344,30 +476,57 @@ export const AssignmentsContainer: React.FC = () => {
             }
 
             await refreshSubmissions();
-            const payload = (await response.json()) as ApiGrade;
+            const payload = (await response.json()) as ApiGrade | ApiTeamGrade;
+            const gradePayload = isTeamGrade
+                ? mapTeamGradeToApiGrade(payload as ApiTeamGrade)
+                : (payload as ApiGrade);
             return {
-                id: payload.id,
-                submissionId: payload.submissionId,
-                score: payload.score,
-                verdictText: payload.verdictText,
-                gradedAt: payload.verdictedAt,
+                id: gradePayload.id,
+                submissionId: gradePayload.submissionId,
+                teamId: gradePayload.teamId,
+                assignmentId: gradePayload.assignmentId,
+                score: gradePayload.score,
+                redistributeTotalScore: gradePayload.redistributeTotalScore ?? false,
+                totalScore: gradePayload.totalScore ?? null,
+                verdictText: gradePayload.verdictText,
+                gradedAt: gradePayload.verdictedAt,
             };
         },
-        [API_BASE, refreshSubmissions],
+        [API_BASE, refreshSubmissions, mapTeamGradeToApiGrade],
     );
 
     const updateGrade = useCallback(
-        async (submissionId: string, score: number, verdictText: string): Promise<Grade | null> => {
+        async (
+            submissionId: string,
+            score: number,
+            verdictText: string,
+            options?: TeamGradeRequestOptions,
+        ): Promise<Grade | null> => {
             const accessToken = localStorage.getItem(ACCESS_TOKEN);
             if (!accessToken) return null;
 
-            const response = await fetch(`${API_BASE}/submissions/${submissionId}/grade`, {
+            const isTeamGrade = Boolean(options?.teamId);
+            const endpoint = isTeamGrade
+                ? `${API_BASE}/teams/${options!.teamId}/assignments/${options!.assignmentId}/grade`
+                : `${API_BASE}/submissions/${submissionId}/grade`;
+            const payload = isTeamGrade
+                ? {
+                      score,
+                      verdictText,
+                      redistributeTotalScore: options?.redistributeTotalScore ?? false,
+                      totalScore: options?.redistributeTotalScore
+                          ? options?.totalScore ?? 0
+                          : null,
+                  }
+                : { score, verdictText };
+
+            const response = await fetch(endpoint, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${accessToken}`,
                 },
-                body: JSON.stringify({ score, verdictText }),
+                body: JSON.stringify(payload),
             });
 
             if (!response.ok) {
@@ -376,24 +535,35 @@ export const AssignmentsContainer: React.FC = () => {
             }
 
             await refreshSubmissions();
-            const payload = (await response.json()) as ApiGrade;
+            const payload = (await response.json()) as ApiGrade | ApiTeamGrade;
+            const gradePayload = isTeamGrade
+                ? mapTeamGradeToApiGrade(payload as ApiTeamGrade)
+                : (payload as ApiGrade);
             return {
-                id: payload.id,
-                submissionId: payload.submissionId,
-                score: payload.score,
-                verdictText: payload.verdictText,
-                gradedAt: payload.verdictedAt,
+                id: gradePayload.id,
+                submissionId: gradePayload.submissionId,
+                teamId: gradePayload.teamId,
+                assignmentId: gradePayload.assignmentId,
+                score: gradePayload.score,
+                redistributeTotalScore: gradePayload.redistributeTotalScore ?? false,
+                totalScore: gradePayload.totalScore ?? null,
+                verdictText: gradePayload.verdictText,
+                gradedAt: gradePayload.verdictedAt,
             };
         },
-        [API_BASE, refreshSubmissions],
+        [API_BASE, refreshSubmissions, mapTeamGradeToApiGrade],
     );
 
     const deleteGrade = useCallback(
-        async (submissionId: string): Promise<boolean> => {
+        async (submissionId: string, options?: TeamGradeRequestOptions): Promise<boolean> => {
             const accessToken = localStorage.getItem(ACCESS_TOKEN);
             if (!accessToken) return false;
 
-            const response = await fetch(`${API_BASE}/submissions/${submissionId}/grade`, {
+            const endpoint = options?.teamId
+                ? `${API_BASE}/teams/${options.teamId}/assignments/${options.assignmentId}/grade`
+                : `${API_BASE}/submissions/${submissionId}/grade`;
+
+            const response = await fetch(endpoint, {
                 method: 'DELETE',
                 headers: { Authorization: `Bearer ${accessToken}` },
             });
@@ -407,6 +577,90 @@ export const AssignmentsContainer: React.FC = () => {
             return true;
         },
         [API_BASE, refreshSubmissions],
+    );
+
+    const loadTeamMemberGrades = useCallback(
+        async (
+            teamId: string,
+            assignmentId: string,
+            memberIds: string[],
+        ): Promise<TeamMemberGrade[]> => {
+            const accessToken = localStorage.getItem(ACCESS_TOKEN);
+            if (!accessToken || memberIds.length === 0) return [];
+
+            const responses = await Promise.all(
+                memberIds.map(async (studentId) => {
+                    const response = await fetch(
+                        `${API_BASE}/teams/${teamId}/assignments/${assignmentId}/students/${studentId}/grade`,
+                        { headers: { Authorization: `Bearer ${accessToken}` } },
+                    );
+
+                    if (!response.ok) {
+                        return null;
+                    }
+
+                    return (await response.json()) as ApiTeamMemberGrade;
+                }),
+            );
+
+            return responses.filter((item): item is ApiTeamMemberGrade => item != null);
+        },
+        [API_BASE],
+    );
+
+    const upsertTeamMemberGrade = useCallback(
+        async (
+            teamId: string,
+            assignmentId: string,
+            studentId: string,
+            score: number,
+        ): Promise<TeamMemberGrade | null> => {
+            const accessToken = localStorage.getItem(ACCESS_TOKEN);
+            if (!accessToken) return null;
+
+            const response = await fetch(
+                `${API_BASE}/teams/${teamId}/assignments/${assignmentId}/students/${studentId}/grade`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify({ score }),
+                },
+            );
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({}));
+                throw new Error(error.detail || `Ошибка ${response.status}`);
+            }
+
+            return (await response.json()) as ApiTeamMemberGrade;
+        },
+        [API_BASE],
+    );
+
+    const deleteTeamMemberGrade = useCallback(
+        async (teamId: string, assignmentId: string, studentId: string): Promise<boolean> => {
+            const accessToken = localStorage.getItem(ACCESS_TOKEN);
+            if (!accessToken) return false;
+
+            const response = await fetch(
+                `${API_BASE}/teams/${teamId}/assignments/${assignmentId}/students/${studentId}/grade`,
+                {
+                    method: 'DELETE',
+                    headers: { Authorization: `Bearer ${accessToken}` },
+                },
+            );
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({}));
+                throw new Error(error.detail || `Ошибка ${response.status}`);
+            }
+
+            return true;
+        },
+        [API_BASE],
     );
 
     const loadSubmissionComments = useCallback(
@@ -487,6 +741,11 @@ export const AssignmentsContainer: React.FC = () => {
         openAssignment(assignment);
     }, [assignments, submissions, profile.id]);
 
+    const reviewTeam =
+        reviewing && showSolutionsList
+            ? findTeamForAuthor(showSolutionsList.subjectId, reviewing.authorId)
+            : null;
+
     return (
         <div className='p-4 bg-slate-50 min-h-screen'>
             <div className='mb-6 flex justify-end gap-2'>
@@ -558,6 +817,18 @@ export const AssignmentsContainer: React.FC = () => {
                     onGradeDelete={deleteGrade}
                     onLoadComments={loadSubmissionComments}
                     onAddComment={addSubmissionComment}
+                    teamMembers={reviewTeam?.members ?? []}
+                    onLoadTeamMemberGrades={loadTeamMemberGrades}
+                    onUpsertTeamMemberGrade={upsertTeamMemberGrade}
+                    onDeleteTeamMemberGrade={deleteTeamMemberGrade}
+                    teamGradeOptions={
+                        reviewTeam
+                            ? {
+                                  teamId: reviewTeam.id,
+                                  assignmentId: showSolutionsList.id,
+                              }
+                            : undefined
+                    }
                 />
             )}
 

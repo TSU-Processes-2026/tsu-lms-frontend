@@ -16,6 +16,7 @@ export interface CommandConfig {
     requiresDecision: boolean;
     decisionMode: FinalDecisionMethod | null;
     decisionDeadlineDays: number | null;
+    requiredDecisionVotes: number | null;
 }
 
 export interface TeamConfig extends CommandConfig, ConfirmationResponse {
