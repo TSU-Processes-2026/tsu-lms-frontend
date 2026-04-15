@@ -11,6 +11,7 @@ import { transformAnswersToApi } from '@/utils/answerTransformer';
 import { ApiGrade, ApiSubmission, mapSubmission } from '@/utils/submissionMapper';
 import { Team } from '@/types/command/Team';
 import { TeamDecisionModal } from './TeamDecisionModal';
+import { apiClient } from '@/api/axios-client';
 
 interface Participant {
     userId: string;
@@ -70,24 +71,20 @@ export const AssignmentsContainer: React.FC = () => {
         const headers = { Authorization: `Bearer ${accessToken}` };
 
         try {
-            const subjRes = await fetch(`${API_BASE}/subjects?limit=100&offset=0`, { headers });
-            if (!subjRes.ok) {
-                setOnline(false);
-                return;
-            }
+            const subjRes = await apiClient.get(`${API_BASE}/subjects?limit=100&offset=0`);
+
             setOnline(true);
-            const subjectsData = await subjRes.json();
+            const subjectsData = await subjRes.data;
             const nextParticipants: Record<string, Participant[]> = {};
             const nextRoles: Record<string, Role> = {};
             const nextTeams: Record<string, Team[]> = {};
 
             for (const subject of subjectsData) {
-                const partRes = await fetch(
+                const partRes = await apiClient.get(
                     `${API_BASE}/subjects/${subject.id}/participants?limit=200&offset=0`,
-                    { headers },
                 );
-                if (partRes.ok) {
-                    const participants = await partRes.json();
+                if (partRes) {
+                    const participants = await partRes.data;
                     nextParticipants[subject.id] = participants;
                     nextRoles[subject.id] = getRoleForSubject(participants);
                 } else {
@@ -95,12 +92,10 @@ export const AssignmentsContainer: React.FC = () => {
                     nextRoles[subject.id] = 'student';
                 }
 
-                const teamsRes = await fetch(`${API_BASE}/subjects/${subject.id}/teams`, {
-                    headers,
-                });
+                const teamsRes = await apiClient.get(`${API_BASE}/subjects/${subject.id}/teams`);
 
-                if (teamsRes.ok) {
-                    const teamsPayload = await teamsRes.json();
+                if (teamsRes) {
+                    const teamsPayload = await teamsRes.data;
                     nextTeams[subject.id] = (teamsPayload.teams ?? []).map((team: Team) => ({
                         ...team,
                         memberIds:
@@ -122,14 +117,13 @@ export const AssignmentsContainer: React.FC = () => {
             let allSubmissions: Submission[] = [];
 
             for (const subject of subjectsData) {
-                const assRes = await fetch(
+                const assRes = await apiClient.get(
                     `${API_BASE}/subjects/${subject.id}/assignments?limit=50&offset=0`,
-                    { headers },
                 );
 
-                if (!assRes.ok) continue;
+                if (!assRes) continue;
 
-                const assignmentsData: Assignment[] = await assRes.json();
+                const assignmentsData: Assignment[] = await assRes.data;
                 const normalizedAssignments = assignmentsData.map((assignment) => ({
                     ...assignment,
                     questions: assignment.questions ?? [],
@@ -146,13 +140,13 @@ export const AssignmentsContainer: React.FC = () => {
                 );
 
                 for (const assignment of normalizedAssignments) {
-                    const subRes = await fetch(
+                    const subRes = await apiClient.get(
                         `${API_BASE}/assignments/${assignment.id}/submissions?limit=100&offset=0&isTeacher=${isTeacher}`,
-                        { headers },
                     );
-                    if (!subRes.ok) continue;
 
-                    const submissionsData: ApiSubmission[] = await subRes.json();
+                    if (!subRes) continue;
+
+                    const submissionsData: ApiSubmission[] = await subRes.data;
                     const grades = await Promise.all(
                         submissionsData.map((s) => fetchGrade(s.id, headers)),
                     );
