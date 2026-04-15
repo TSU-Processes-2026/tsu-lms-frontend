@@ -12,7 +12,11 @@ export interface ApiSubmission {
 export interface ApiGrade {
     id: string;
     submissionId: string;
+    teamId?: string;
+    assignmentId?: string;
     score: number;
+    redistributeTotalScore?: boolean;
+    totalScore?: number | null;
     verdictText: string;
     verdictedAt: string;
 }
@@ -62,7 +66,11 @@ export const mapSubmission = (
             ? {
                   id: grade.id,
                   submissionId: grade.submissionId,
+                  teamId: grade.teamId,
+                  assignmentId: grade.assignmentId,
                   score: grade.score,
+                  redistributeTotalScore: grade.redistributeTotalScore ?? false,
+                  totalScore: grade.totalScore ?? null,
                   verdictText: grade.verdictText,
                   gradedAt: grade.verdictedAt,
               }

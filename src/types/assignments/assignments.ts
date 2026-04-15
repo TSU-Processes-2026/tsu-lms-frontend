@@ -68,12 +68,31 @@ export interface SubmissionCreateRequest {
 export interface GradeRequest {
     score: number;
     verdictText: string;
+    redistributeTotalScore?: boolean;
+    totalScore?: number | null;
 }
 
 export interface Grade {
     id?: string;
     submissionId?: string;
+    teamId?: string;
+    assignmentId?: string;
     score: number;
     verdictText: string;
+    redistributeTotalScore?: boolean;
+    totalScore?: number | null;
     gradedAt?: string;
+}
+
+export interface TeamMemberGrade {
+    id?: string;
+    teamGradeId: string;
+    teamId: string;
+    assignmentId: string;
+    studentId: string;
+    username: string;
+    baseScore: number;
+    score: number;
+    isAdjusted: boolean;
+    adjustedAt?: string | null;
 }

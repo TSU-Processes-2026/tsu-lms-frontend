@@ -1,6 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { UserIcon, X, Trash2, PenLine, MessageSquare, Send, Save } from 'lucide-react';
-import { Assignment, Submission, Comment, Grade } from '../../types/assignments/assignments';
+import {
+    Assignment,
+    Submission,
+    Comment,
+    Grade,
+    TeamMemberGrade,
+} from '../../types/assignments/assignments';
+import { TeamMember } from '@/types/command/Team';
+
+interface TeamGradeOptions {
+    teamId: string;
+    assignmentId: string;
+}
+
+interface TeamGradeRequestOptions extends TeamGradeOptions {
+    redistributeTotalScore?: boolean;
+    totalScore?: number | null;
+}
 
 interface Props {
     submission: Submission;
@@ -10,15 +27,35 @@ interface Props {
         submissionId: string,
         score: number,
         verdictText: string,
+        options?: TeamGradeRequestOptions,
     ) => Promise<Grade | null>;
     onGradeUpdate: (
         submissionId: string,
         score: number,
         verdictText: string,
+        options?: TeamGradeRequestOptions,
     ) => Promise<Grade | null>;
-    onGradeDelete: (submissionId: string) => Promise<boolean>;
+    onGradeDelete: (submissionId: string, options?: TeamGradeOptions) => Promise<boolean>;
     onLoadComments: (submissionId: string) => Promise<Comment[]>;
     onAddComment: (submissionId: string, text: string) => Promise<Comment | null>;
+    teamGradeOptions?: TeamGradeOptions;
+    teamMembers?: TeamMember[];
+    onLoadTeamMemberGrades?: (
+        teamId: string,
+        assignmentId: string,
+        memberIds: string[],
+    ) => Promise<TeamMemberGrade[]>;
+    onUpsertTeamMemberGrade?: (
+        teamId: string,
+        assignmentId: string,
+        studentId: string,
+        score: number,
+    ) => Promise<TeamMemberGrade | null>;
+    onDeleteTeamMemberGrade?: (
+        teamId: string,
+        assignmentId: string,
+        studentId: string,
+    ) => Promise<boolean>;
 }
 
 export const TeacherReviewModal: React.FC<Props> = ({
@@ -30,12 +67,26 @@ export const TeacherReviewModal: React.FC<Props> = ({
     onGradeDelete,
     onLoadComments,
     onAddComment,
+    teamGradeOptions,
+    teamMembers = [],
+    onLoadTeamMemberGrades,
+    onUpsertTeamMemberGrade,
+    onDeleteTeamMemberGrade,
 }) => {
     const [score, setScore] = useState(submission.grade?.score?.toString() || '');
     const [verdictText, setVerdictText] = useState(submission.grade?.verdictText || '');
+    const [redistributeTotalScore, setRedistributeTotalScore] = useState(
+        submission.grade?.redistributeTotalScore ?? false,
+    );
+    const [totalScore, setTotalScore] = useState(
+        submission.grade?.totalScore?.toString() ?? '',
+    );
     const [comment, setComment] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [comments, setComments] = useState<Comment[]>(submission.comments || []);
+    const [memberGrades, setMemberGrades] = useState<Record<string, TeamMemberGrade>>({});
+    const [memberScoreInputs, setMemberScoreInputs] = useState<Record<string, string>>({});
+    const [memberLoadingId, setMemberLoadingId] = useState<string | null>(null);
 
     useEffect(() => {
         onLoadComments(submission.id)
@@ -46,17 +97,77 @@ export const TeacherReviewModal: React.FC<Props> = ({
     useEffect(() => {
         setScore(submission.grade?.score?.toString() || '');
         setVerdictText(submission.grade?.verdictText || '');
+        setRedistributeTotalScore(submission.grade?.redistributeTotalScore ?? false);
+        setTotalScore(submission.grade?.totalScore?.toString() ?? '');
     }, [submission]);
+
+    useEffect(() => {
+        const loadMemberGrades = async () => {
+            if (
+                !teamGradeOptions ||
+                teamMembers.length === 0 ||
+                !onLoadTeamMemberGrades
+            ) {
+                setMemberGrades({});
+                setMemberScoreInputs({});
+                return;
+            }
+
+            try {
+                const grades = await onLoadTeamMemberGrades(
+                    teamGradeOptions.teamId,
+                    teamGradeOptions.assignmentId,
+                    teamMembers.map((member) => member.userId),
+                );
+
+                const nextGrades: Record<string, TeamMemberGrade> = {};
+                const nextInputs: Record<string, string> = {};
+                grades.forEach((grade) => {
+                    nextGrades[grade.studentId] = grade;
+                    nextInputs[grade.studentId] = grade.score.toString();
+                });
+
+                setMemberGrades(nextGrades);
+                setMemberScoreInputs(nextInputs);
+            } catch {
+                setMemberGrades({});
+                setMemberScoreInputs({});
+            }
+        };
+
+        loadMemberGrades();
+    }, [teamGradeOptions, teamMembers, onLoadTeamMemberGrades, submission.id, submission.grade?.id]);
 
     const handleGrade = async () => {
         if (!score) return;
+        const scoreValue = Number(score);
+        if (!Number.isFinite(scoreValue) || scoreValue < 0) {
+            alert('Укажите корректный балл');
+            return;
+        }
+
+        const parsedTotalScore = redistributeTotalScore ? Number(totalScore) : null;
+        if (
+            redistributeTotalScore &&
+            (!Number.isFinite(parsedTotalScore) || parsedTotalScore === null || parsedTotalScore < 0)
+        ) {
+            alert('Укажите корректный общий балл команды');
+            return;
+        }
+
         setSubmitting(true);
         try {
-            const scoreValue = Number(score);
+            const requestOptions = teamGradeOptions
+                ? {
+                      ...teamGradeOptions,
+                      redistributeTotalScore,
+                      totalScore: redistributeTotalScore ? parsedTotalScore : null,
+                  }
+                : undefined;
             if (submission.grade) {
-                await onGradeUpdate(submission.id, scoreValue, verdictText);
+                await onGradeUpdate(submission.id, scoreValue, verdictText, requestOptions);
             } else {
-                await onGradeCreate(submission.id, scoreValue, verdictText);
+                await onGradeCreate(submission.id, scoreValue, verdictText, requestOptions);
             }
             onClose();
         } catch (err) {
@@ -69,7 +180,7 @@ export const TeacherReviewModal: React.FC<Props> = ({
     const handleDeleteGrade = async () => {
         setSubmitting(true);
         try {
-            await onGradeDelete(submission.id);
+            await onGradeDelete(submission.id, teamGradeOptions);
             onClose();
         } catch (err) {
             alert('Ошибка: ' + (err as Error).message);
@@ -88,6 +199,76 @@ export const TeacherReviewModal: React.FC<Props> = ({
             }
         } catch (err) {
             alert('Ошибка: ' + (err as Error).message);
+        }
+    };
+
+    const handleMemberScoreInput = (studentId: string, value: string) => {
+        setMemberScoreInputs((prev) => ({ ...prev, [studentId]: value }));
+    };
+
+    const handleSaveMemberAdjustment = async (studentId: string) => {
+        if (!teamGradeOptions || !onUpsertTeamMemberGrade) {
+            return;
+        }
+
+        const scoreText = memberScoreInputs[studentId];
+        if (scoreText == null || scoreText === '') {
+            return;
+        }
+
+        const scoreValue = Number(scoreText);
+        if (!Number.isFinite(scoreValue)) {
+            return;
+        }
+
+        setMemberLoadingId(studentId);
+        try {
+            const updated = await onUpsertTeamMemberGrade(
+                teamGradeOptions.teamId,
+                teamGradeOptions.assignmentId,
+                studentId,
+                scoreValue,
+            );
+
+            if (updated) {
+                setMemberGrades((prev) => ({ ...prev, [studentId]: updated }));
+                setMemberScoreInputs((prev) => ({
+                    ...prev,
+                    [studentId]: updated.score.toString(),
+                }));
+            }
+        } finally {
+            setMemberLoadingId(null);
+        }
+    };
+
+    const handleResetMemberAdjustment = async (studentId: string) => {
+        if (!teamGradeOptions || !onDeleteTeamMemberGrade) {
+            return;
+        }
+
+        setMemberLoadingId(studentId);
+        try {
+            const deleted = await onDeleteTeamMemberGrade(
+                teamGradeOptions.teamId,
+                teamGradeOptions.assignmentId,
+                studentId,
+            );
+
+            if (deleted) {
+                const current = memberGrades[studentId];
+                setMemberGrades((prev) => {
+                    const next = { ...prev };
+                    delete next[studentId];
+                    return next;
+                });
+                setMemberScoreInputs((prev) => ({
+                    ...prev,
+                    [studentId]: current ? current.baseScore.toString() : '',
+                }));
+            }
+        } finally {
+            setMemberLoadingId(null);
         }
     };
 
@@ -281,7 +462,98 @@ export const TeacherReviewModal: React.FC<Props> = ({
                             placeholder='Напишите обратную связь для студента...'
                             className='w-full p-4 bg-white border-2 border-slate-200 rounded-xl outline-none focus:border-blue-500 transition-colors resize-none'
                         />
+                        {teamGradeOptions && (
+                            <div className='mt-4 space-y-3'>
+                                <label className='flex items-center gap-2 text-sm font-semibold text-slate-700'>
+                                    <input
+                                        type='checkbox'
+                                        checked={redistributeTotalScore}
+                                        onChange={(event) =>
+                                            setRedistributeTotalScore(event.target.checked)
+                                        }
+                                    />
+                                    Распределить общий балл по команде
+                                </label>
+                                {redistributeTotalScore && (
+                                    <input
+                                        type='number'
+                                        min={0}
+                                        value={totalScore}
+                                        onChange={(event) => setTotalScore(event.target.value)}
+                                        placeholder='Общий балл команды'
+                                        className='w-full p-3 bg-white border-2 border-slate-200 rounded-xl outline-none focus:border-blue-500 transition-colors font-medium'
+                                    />
+                                )}
+                            </div>
+                        )}
                     </div>
+
+                    {teamGradeOptions && teamMembers.length > 0 && (
+                        <div className='p-6 bg-white rounded-2xl border border-slate-200'>
+                            <h4 className='font-bold text-slate-800 mb-4'>
+                                Индивидуальные корректировки
+                            </h4>
+                            <div className='space-y-3'>
+                                {teamMembers.map((member) => {
+                                    const grade = memberGrades[member.userId];
+                                    const baseScore = grade?.baseScore ?? submission.grade?.score ?? 0;
+                                    const currentScore = grade?.score ?? baseScore;
+                                    const inputValue =
+                                        memberScoreInputs[member.userId] ?? currentScore.toString();
+                                    const disabled = memberLoadingId === member.userId || submitting;
+
+                                    return (
+                                        <div
+                                            key={member.userId}
+                                            className='grid grid-cols-1 md:grid-cols-[1.4fr_0.6fr_0.8fr_0.8fr] gap-3 items-center p-3 bg-slate-50 rounded-xl border border-slate-100'
+                                        >
+                                            <div>
+                                                <p className='font-semibold text-slate-800'>
+                                                    {member.username}
+                                                </p>
+                                                <p className='text-xs text-slate-500'>
+                                                    Базовая: {baseScore} • Текущая: {currentScore}
+                                                </p>
+                                            </div>
+                                            <input
+                                                type='number'
+                                                min={0}
+                                                value={inputValue}
+                                                onChange={(event) =>
+                                                    handleMemberScoreInput(
+                                                        member.userId,
+                                                        event.target.value,
+                                                    )
+                                                }
+                                                disabled={disabled}
+                                                className='w-full p-2 bg-white border border-slate-200 rounded-lg outline-none focus:border-blue-500 transition-colors'
+                                            />
+                                            <button
+                                                type='button'
+                                                onClick={() =>
+                                                    handleSaveMemberAdjustment(member.userId)
+                                                }
+                                                disabled={disabled}
+                                                className='px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-50'
+                                            >
+                                                Сохранить
+                                            </button>
+                                            <button
+                                                type='button'
+                                                onClick={() =>
+                                                    handleResetMemberAdjustment(member.userId)
+                                                }
+                                                disabled={disabled || !grade?.isAdjusted}
+                                                className='px-3 py-2 rounded-lg bg-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-300 disabled:opacity-50'
+                                            >
+                                                Сбросить
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <div className='px-8 py-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/30 shrink-0'>

@@ -15,7 +15,7 @@ export const initiateVoting = async (
     try {
         const response: AxiosResponse<SubmissionDecisionInitResponse> =
             await apiClient.post<SubmissionDecisionInitResponse>(
-                `/api/submissions/${submissionId}/decision/initiate`,
+                `/submissions/${submissionId}/decision/initiate`,
                 null,
             );
         return response.data;
@@ -31,7 +31,7 @@ export const sendVote = async (
     try {
         const response: AxiosResponse<SubmissionDecisionVoteResponse> =
             await apiClient.post<SubmissionDecisionVoteResponse>(
-                `/api/submissions/${submissionId}/decision/vote`,
+                `/submissions/${submissionId}/decision/vote`,
                 vote,
             );
         return response.data;
@@ -43,11 +43,10 @@ export const sendVote = async (
 export const fetchSubmissionDecisionStatus = async (
     submissionId: string,
 ): Promise<SubmissionDecisionStatus> => {
-    console.log('id:', submissionId);
     try {
         const response: AxiosResponse<SubmissionDecisionStatus> =
             await apiClient.get<SubmissionDecisionStatus>(
-                `/api/submissions/${submissionId}/decision/status`,
+                `/submissions/${submissionId}/decision/status`,
             );
         return response.data;
     } catch (error) {
@@ -60,7 +59,7 @@ export const fetchSubmissionDecisionVotesStatus = async (
 ): Promise<SubmissionDecisionVotesStatus> => {
     try {
         const response: AxiosResponse<SubmissionDecisionVotesStatus> = await apiClient.get(
-            `/api/submissions/${submissionId}/decision/votes`,
+            `/submissions/${submissionId}/decision/votes`,
         );
         return response.data;
     } catch (error) {
@@ -75,7 +74,7 @@ export const approveSubmissionByCaptain = async (
     try {
         const response: AxiosResponse<SubmissionDecisionInitResponse> =
             await apiClient.post<SubmissionDecisionInitResponse>(
-                `/api/submissions/${submissionId}/decision/captain-approve`,
+                `/submissions/${submissionId}/decision/captain-approve`,
                 decision,
             );
         return response.data;
@@ -91,7 +90,7 @@ export const rejectSubmissionByCaptain = async (
     try {
         const response: AxiosResponse<SubmissionDecisionInitResponse> =
             await apiClient.post<SubmissionDecisionInitResponse>(
-                `/api/submissions/${submissionId}/decision/captain-reject`,
+                `/submissions/${submissionId}/decision/captain-reject`,
                 decision,
             );
         return response.data;

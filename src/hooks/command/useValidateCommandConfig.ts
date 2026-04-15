@@ -106,7 +106,10 @@ export const useValidateCommandConfig = () => {
         return null;
     };
 
-    const validateDecisionRequirement = (form: TeamConfig): string | null => {
+    const validateDecisionRequirement = (
+        totalStudentsCount: number,
+        form: TeamConfig,
+    ): string | null => {
         if (form.requiresDecision && !form.decisionMode) {
             return 'Укажите способ принятия итогового решения';
         }
@@ -117,6 +120,18 @@ export const useValidateCommandConfig = () => {
 
         if (form.decisionDeadlineDays == null) {
             return 'Укажите срок принятия итогового решения';
+        }
+
+        if (form.requiredDecisionVotes == null) {
+            return 'Укажите количество решений внутри команды';
+        }
+
+        if (form.requiredDecisionVotes < 1 || form.requiredDecisionVotes > totalStudentsCount) {
+            return 'Количество решений должно быть в пределах от 1 до числа студентов';
+        }
+
+        if (form.requiresCaptain && form.requiredDecisionVotes !== 1) {
+            return 'При режиме с капитаном количество решений должно быть равно 1';
         }
 
         if (
@@ -144,7 +159,7 @@ export const useValidateCommandConfig = () => {
         validationResult = validateCaptainAndDecisionRules(form);
         if (validationResult) return validationResult;
 
-        validationResult = validateDecisionRequirement(form);
+        validationResult = validateDecisionRequirement(totalStudentsCount, form);
         if (validationResult) return validationResult;
 
         validationResult = validateDeadlines(form);
