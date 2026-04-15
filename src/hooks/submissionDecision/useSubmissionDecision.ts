@@ -17,6 +17,21 @@ import {
 
 import { useCallback, useEffect, useState } from 'react';
 import { useErrorHandler } from '../error/useErrorHandler';
+import { isAxiosError } from 'axios';
+
+const isNoActiveSessionError = (error: unknown): boolean => {
+    if (!isAxiosError(error) || error.response?.status !== 404) {
+        return false;
+    }
+
+    const detail = error.response?.data?.detail;
+    if (typeof detail !== 'string') {
+        return false;
+    }
+
+    const normalized = detail.toLowerCase();
+    return normalized.includes('no active decision session');
+};
 
 export const useCaptainDecision = (submissionId: string) => {
     const [decision, setDecision] = useState<CaptainDecision>({ comment: '' });
@@ -157,15 +172,23 @@ export const useDecisionDetails = (submissionId: string) => {
         if (statusRes.status === 'fulfilled') {
             setDecisionStatus(statusRes.value);
         } else {
-            console.error('Status fetch error:', statusRes.reason);
-            handleError(statusRes.reason);
+            if (!isNoActiveSessionError(statusRes.reason)) {
+                console.error('Status fetch error:', statusRes.reason);
+                handleError(statusRes.reason);
+            } else {
+                setDecisionStatus(null);
+            }
         }
 
         if (votesRes.status === 'fulfilled') {
             setVotes(votesRes.value);
         } else {
-            console.error('Votes fetch error:', votesRes.reason);
-            handleError(votesRes.reason);
+            if (!isNoActiveSessionError(votesRes.reason)) {
+                console.error('Votes fetch error:', votesRes.reason);
+                handleError(votesRes.reason);
+            } else {
+                setVotes(null);
+            }
         }
 
         setIsLoading(false);

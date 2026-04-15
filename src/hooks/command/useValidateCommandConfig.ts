@@ -68,12 +68,8 @@ export const useValidateCommandConfig = () => {
             return null;
         }
 
-        if (!form.requiresCaptain && form.decisionMode !== 'Voting') {
-            return 'Без капитана метод принятия решения должен быть "Голосование"';
-        }
-
-        if (form.requiresCaptain && form.decisionMode !== 'CaptainDecides') {
-            return 'При включенном капитане метод принятия решения должен быть "Выбор капитана"';
+        if (!form.decisionMode) {
+            return 'Укажите способ принятия итогового решения';
         }
 
         return null;
@@ -130,7 +126,7 @@ export const useValidateCommandConfig = () => {
             return 'Количество решений должно быть в пределах от 1 до числа студентов';
         }
 
-        if (form.requiresCaptain && form.requiredDecisionVotes !== 1) {
+        if (form.decisionMode === 'CaptainDecides' && form.requiredDecisionVotes !== 1) {
             return 'При режиме с капитаном количество решений должно быть равно 1';
         }
 
