@@ -46,6 +46,10 @@ export interface Submission {
     answers: Record<string, any>;
     answerItems?: AnswerItemDto[];
     status: SubmissionStatus;
+    decisionResult?: 'Approved' | 'Rejected' | 'Expired' | string | null;
+    hasDecisionSession?: boolean;
+    isDecisionSessionClosed?: boolean;
+    isFinalTeamDecision?: boolean;
     grade?: Grade;
     comments?: Comment[];
 }

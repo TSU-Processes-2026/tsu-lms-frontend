@@ -482,10 +482,10 @@ export const AssignmentsContainer: React.FC = () => {
             }
 
             await refreshSubmissions();
-            const payload = (await response.json()) as ApiGrade | ApiTeamGrade;
+            const responsePayload = (await response.json()) as ApiGrade | ApiTeamGrade;
             const gradePayload = isTeamGrade
-                ? mapTeamGradeToApiGrade(payload as ApiTeamGrade)
-                : (payload as ApiGrade);
+                ? mapTeamGradeToApiGrade(responsePayload as ApiTeamGrade)
+                : (responsePayload as ApiGrade);
             return {
                 id: gradePayload.id,
                 submissionId: gradePayload.submissionId,
@@ -541,10 +541,10 @@ export const AssignmentsContainer: React.FC = () => {
             }
 
             await refreshSubmissions();
-            const payload = (await response.json()) as ApiGrade | ApiTeamGrade;
+            const responsePayload = (await response.json()) as ApiGrade | ApiTeamGrade;
             const gradePayload = isTeamGrade
-                ? mapTeamGradeToApiGrade(payload as ApiTeamGrade)
-                : (payload as ApiGrade);
+                ? mapTeamGradeToApiGrade(responsePayload as ApiTeamGrade)
+                : (responsePayload as ApiGrade);
             return {
                 id: gradePayload.id,
                 submissionId: gradePayload.submissionId,

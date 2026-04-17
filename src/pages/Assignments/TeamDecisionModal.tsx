@@ -39,6 +39,10 @@ export const TeamDecisionModal: React.FC<TeamDecisionModalProps> = ({
         [selectedSubmissionId, submissions],
     );
     const isCaptain = team.captainId === currentUserId;
+    const finalDecisionSubmissionId = useMemo(
+        () => submissions.find((submission) => submission.isFinalTeamDecision)?.id ?? null,
+        [submissions],
+    );
     const teamMemberIds = useMemo(
         () => new Set(team.members.map((member) => member.userId)),
         [team],
@@ -168,7 +172,8 @@ export const TeamDecisionModal: React.FC<TeamDecisionModalProps> = ({
     const canInitiateDecision = Boolean(
         selectedSubmission &&
         selectedSubmission.status !== 'Graded' &&
-        !activeSession,
+        !activeSession &&
+        (!finalDecisionSubmissionId || finalDecisionSubmissionId === selectedSubmission.id),
     );
     const canVote =
         decisionMode === 'Voting' &&
@@ -180,6 +185,12 @@ export const TeamDecisionModal: React.FC<TeamDecisionModalProps> = ({
         isCaptain &&
         Boolean(activeSession) &&
         !activeSession?.isClosed;
+    const selectedSubmissionDecisionSummary =
+        selectedSubmission?.isFinalTeamDecision
+            ? 'Это итоговое решение команды.'
+            : selectedSubmission?.decisionResult
+              ? `Результат выбора: ${selectedSubmission.decisionResult}`
+              : null;
 
     return (
         <div className='fixed inset-0 z-50 flex items-center justify-center p-4'>
@@ -252,6 +263,11 @@ export const TeamDecisionModal: React.FC<TeamDecisionModalProps> = ({
                                                     </span>
                                                 )}
                                             </p>
+                                            {submission.id === finalDecisionSubmissionId && (
+                                                <p className='text-xs font-semibold text-blue-600 mt-1'>
+                                                    Итоговое решение команды
+                                                </p>
+                                            )}
                                             <p className='text-sm text-slate-500 mt-1'>
                                                 Статус: {submission.status}
                                             </p>
@@ -288,7 +304,7 @@ export const TeamDecisionModal: React.FC<TeamDecisionModalProps> = ({
                             {decisionStatus && (
                                 <>
                                     <p className='text-sm text-slate-600'>
-                                        Голоса: {decisionStatus.decisionsCast} из{' '}
+                                        Голоса: {decisionStatus.decisionCast} из{' '}
                                         {decisionStatus.requiredDecisionsCount}
                                     </p>
                                     <p className='text-sm text-slate-600'>
@@ -314,6 +330,64 @@ export const TeamDecisionModal: React.FC<TeamDecisionModalProps> = ({
                                         {selectedSubmission.authorName ||
                                             selectedSubmission.authorId}
                                     </p>
+                                    {selectedSubmissionDecisionSummary && (
+                                        <p className='text-sm text-blue-600 mt-1'>
+                                            {selectedSubmissionDecisionSummary}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div className='space-y-4'>
+                                    <h5 className='font-semibold text-slate-800'>
+                                        Ответы участника команды
+                                    </h5>
+                                    {assignment.questions.map((question) => {
+                                        const answer = selectedSubmission.answers?.[question.id];
+
+                                        return (
+                                            <div
+                                                key={question.id}
+                                                className='rounded-xl border border-slate-100 bg-slate-50 p-4'
+                                            >
+                                                <p className='font-semibold text-slate-800 mb-2'>
+                                                    {question.questionData}
+                                                </p>
+                                                {question.questionType === 'SingleChoice' && (
+                                                    <p className='text-sm text-slate-600'>
+                                                        {question.options?.find(
+                                                            (option) => option.id === answer,
+                                                        )?.text ??
+                                                            answer ??
+                                                            '—'}
+                                                    </p>
+                                                )}
+                                                {question.questionType === 'MultipleChoice' && (
+                                                    <p className='text-sm text-slate-600'>
+                                                        {(Array.isArray(answer) ? answer : [])
+                                                            .map(
+                                                                (id) =>
+                                                                    question.options?.find(
+                                                                        (option) =>
+                                                                            option.id === id,
+                                                                    )?.text,
+                                                            )
+                                                            .filter(Boolean)
+                                                            .join(', ') || '—'}
+                                                    </p>
+                                                )}
+                                                {question.questionType === 'Text' && (
+                                                    <p className='text-sm text-slate-600 whitespace-pre-wrap'>
+                                                        {answer || '—'}
+                                                    </p>
+                                                )}
+                                                {question.questionType === 'File' && (
+                                                    <p className='text-sm text-slate-600'>
+                                                        {answer?.fileName || 'Файл загружен'}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
 
                                 <textarea
@@ -388,6 +462,13 @@ export const TeamDecisionModal: React.FC<TeamDecisionModalProps> = ({
                                         Решение может подтвердить только капитан команды.
                                     </div>
                                 )}
+
+                                {finalDecisionSubmissionId &&
+                                    finalDecisionSubmissionId !== selectedSubmission.id && (
+                                        <div className='p-4 rounded-xl border border-blue-100 bg-blue-50 text-blue-700 text-sm'>
+                                            Итоговое решение уже выбрано для другой работы команды.
+                                        </div>
+                                    )}
 
                                 {decisionMode === 'Voting' &&
                                     decisionStatus?.hasCurrentUserDecided && (

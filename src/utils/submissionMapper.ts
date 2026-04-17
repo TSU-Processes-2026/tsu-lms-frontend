@@ -7,6 +7,10 @@ export interface ApiSubmission {
     answers?: AnswerItemDto[] | null;
     status: string | number;
     submittedAt?: string | null;
+    decisionResult?: 'Approved' | 'Rejected' | 'Expired' | string | null;
+    hasDecisionSession?: boolean;
+    isDecisionSessionClosed?: boolean;
+    isFinalTeamDecision?: boolean;
 }
 
 export interface ApiGrade {
@@ -62,6 +66,10 @@ export const mapSubmission = (
         answers: mapSubmissionAnswers(answerItems),
         answerItems: answerItems,
         status: statusValue as Submission['status'],
+        decisionResult: submission.decisionResult ?? null,
+        hasDecisionSession: submission.hasDecisionSession ?? false,
+        isDecisionSessionClosed: submission.isDecisionSessionClosed ?? false,
+        isFinalTeamDecision: submission.isFinalTeamDecision ?? false,
         grade: grade
             ? {
                   id: grade.id,

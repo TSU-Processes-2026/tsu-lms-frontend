@@ -361,7 +361,6 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                     </button>
                     <button
                         type='submit'
-                        onClick={handleSubmit}
                         disabled={isFinalized}
                         className='flex-1 bg-linear-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-300/150 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0 disabled:cursor-not-allowed'
                     >

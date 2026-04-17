@@ -294,6 +294,11 @@ export const TeacherReviewModal: React.FC<Props> = ({
                                     submission.grade.score !== undefined &&
                                     ' • Оценено'}
                             </p>
+                            {submission.isFinalTeamDecision && (
+                                <p className='text-xs font-semibold text-blue-600 mt-1'>
+                                    Итоговое решение команды
+                                </p>
+                            )}
                         </div>
                     </div>
                     <div className='flex items-center gap-2'>

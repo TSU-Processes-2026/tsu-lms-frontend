@@ -12,6 +12,8 @@ interface Props {
 export const SolutionsListPage: React.FC<Props> = ({ assignment, solutions, onReview, onBack }) => {
     const pending = solutions.filter((s) => s.status === 'RequiresReview');
     const graded = solutions.filter((s) => s.status === 'Graded');
+    const finalDecisionSubmissionId =
+        solutions.find((submission) => submission.isFinalTeamDecision)?.id ?? null;
 
     const title = assignment.content.split('\n')[0] || 'Задание';
 
@@ -80,6 +82,11 @@ export const SolutionsListPage: React.FC<Props> = ({ assignment, solutions, onRe
                                         <p className='font-bold text-slate-800'>
                                             {sol.authorName || 'Студент'}
                                         </p>
+                                        {sol.id === finalDecisionSubmissionId && (
+                                            <p className='text-xs font-semibold text-blue-600 mt-1'>
+                                                Итоговое решение команды
+                                            </p>
+                                        )}
                                         <p className='text-sm text-slate-500'>
                                             Сдано:{' '}
                                             {new Date(
@@ -119,6 +126,11 @@ export const SolutionsListPage: React.FC<Props> = ({ assignment, solutions, onRe
                                         <p className='font-bold text-slate-800'>
                                             {sol.authorName || 'Студент'}
                                         </p>
+                                        {sol.id === finalDecisionSubmissionId && (
+                                            <p className='text-xs font-semibold text-blue-600 mt-1'>
+                                                Итоговое решение команды
+                                            </p>
+                                        )}
                                         <p className='text-sm text-slate-500'>
                                             Проверено:{' '}
                                             {sol.grade?.gradedAt
