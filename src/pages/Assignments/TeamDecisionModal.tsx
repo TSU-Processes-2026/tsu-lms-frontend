@@ -166,9 +166,7 @@ export const TeamDecisionModal: React.FC<TeamDecisionModalProps> = ({
         isVotingActionLoading ||
         isCaptainActionLoading;
     const canInitiateDecision = Boolean(
-        selectedSubmission &&
-        selectedSubmission.status !== 'Graded' &&
-        !activeSession,
+        selectedSubmission && selectedSubmission.status !== 'Graded' && !activeSession,
     );
     const canVote =
         decisionMode === 'Voting' &&
@@ -180,7 +178,11 @@ export const TeamDecisionModal: React.FC<TeamDecisionModalProps> = ({
         isCaptain &&
         Boolean(activeSession) &&
         !activeSession?.isClosed;
-
+    useEffect(() => {
+        if (selectedSubmissionId) {
+            if (canInitiateDecision) handleInitiateDecision();
+        }
+    }, [selectedSubmissionId]);
     return (
         <div className='fixed inset-0 z-50 flex items-center justify-center p-4'>
             <div className='absolute inset-0 bg-slate-900/60 backdrop-blur-sm' onClick={onClose} />
@@ -324,7 +326,7 @@ export const TeamDecisionModal: React.FC<TeamDecisionModalProps> = ({
                                     className='w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 resize-none'
                                 />
 
-                                {canInitiateDecision && (
+                                {/* {canInitiateDecision && (
                                     <button
                                         type='button'
                                         onClick={handleInitiateDecision}
@@ -335,7 +337,7 @@ export const TeamDecisionModal: React.FC<TeamDecisionModalProps> = ({
                                             ? 'Запустить выбор капитаном'
                                             : 'Запустить голосование по выбранному решению'}
                                     </button>
-                                )}
+                                )} */}
 
                                 {canVote && (
                                     <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>

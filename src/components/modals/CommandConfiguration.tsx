@@ -265,22 +265,37 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                             />
                         </div>
                     )}
-                    <div className='p-4 bg-slate-50 rounded-xl border border-slate-200'>
+                    <div className={`p-4 bg-slate-50 rounded-xl border border-slate-200`}>
                         <div className='flex items-center justify-between gap-3'>
                             <div>
-                                <p className='text-sm font-semibold text-slate-700'>
+                                <p
+                                    className={
+                                        config.requiresCaptain
+                                            ? `text-sm font-semibold text-slate-400`
+                                            : `text-sm font-semibold text-slate-700`
+                                    }
+                                >
                                     Требуется выбор итогового решения
                                 </p>
-                                <p className='text-xs text-slate-500'>
-                                    Если выключено, команда может отправлять решения без внутреннего
-                                    согласования
+                                <p
+                                    className={
+                                        config.requiresCaptain
+                                            ? `text-xs text-slate-400`
+                                            : `text-xs text-slate-500`
+                                    }
+                                >
+                                    {config.requiresCaptain
+                                        ? 'Назначен капитан. Итоговое решение принимает капитан команды'
+                                        : 'Если выключено, команда может отправлять решения без внутреннего согласования'}
                                 </p>
                             </div>
                             <input
                                 type='checkbox'
-                                checked={config.requiresDecision}
-                                disabled={isFinalized}
-                                onChange={(e) => handleRequiresDecision(e.target.checked)}
+                                checked={config.requiresDecision && !config.requiresCaptain}
+                                disabled={isFinalized || config.requiresCaptain}
+                                onChange={(e) => {
+                                    handleRequiresDecision(e.target.checked);
+                                }}
                                 className='h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 disabled:opacity-60'
                             />
                         </div>
@@ -300,20 +315,24 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                                     className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all disabled:opacity-60'
                                 />
                             </div>
-                            <div>
-                                <label className='block text-sm font-semibold text-slate-700 mb-2'>
-                                    Количество решений в команде
-                                </label>
-                                <input
-                                    type='number'
-                                    value={config.requiredDecisionVotes ?? ''}
-                                    onChange={(e) => handleRequiredDecisionVotes(e.target.value)}
-                                    min={1}
-                                    max={participantsCount}
-                                    disabled={isFinalized}
-                                    className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all disabled:opacity-60'
-                                />
-                            </div>
+                            {config.decisionMode === 'Voting' && (
+                                <div>
+                                    <label className='block text-sm font-semibold text-slate-700 mb-2'>
+                                        Количество голосов для выбора решения при голосовании
+                                    </label>
+                                    <input
+                                        type='number'
+                                        value={config.requiredDecisionVotes ?? ''}
+                                        onChange={(e) =>
+                                            handleRequiredDecisionVotes(e.target.value)
+                                        }
+                                        min={1}
+                                        max={participantsCount}
+                                        disabled={isFinalized}
+                                        className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all disabled:opacity-60'
+                                    />
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -323,10 +342,10 @@ export const CommandConfiguration = (props: ConfigModalProps) => {
                         </p>
                         <p className='text-xs text-blue-600'>
                             {!config.requiresDecision
-                                ? 'Итоговое решение не требуется'
-                                : config.decisionMode === 'CaptainDecides'
-                                  ? 'Выбор капитана (капитан принимает финальное решение)'
-                                  : 'Голосование участников команды'}
+                                ? config.requiresCaptain
+                                    ? 'Решение принимает капитан'
+                                    : 'Итоговое решение не требуется'
+                                : 'Голосование участников команды'}
                         </p>
                     </div>
 

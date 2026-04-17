@@ -115,7 +115,7 @@ export const AssignmentsContainer: React.FC = () => {
             headers: HeadersInit,
             teamsLookup?: Record<string, Team[]>,
         ): Promise<ApiGrade | null> => {
-            const teams = teamsLookup?.[subjectId] ?? teamsBySubject[subjectId] ?? [];
+            const teams = teamsLookup?.[subjectId] ?? [];
             const team = teams.find((candidateTeam) =>
                 candidateTeam.members.some((member) => member.userId === authorId),
             );
@@ -145,7 +145,7 @@ export const AssignmentsContainer: React.FC = () => {
             if (!gradeResponse.ok) return null;
             return (await gradeResponse.json()) as ApiGrade;
         },
-        [API_BASE, teamsBySubject, mapTeamGradeToApiGrade],
+        [API_BASE, mapTeamGradeToApiGrade],
     );
 
     const getRoleForSubject = (participants: Participant[]): Role => {
@@ -295,13 +295,7 @@ export const AssignmentsContainer: React.FC = () => {
                 const submissionsData: ApiSubmission[] = await subRes.json();
                 const grades = await Promise.all(
                     submissionsData.map((s) =>
-                        fetchGrade(
-                            s.id,
-                            assignment.id,
-                            assignment.subjectId,
-                            s.authorId,
-                            headers,
-                        ),
+                        fetchGrade(s.id, assignment.id, assignment.subjectId, s.authorId, headers),
                     ),
                 );
                 const nameMap = new Map(
@@ -320,7 +314,7 @@ export const AssignmentsContainer: React.FC = () => {
         } catch {
             return;
         }
-    }, [API_BASE, assignments, subjectRoles, participantsBySubject, fetchGrade]);
+    }, [API_BASE]);
 
     const upsertDraftSubmission = useCallback(
         async (assignmentId: string, questions: Question[], answers: Record<string, any>) => {
@@ -449,14 +443,14 @@ export const AssignmentsContainer: React.FC = () => {
             const endpoint = isTeamGrade
                 ? `${API_BASE}/teams/${options!.teamId}/assignments/${options!.assignmentId}/grade`
                 : `${API_BASE}/submissions/${submissionId}/grade`;
-            const payload = isTeamGrade
+            const payloadRes = isTeamGrade
                 ? {
                       submissionId,
                       score,
                       verdictText,
                       redistributeTotalScore: options?.redistributeTotalScore ?? false,
                       totalScore: options?.redistributeTotalScore
-                          ? options?.totalScore ?? 0
+                          ? (options?.totalScore ?? 0)
                           : null,
                   }
                 : { score, verdictText };
@@ -467,7 +461,7 @@ export const AssignmentsContainer: React.FC = () => {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${accessToken}`,
                 },
-                body: JSON.stringify(payload),
+                body: JSON.stringify(payloadRes),
             });
 
             if (!response.ok) {
@@ -509,13 +503,13 @@ export const AssignmentsContainer: React.FC = () => {
             const endpoint = isTeamGrade
                 ? `${API_BASE}/teams/${options!.teamId}/assignments/${options!.assignmentId}/grade`
                 : `${API_BASE}/submissions/${submissionId}/grade`;
-            const payload = isTeamGrade
+            const payloadRes = isTeamGrade
                 ? {
                       score,
                       verdictText,
                       redistributeTotalScore: options?.redistributeTotalScore ?? false,
                       totalScore: options?.redistributeTotalScore
-                          ? options?.totalScore ?? 0
+                          ? (options?.totalScore ?? 0)
                           : null,
                   }
                 : { score, verdictText };
@@ -526,7 +520,7 @@ export const AssignmentsContainer: React.FC = () => {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${accessToken}`,
                 },
-                body: JSON.stringify(payload),
+                body: JSON.stringify(payloadRes),
             });
 
             if (!response.ok) {

@@ -34,6 +34,9 @@ const normalizeDecisionMethod = (
     _requiresCaptain: boolean,
     requiresDecision: boolean,
 ): FinalDecisionMethod | null => {
+    if (_requiresCaptain) {
+        return 'CaptainDecides';
+    }
     if (!requiresDecision) {
         return null;
     }
@@ -221,17 +224,23 @@ export const useCommandConfig = (
                 requiresCaptain: preparedConfig.requiresCaptain,
                 captainSelectionMode: preparedConfig.captainSelectionMode,
                 captainVotingDeadlineDays: preparedConfig.captainVotingDeadlineDays,
-                requiresDecision: preparedConfig.requiresDecision,
+                requiresDecision: preparedConfig.requiresCaptain
+                    ? true
+                    : preparedConfig.requiresDecision,
                 decisionMode: normalizeDecisionMethod(
                     preparedConfig.requiresCaptain,
                     preparedConfig.requiresDecision,
                 ),
                 decisionDeadlineDays: preparedConfig.decisionDeadlineDays,
-                requiredDecisionVotes: preparedConfig.requiredDecisionVotes,
+                requiredDecisionVotes:
+                    preparedConfig.decisionMode === 'CaptainDecides'
+                        ? 1
+                        : preparedConfig.requiredDecisionVotes,
             });
 
             const loadedMode = normalizeDistributionMode(response.data.distributionMode);
-            const requiresCaptain = loadedMode === 'Draft' ? true : Boolean(response.data.requiresCaptain);
+            const requiresCaptain =
+                loadedMode === 'Draft' ? true : Boolean(response.data.requiresCaptain);
             const requiresDecision = Boolean(response.data.requiresDecision);
 
             setConfig({

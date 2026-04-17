@@ -8,6 +8,7 @@ import {
     TeamMemberGrade,
 } from '../../types/assignments/assignments';
 import { TeamMember } from '@/types/command/Team';
+import { useLoadConfig } from '@/hooks/command/useCommandConfig';
 
 interface TeamGradeOptions {
     teamId: string;
@@ -78,15 +79,18 @@ export const TeacherReviewModal: React.FC<Props> = ({
     const [redistributeTotalScore, setRedistributeTotalScore] = useState(
         submission.grade?.redistributeTotalScore ?? false,
     );
-    const [totalScore, setTotalScore] = useState(
-        submission.grade?.totalScore?.toString() ?? '',
-    );
+    const [totalScore, setTotalScore] = useState(submission.grade?.totalScore?.toString() ?? '');
     const [comment, setComment] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [comments, setComments] = useState<Comment[]>(submission.comments || []);
     const [memberGrades, setMemberGrades] = useState<Record<string, TeamMemberGrade>>({});
     const [memberScoreInputs, setMemberScoreInputs] = useState<Record<string, string>>({});
     const [memberLoadingId, setMemberLoadingId] = useState<string | null>(null);
+
+    const subjectId: string = assignment.subjectId;
+    const { config, isConfigLoading } = useLoadConfig(subjectId, 'teacher');
+    const isOverallSubmission = config.decisionMode != null; //для оценивания общего решения
+    const isRequireGradeEachSubmissionIndividually = !config.requiresDecision; //для оценивания решения каждого студента
 
     useEffect(() => {
         onLoadComments(submission.id)
@@ -103,11 +107,7 @@ export const TeacherReviewModal: React.FC<Props> = ({
 
     useEffect(() => {
         const loadMemberGrades = async () => {
-            if (
-                !teamGradeOptions ||
-                teamMembers.length === 0 ||
-                !onLoadTeamMemberGrades
-            ) {
+            if (!teamGradeOptions || teamMembers.length === 0 || !onLoadTeamMemberGrades) {
                 setMemberGrades({});
                 setMemberScoreInputs({});
                 return;
@@ -136,7 +136,13 @@ export const TeacherReviewModal: React.FC<Props> = ({
         };
 
         loadMemberGrades();
-    }, [teamGradeOptions, teamMembers, onLoadTeamMemberGrades, submission.id, submission.grade?.id]);
+    }, [
+        teamGradeOptions,
+        teamMembers,
+        onLoadTeamMemberGrades,
+        submission.id,
+        submission.grade?.id,
+    ]);
 
     const handleGrade = async () => {
         if (!score) return;
@@ -149,7 +155,9 @@ export const TeacherReviewModal: React.FC<Props> = ({
         const parsedTotalScore = redistributeTotalScore ? Number(totalScore) : null;
         if (
             redistributeTotalScore &&
-            (!Number.isFinite(parsedTotalScore) || parsedTotalScore === null || parsedTotalScore < 0)
+            (!Number.isFinite(parsedTotalScore) ||
+                parsedTotalScore === null ||
+                parsedTotalScore < 0)
         ) {
             alert('Укажите корректный общий балл команды');
             return;
@@ -488,7 +496,7 @@ export const TeacherReviewModal: React.FC<Props> = ({
                         )}
                     </div>
 
-                    {teamGradeOptions && teamMembers.length > 0 && (
+                    {false && teamGradeOptions && teamMembers.length > 0 && (
                         <div className='p-6 bg-white rounded-2xl border border-slate-200'>
                             <h4 className='font-bold text-slate-800 mb-4'>
                                 Индивидуальные корректировки
@@ -496,11 +504,13 @@ export const TeacherReviewModal: React.FC<Props> = ({
                             <div className='space-y-3'>
                                 {teamMembers.map((member) => {
                                     const grade = memberGrades[member.userId];
-                                    const baseScore = grade?.baseScore ?? submission.grade?.score ?? 0;
+                                    const baseScore =
+                                        grade?.baseScore ?? submission.grade?.score ?? 0;
                                     const currentScore = grade?.score ?? baseScore;
                                     const inputValue =
                                         memberScoreInputs[member.userId] ?? currentScore.toString();
-                                    const disabled = memberLoadingId === member.userId || submitting;
+                                    const disabled =
+                                        memberLoadingId === member.userId || submitting;
 
                                     return (
                                         <div
