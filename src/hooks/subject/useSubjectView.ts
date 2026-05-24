@@ -137,6 +137,7 @@ export type UseSubjectViewResult = {
         id: string;
         title: string;
         questions: import('@/hooks/subject/useCreateAssignmentModal').QuestionType[];
+        criteria: import('@/hooks/subject/useCreateAssignmentModal').CriteriaDraft[];
         subjectId: string;
         type: string;
         status: string;
@@ -413,6 +414,7 @@ export function useSubjectView(): UseSubjectViewResult {
         id: string;
         title: string;
         questions: import('@/hooks/subject/useCreateAssignmentModal').QuestionType[];
+        criteria: import('@/hooks/subject/useCreateAssignmentModal').CriteriaDraft[];
         subjectId: string;
         type: string;
         status: string;
@@ -432,9 +434,22 @@ export function useSubjectView(): UseSubjectViewResult {
                             : undefined,
                     })),
                 };
-            await import('@/api/subject/subjectView').then((api) =>
+            const created = await import('@/api/subject/subjectView').then((api) =>
                 api.createAssignment(subjectId, upsertAssignment),
             );
+            if (assignment.criteria.length > 0) {
+                const { apiClient } = await import('@/api/axios-client');
+                await Promise.all(assignment.criteria.map((c) =>
+                    apiClient.post(`/tasks/${created.id}/criteria`, {
+                        description: c.description,
+                        format: c.format,
+                        weight: c.weight ? Number(c.weight) : null,
+                        maxPoints: c.maxPoints ? Number(c.maxPoints) : null,
+                        isBonus: c.isBonus,
+                        isPenalty: c.isPenalty,
+                    }),
+                ));
+            }
             handleCloseAssignmentModal();
             await feed.refreshFeed();
         } catch {

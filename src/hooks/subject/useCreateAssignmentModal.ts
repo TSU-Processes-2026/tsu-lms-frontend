@@ -1,14 +1,5 @@
 import React, { useState } from "react";
 
-/**
- * useCreateAssignmentModal hook manages business logic for CreateAssignmentModal.
- *
- * @param subjectId The subject identifier for the assignment.
- * @param onCreate Handler to create the assignment with provided data.
- * @returns State and handlers for modal form.
- *
- * @throws {Error} If form submission fails.
- */
 export type QuestionType = {
   id: string;
   type: 'single' | 'multiple' | 'input';
@@ -17,11 +8,22 @@ export type QuestionType = {
   correct?: number | number[];
 };
 
-export function useCreateAssignmentModal(subjectId: string, onCreate: (a: { id: string; title: string; questions: QuestionType[]; subjectId: string; type: string; status: string; subject: string }) => void) {
+export type CriteriaDraft = {
+  id: string;
+  description: string;
+  format: 'checklist' | 'percentage' | 'numeric';
+  weight: string;
+  maxPoints: string;
+  isBonus: boolean;
+  isPenalty: boolean;
+};
+
+export function useCreateAssignmentModal(subjectId: string, onCreate: (a: { id: string; title: string; questions: QuestionType[]; criteria: CriteriaDraft[]; subjectId: string; type: string; status: string; subject: string }) => void) {
   const [title, setTitle] = useState("");
   const [questions, setQuestions] = useState<QuestionType[]>([
     { id: "q1", type: "single", text: "", options: ["", "", "", ""], correct: 0 }
   ]);
+  const [criteria, setCriteria] = useState<CriteriaDraft[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const addQuestion = (): void => {
@@ -44,6 +46,16 @@ export function useCreateAssignmentModal(subjectId: string, onCreate: (a: { id: 
     setQuestions(updated);
   };
 
+  const addCriterion = (): void => {
+    setCriteria([...criteria, { id: "c" + Date.now(), description: "", format: "checklist", weight: "1", maxPoints: "5", isBonus: false, isPenalty: false }]);
+  };
+
+  const updateCriterion = (idx: number, patch: Partial<CriteriaDraft>): void => {
+    setCriteria((prev) => prev.map((c, i) => (i === idx ? { ...c, ...patch } : c)));
+  };
+
+  const removeCriterion = (idx: number): void => setCriteria(criteria.filter((_, i) => i !== idx));
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
@@ -51,7 +63,7 @@ export function useCreateAssignmentModal(subjectId: string, onCreate: (a: { id: 
       try {
         onCreate({
           id: "a" + Date.now(), title,
-          questions, subjectId, type: "test", status: "not_started", subject: "Предмет"
+          questions, criteria, subjectId, type: "test", status: "not_started", subject: "Предмет"
         });
       } catch {
         setError('Ошибка создания теста');
@@ -67,6 +79,10 @@ export function useCreateAssignmentModal(subjectId: string, onCreate: (a: { id: 
     removeQuestion,
     updateQuestion,
     updateOption,
+    criteria,
+    addCriterion,
+    updateCriterion,
+    removeCriterion,
     handleSubmit,
     error,
   };

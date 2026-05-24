@@ -1,19 +1,8 @@
 import React from "react";
-import { ClipboardCheck, X, Plus, Trash2 } from "lucide-react";
-import { useCreateAssignmentModal, QuestionType } from '@/hooks/subject/useCreateAssignmentModal';
+import { ClipboardCheck, X, Plus, Trash2, ListChecks } from "lucide-react";
+import { useCreateAssignmentModal, QuestionType, CriteriaDraft } from '@/hooks/subject/useCreateAssignmentModal';
 
-/**
- * CreateAssignmentModal component for creating a test assignment with dynamic questions.
- *
- * @param props Component props.
- * @property subjectId The subject identifier for the assignment.
- * @property onClose Handler to close the modal.
- * @property onCreate Handler to create the assignment with provided data.
- * @returns Modal window for creating a test assignment.
- *
- * @throws {Error} If form submission fails.
- */
-const CreateAssignmentModal: React.FC<{ subjectId: string; onClose: () => void; onCreate: (a: { id: string; title: string; questions: QuestionType[]; subjectId: string; type: string; status: string; subject: string }) => void }> = ({ subjectId, onClose, onCreate }) => {
+const CreateAssignmentModal: React.FC<{ subjectId: string; onClose: () => void; onCreate: (a: { id: string; title: string; questions: QuestionType[]; criteria: CriteriaDraft[]; subjectId: string; type: string; status: string; subject: string }) => void }> = ({ subjectId, onClose, onCreate }) => {
   const {
     title,
     setTitle,
@@ -22,6 +11,10 @@ const CreateAssignmentModal: React.FC<{ subjectId: string; onClose: () => void; 
     removeQuestion,
     updateQuestion,
     updateOption,
+    criteria,
+    addCriterion,
+    updateCriterion,
+    removeCriterion,
     handleSubmit,
     error,
   } = useCreateAssignmentModal(subjectId, onCreate);
@@ -129,7 +122,46 @@ const CreateAssignmentModal: React.FC<{ subjectId: string; onClose: () => void; 
                 ))}
               </div>
             </div>
-          </div>
+            </div>
+
+            <div className="border-t border-slate-200 pt-6">
+              <div className="flex justify-between items-center mb-5">
+                <div className="flex items-center gap-3">
+                  <ListChecks size={20} className="text-blue-500" />
+                  <h4 className="font-bold text-slate-800">Критерии оценивания</h4>
+                </div>
+                <button type="button" onClick={addCriterion}
+                  className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-50 transition-all">
+                  <Plus size={16} /> Добавить критерий
+                </button>
+              </div>
+              <div className="space-y-2">
+                {criteria.map((c, idx) => (
+                  <div key={c.id} className="flex items-center gap-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <input value={c.description} onChange={(e) => updateCriterion(idx, { description: e.target.value })} placeholder="Описание критерия" className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+                    <select value={c.format} onChange={(e) => updateCriterion(idx, { format: e.target.value as CriteriaDraft['format'] })} className="border rounded-lg px-2 py-2 text-sm bg-white">
+                      <option value="checklist">checklist</option>
+                      <option value="percentage">percentage</option>
+                      <option value="numeric">numeric</option>
+                    </select>
+                    <input type="number" value={c.weight} onChange={(e) => updateCriterion(idx, { weight: e.target.value })} placeholder="Вес" className="w-16 px-2 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+                    <input type="number" value={c.maxPoints} onChange={(e) => updateCriterion(idx, { maxPoints: e.target.value })} placeholder="Макс" className="w-16 px-2 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+                    <div className="flex items-center gap-1 text-xs">
+                      <label className="flex items-center gap-0.5 cursor-pointer">
+                        <input type="checkbox" checked={c.isBonus} onChange={() => updateCriterion(idx, { isBonus: !c.isBonus })} className="accent-emerald-600" />
+                        <span className="text-emerald-700 font-semibold">Бонус</span>
+                      </label>
+                      <label className="flex items-center gap-0.5 cursor-pointer">
+                        <input type="checkbox" checked={c.isPenalty} onChange={() => updateCriterion(idx, { isPenalty: !c.isPenalty })} className="accent-red-600" />
+                        <span className="text-red-700 font-semibold">Штраф</span>
+                      </label>
+                    </div>
+                    <button type="button" onClick={() => removeCriterion(idx)} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
+                  </div>
+                ))}
+                {criteria.length === 0 && <p className="text-sm text-slate-400">Критерии не добавлены. Можно добавить позже.</p>}
+              </div>
+            </div>
 
           <div className="flex gap-3 mt-8 pt-6 border-t border-slate-200">
             <button type="button" onClick={onClose}
