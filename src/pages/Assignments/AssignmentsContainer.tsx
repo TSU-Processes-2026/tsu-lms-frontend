@@ -932,8 +932,11 @@ export const AssignmentsContainer: React.FC = () => {
         });
         if (!list.ok) return;
         const rows = await list.json();
-        setCourseGrades(Array.isArray(rows) ? rows : rows.grades ?? []);
-    }, [API_BASE, assignments, selectedGradeSubjectId]);
+        const grades: StudentCourseGrade[] = Array.isArray(rows) ? rows : rows.grades ?? [];
+        const participants = participantsBySubject[targetId] ?? [];
+        const nameMap = Object.fromEntries(participants.map((p) => [p.userId, p.username]));
+        setCourseGrades(grades.map((g) => ({ ...g, studentName: g.studentName || nameMap[g.studentId] || g.studentId })));
+    }, [API_BASE, assignments, selectedGradeSubjectId, participantsBySubject]);
 
     const loadCourseGrades = useCallback(async (subjectId: string) => {
         const accessToken = localStorage.getItem(ACCESS_TOKEN);
@@ -943,8 +946,11 @@ export const AssignmentsContainer: React.FC = () => {
         });
         if (!list.ok) return;
         const rows = await list.json();
-        setCourseGrades(Array.isArray(rows) ? rows : rows.grades ?? []);
-    }, [API_BASE]);
+        const grades: StudentCourseGrade[] = Array.isArray(rows) ? rows : rows.grades ?? [];
+        const participants = participantsBySubject[subjectId] ?? [];
+        const nameMap = Object.fromEntries(participants.map((p) => [p.userId, p.username]));
+        setCourseGrades(grades.map((g) => ({ ...g, studentName: g.studentName || nameMap[g.studentId] || g.studentId })));
+    }, [API_BASE, participantsBySubject]);
 
     useEffect(() => {
         if (assignments.length > 0) {
@@ -1076,10 +1082,23 @@ export const AssignmentsContainer: React.FC = () => {
                         selectedSubjectId={selectedGradeSubjectId || subjects[0].id}
                         onSelectSubject={(id) => setSelectedGradeSubjectId(id)}
                         onRecalculate={() => recalculateCourseGrades(selectedGradeSubjectId || subjects[0].id)}
-                        onExport={() => {
+                        onExport={async () => {
                             const targetId = selectedGradeSubjectId || subjects[0].id;
                             const token = localStorage.getItem(ACCESS_TOKEN);
-                            if (token) window.open(`${API_BASE}/courses/${targetId}/grades/export`, '_blank');
+                            if (!token) return;
+                            const res = await fetch(`${API_BASE}/courses/${targetId}/grades/export`, {
+                                headers: { Authorization: `Bearer ${token}` },
+                            });
+                            if (!res.ok) return;
+                            const blob = await res.blob();
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `grades-${targetId}.csv`;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
                         }}
                         isTeacher={Object.values(subjectRoles).includes('teacher')}
                         currentUserId={profile.id}
