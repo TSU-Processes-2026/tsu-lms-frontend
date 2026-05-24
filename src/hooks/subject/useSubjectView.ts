@@ -439,12 +439,14 @@ export function useSubjectView(): UseSubjectViewResult {
             );
             if (assignment.criteria.length > 0) {
                 const { apiClient } = await import('@/api/axios-client');
+                const gradingMode = (selectedSubject as Subject | null)?.gradingMode || 'five_point';
+                const isCumulative = gradingMode === 'cumulative';
                 await Promise.all(assignment.criteria.map((c) =>
                     apiClient.post(`/tasks/${created.id}/criteria`, {
                         description: c.description,
                         format: c.format,
-                        weight: c.weight ? Number(c.weight) : null,
-                        maxPoints: c.maxPoints ? Number(c.maxPoints) : null,
+                        weight: isCumulative ? null : (c.weight ? Number(c.weight) : null),
+                        maxPoints: isCumulative ? (c.maxPoints ? Number(c.maxPoints) : null) : null,
                         isBonus: c.isBonus,
                         isPenalty: c.isPenalty,
                     }),
