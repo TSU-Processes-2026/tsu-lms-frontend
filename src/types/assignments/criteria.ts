@@ -1,4 +1,4 @@
-export type AssessmentFormat = 'checklist' | 'percentage';
+export type AssessmentFormat = 'checklist' | 'percentage' | 'numeric';
 export type AssessmentType = 'SELF' | 'INSTRUCTOR';
 
 export interface Criterion {

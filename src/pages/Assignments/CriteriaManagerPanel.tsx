@@ -22,7 +22,7 @@ export const CriteriaManagerPanel: React.FC<Props> = ({
     onDelete,
 }) => {
     const [description, setDescription] = useState('');
-    const [format, setFormat] = useState<'checklist' | 'percentage'>('checklist');
+    const [format, setFormat] = useState<'checklist' | 'percentage' | 'numeric'>('checklist');
     const [gradingMode, setGradingMode] = useState<'five_point' | 'cumulative'>(
         assignment.maxPoints == null ? 'five_point' : 'cumulative',
     );
@@ -84,9 +84,10 @@ export const CriteriaManagerPanel: React.FC<Props> = ({
 
         {!isStudent && <div className='grid md:grid-cols-6 gap-2'>
             <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder='Описание критерия' className='md:col-span-2 border rounded-xl px-3 py-2 text-sm' />
-            <select value={format} onChange={(e) => setFormat(e.target.value as 'checklist' | 'percentage')} className='border rounded-xl px-3 py-2 text-sm'>
+            <select value={format} onChange={(e) => setFormat(e.target.value as 'checklist' | 'percentage' | 'numeric')} className='border rounded-xl px-3 py-2 text-sm'>
                 <option value='checklist'>checklist</option>
                 <option value='percentage'>percentage</option>
+                <option value='numeric'>numeric</option>
             </select>
             <select value={gradingMode} onChange={(e) => setGradingMode(e.target.value as 'five_point' | 'cumulative')} className='border rounded-xl px-3 py-2 text-sm'>
                 <option value='five_point'>five_point</option>

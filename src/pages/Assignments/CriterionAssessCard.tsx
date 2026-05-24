@@ -22,7 +22,7 @@ export const CriterionAssessCard: React.FC<Props> = ({
           <div className='flex flex-wrap gap-1 mt-1'>
             {criterion.isBonus && <span className='text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700'>Бонус</span>}
             {criterion.isPenalty && <span className='text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700'>Штраф</span>}
-            <span className='text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500'>{criterion.format === 'checklist' ? 'Чеклист' : 'Проценты'}</span>
+            <span className='text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500'>{criterion.format === 'checklist' ? 'Чеклист' : criterion.format === 'percentage' ? 'Проценты' : 'Число'}</span>
             {criterion.weight != null && <span className='text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700'>Вес: {criterion.weight}</span>}
             {criterion.maxPoints != null && <span className='text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700'>Макс: {criterion.maxPoints}</span>}
           </div>
@@ -30,10 +30,10 @@ export const CriterionAssessCard: React.FC<Props> = ({
       </div>
       <div className='mt-2 flex flex-wrap items-center gap-3 text-xs'>
         {selfValue !== undefined && (
-          <span className='text-slate-500'>Самооценка: <strong>{criterion.format === 'checklist' ? (selfValue ? 'Да' : 'Нет') : `${selfValue}%`}</strong></span>
+          <span className='text-slate-500'>Самооценка: <strong>{criterion.format === 'checklist' ? (selfValue ? 'Да' : 'Нет') : criterion.format === 'percentage' ? `${selfValue}%` : selfValue}</strong></span>
         )}
         {instructorValue !== undefined && (
-          <span className='text-blue-600'>Оценка: <strong>{criterion.format === 'checklist' ? (instructorValue ? 'Да' : 'Нет') : `${instructorValue}%`}</strong></span>
+          <span className='text-blue-600'>Оценка: <strong>{criterion.format === 'checklist' ? (instructorValue ? 'Да' : 'Нет') : criterion.format === 'percentage' ? `${instructorValue}%` : instructorValue}</strong></span>
         )}
       </div>
       <div className='mt-3 space-y-2'>
@@ -43,10 +43,20 @@ export const CriterionAssessCard: React.FC<Props> = ({
               <button onClick={() => onAssess(1, comment)} className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${instructorValue === 1 ? 'bg-emerald-600 text-white shadow-md' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}`}>Да</button>
               <button onClick={() => onAssess(0, comment)} className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${instructorValue === 0 ? 'bg-red-600 text-white shadow-md' : 'bg-red-100 text-red-700 hover:bg-red-200'}`}>Нет</button>
             </>
-          ) : (
+          ) : criterion.format === 'percentage' ? (
             [0, 50, 100].map((v) => (
               <button key={v} onClick={() => onAssess(v, comment)} className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${instructorValue === v ? 'bg-blue-600 text-white shadow-md' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}>{v}%</button>
             ))
+          ) : (
+            <input
+              type='number'
+              min={0}
+              max={criterion.maxPoints ?? 100}
+              step='any'
+              value={instructorValue ?? 0}
+              onChange={(e) => onAssess(Number(e.target.value), comment)}
+              className='w-24 px-3 py-1.5 text-sm border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500'
+            />
           )}
         </div>
         <input

@@ -1009,14 +1009,17 @@ export const AssignmentsContainer: React.FC = () => {
     const isCriteriaHiddenForStudent = useCallback((assignment: Assignment) => {
         const role = subjectRoles[assignment.subjectId] ?? 'student';
         if (role === 'teacher') return false;
+        const now = new Date().getTime();
         try {
             const data = assignment.assignmentData ? JSON.parse(assignment.assignmentData) : {};
             const visibilityDate = data.self_assessment_visibility_date || data.selfAssessmentVisibilityDate;
-            if (!visibilityDate) return false;
-            return new Date().getTime() < new Date(visibilityDate).getTime();
-        } catch {
-            return false;
+            if (visibilityDate && now < new Date(visibilityDate).getTime()) return true;
+        } catch {}
+        if (assignment.selfAssessmentEnabled && assignment.deadLine) {
+            const oneDayBefore = new Date(assignment.deadLine).getTime() - 24 * 60 * 60 * 1000;
+            if (now < oneDayBefore) return true;
         }
+        return false;
     }, [subjectRoles]);
 
     const reviewTeam =

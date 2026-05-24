@@ -84,10 +84,17 @@ export const AssignmentModal: React.FC<Props> = ({
             return true;
         }
 
-        const filled = payload.every((item) => item.value === 0 || item.value === 1 || item.value === 50 || item.value === 100);
+        const valid = payload.every((item) => {
+            const criterion = criteria.find((c) => c.id === item.criterionId);
+            if (!criterion) return false;
+            if (criterion.format === 'checklist') return item.value === 0 || item.value === 1;
+            if (criterion.format === 'percentage') return item.value === 0 || item.value === 50 || item.value === 100;
+            if (criterion.format === 'numeric') return item.value >= 0;
+            return false;
+        });
 
-        if (!filled) {
-            alert('Заполните самооценку по каждому критерию.');
+        if (!valid) {
+            alert('Заполните самооценку по каждому критерию корректно.');
             return false;
         }
 
@@ -165,24 +172,34 @@ export const AssignmentModal: React.FC<Props> = ({
                                                                 <button type='button' onClick={() => updateSelfAssessment(criterion.id, 1)} className={`px-3 py-1 rounded-lg text-xs ${selfAssessments[criterion.id] === 1 ? 'bg-emerald-600 text-white' : 'bg-emerald-100 text-emerald-700'}`}>Да</button>
                                                                 <button type='button' onClick={() => updateSelfAssessment(criterion.id, 0)} className={`px-3 py-1 rounded-lg text-xs ${selfAssessments[criterion.id] === 0 ? 'bg-red-600 text-white' : 'bg-red-100 text-red-700'}`}>Нет</button>
                                                             </>
-                                                        ) : (
+                                                        ) : criterion.format === 'percentage' ? (
                                                             [0, 50, 100].map((value) => (
                                                                 <button key={value} type='button' onClick={() => updateSelfAssessment(criterion.id, value)} className={`px-3 py-1 rounded-lg text-xs ${selfAssessments[criterion.id] === value ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'}`}>{value}%</button>
                                                             ))
+                                                        ) : (
+                                                            <input
+                                                                type='number'
+                                                                min={0}
+                                                                max={criterion.maxPoints ?? 100}
+                                                                step='any'
+                                                                value={selfAssessments[criterion.id] ?? 0}
+                                                                onChange={(e) => updateSelfAssessment(criterion.id, Number(e.target.value))}
+                                                                className='w-24 px-3 py-1.5 text-sm border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500'
+                                                            />
                                                         )}
                                                     </div>
                                                 )}
                                                 
                                                 {showInstructor && (
                                                     <div className='mt-2 text-xs'>
-                                                        <span className='text-emerald-600 font-semibold'>Оценка: {criterion.format === 'checklist' ? (instructor.value ? 'Да' : 'Нет') : `${instructor.value}%`}</span>
+                                                        <span className='text-emerald-600 font-semibold'>Оценка: {criterion.format === 'checklist' ? (instructor.value ? 'Да' : 'Нет') : criterion.format === 'percentage' ? `${instructor.value}%` : instructor.value}</span>
                                                         {instructor.comment && <span className='text-slate-500 ml-2'>Комментарий: {instructor.comment}</span>}
                                                     </div>
                                                 )}
                                                 
                                                 {self && (isReadOnly || canWithdraw) && !showInstructor && (
                                                     <div className='mt-2 text-xs text-slate-500'>
-                                                        Ваша самооценка: <strong>{criterion.format === 'checklist' ? (self.value ? 'Да' : 'Нет') : `${self.value}%`}</strong>
+                                                        Ваша самооценка: <strong>{criterion.format === 'checklist' ? (self.value ? 'Да' : 'Нет') : criterion.format === 'percentage' ? `${self.value}%` : self.value}</strong>
                                                         {!instructor && <span className='text-amber-600 ml-2'>Ожидает проверки</span>}
                                                     </div>
                                                 )}
