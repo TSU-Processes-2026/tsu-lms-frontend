@@ -64,8 +64,11 @@ export const AssignmentModal: React.FC<Props> = ({
         if (success) onClose();
     };
 
-    const updateSelfAssessment = (criterionId: string, value: number) => {
-        setSelfAssessments((prev) => ({ ...prev, [criterionId]: value }));
+    const updateSelfAssessment = (criterion: Criterion, value: number) => {
+        const clamped = criterion.format === 'numeric'
+            ? Math.min(Math.max(value, 0), criterion.maxPoints ?? 100)
+            : value;
+        setSelfAssessments((prev) => ({ ...prev, [criterion.id]: clamped }));
     };
 
     const buildSelfAssessments = (): SelfAssessmentDraft[] =>
@@ -89,7 +92,7 @@ export const AssignmentModal: React.FC<Props> = ({
             if (!criterion) return false;
             if (criterion.format === 'checklist') return item.value === 0 || item.value === 1;
             if (criterion.format === 'percentage') return item.value === 0 || item.value === 50 || item.value === 100;
-            if (criterion.format === 'numeric') return item.value >= 0;
+            if (criterion.format === 'numeric') return item.value >= 0 && item.value <= (criterion.maxPoints ?? 100);
             return false;
         });
 
@@ -169,12 +172,12 @@ export const AssignmentModal: React.FC<Props> = ({
                                                     <div className='mt-2 flex flex-wrap gap-2'>
                                                         {criterion.format === 'checklist' ? (
                                                             <>
-                                                                <button type='button' onClick={() => updateSelfAssessment(criterion.id, 1)} className={`px-3 py-1 rounded-lg text-xs ${selfAssessments[criterion.id] === 1 ? 'bg-emerald-600 text-white' : 'bg-emerald-100 text-emerald-700'}`}>Да</button>
-                                                                <button type='button' onClick={() => updateSelfAssessment(criterion.id, 0)} className={`px-3 py-1 rounded-lg text-xs ${selfAssessments[criterion.id] === 0 ? 'bg-red-600 text-white' : 'bg-red-100 text-red-700'}`}>Нет</button>
+                                                                <button type='button' onClick={() => updateSelfAssessment(criterion, 1)} className={`px-3 py-1 rounded-lg text-xs ${selfAssessments[criterion.id] === 1 ? 'bg-emerald-600 text-white' : 'bg-emerald-100 text-emerald-700'}`}>Да</button>
+                                                                <button type='button' onClick={() => updateSelfAssessment(criterion, 0)} className={`px-3 py-1 rounded-lg text-xs ${selfAssessments[criterion.id] === 0 ? 'bg-red-600 text-white' : 'bg-red-100 text-red-700'}`}>Нет</button>
                                                             </>
                                                         ) : criterion.format === 'percentage' ? (
                                                             [0, 50, 100].map((value) => (
-                                                                <button key={value} type='button' onClick={() => updateSelfAssessment(criterion.id, value)} className={`px-3 py-1 rounded-lg text-xs ${selfAssessments[criterion.id] === value ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'}`}>{value}%</button>
+                                                                <button key={value} type='button' onClick={() => updateSelfAssessment(criterion, value)} className={`px-3 py-1 rounded-lg text-xs ${selfAssessments[criterion.id] === value ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'}`}>{value}%</button>
                                                             ))
                                                         ) : (
                                                             <input
@@ -183,7 +186,7 @@ export const AssignmentModal: React.FC<Props> = ({
                                                                 max={criterion.maxPoints ?? 100}
                                                                 step='any'
                                                                 value={selfAssessments[criterion.id] ?? 0}
-                                                                onChange={(e) => updateSelfAssessment(criterion.id, Number(e.target.value))}
+                                                                onChange={(e) => updateSelfAssessment(criterion, Number(e.target.value))}
                                                                 className='w-24 px-3 py-1.5 text-sm border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500'
                                                             />
                                                         )}

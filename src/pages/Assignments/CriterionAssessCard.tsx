@@ -54,7 +54,10 @@ export const CriterionAssessCard: React.FC<Props> = ({
               max={criterion.maxPoints ?? 100}
               step='any'
               value={instructorValue ?? 0}
-              onChange={(e) => onAssess(Number(e.target.value), comment)}
+              onChange={(e) => {
+                const val = Math.min(Math.max(Number(e.target.value), 0), criterion.maxPoints ?? 100);
+                onAssess(val, comment);
+              }}
               className='w-24 px-3 py-1.5 text-sm border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500'
             />
           )}

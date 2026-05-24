@@ -3,7 +3,8 @@ import { Subject, GradeScaleRange } from '@/types/subject/Subject';
 import { updateSubject } from '@/api/subject/subject';
 import { DEV_URL, PROD_URL, MOCK_URL } from '@/constants/config/config';
 import { ACCESS_TOKEN } from '@/constants/auth/auth';
-import { ClipboardCheck, Plus, Trash2, Save } from 'lucide-react';
+import { ClipboardCheck, Plus, Trash2, Save, Download, RefreshCw } from 'lucide-react';
+import { StudentCourseGrade } from '@/types/assignments/criteria';
 
 interface Props {
     subject: Subject | null;
@@ -13,6 +14,112 @@ interface Props {
 }
 
 const API_BASE = DEV_URL || PROD_URL || MOCK_URL;
+
+const CourseGradesSection: React.FC<{ subjectId: string; isAdmin: boolean }> = ({ subjectId, isAdmin }) => {
+    const [grades, setGrades] = useState<StudentCourseGrade[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    const fetchGrades = async () => {
+        const token = localStorage.getItem(ACCESS_TOKEN);
+        if (!token) return;
+        setLoading(true);
+        try {
+            const res = await fetch(`${API_BASE}/courses/${subjectId}/grades`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setGrades(Array.isArray(data) ? data : data.grades ?? []);
+            }
+        } catch {} finally {
+            setLoading(false);
+        }
+    };
+
+    const recalculate = async () => {
+        const token = localStorage.getItem(ACCESS_TOKEN);
+        if (!token) return;
+        try {
+            await fetch(`${API_BASE}/courses/${subjectId}/calculate-grades`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            await fetchGrades();
+        } catch {}
+    };
+
+    const handleExport = async () => {
+        const token = localStorage.getItem(ACCESS_TOKEN);
+        if (!token) return;
+        const res = await fetch(`${API_BASE}/courses/${subjectId}/grades/export`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `grades-${subjectId}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
+    useEffect(() => { fetchGrades(); }, [subjectId]);
+
+    return (
+        <div className='bg-white rounded-3xl p-6 shadow-lg border border-slate-100'>
+            <div className='flex items-center justify-between mb-4'>
+                <h3 className='text-lg font-bold text-slate-800 flex items-center gap-2'>
+                    <ClipboardCheck size={20} className='text-violet-500' /> Итоговые оценки
+                </h3>
+                {isAdmin && (
+                    <div className='flex gap-2'>
+                        <button onClick={recalculate} className='px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-200 transition-all flex items-center gap-1'>
+                            <RefreshCw size={14} /> Пересчитать
+                        </button>
+                        <button onClick={handleExport} className='px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-all flex items-center gap-1'>
+                            <Download size={14} /> CSV
+                        </button>
+                    </div>
+                )}
+            </div>
+            {loading ? (
+                <p className='text-sm text-slate-400 py-4'>Загрузка...</p>
+            ) : grades.length === 0 ? (
+                <p className='text-sm text-slate-400 py-4'>Нет оценок. Нажмите «Пересчитать» для расчёта.</p>
+            ) : (
+                <div className='overflow-x-auto'>
+                    <table className='w-full text-sm'>
+                        <thead>
+                            <tr className='text-left text-slate-500 border-b'>
+                                <th className='pb-2 font-semibold'>Студент</th>
+                                <th className='pb-2 font-semibold'>Балл</th>
+                                <th className='pb-2 font-semibold'>Оценка</th>
+                                <th className='pb-2 font-semibold'>Рассчитано</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {grades.map((row) => (
+                                <tr key={row.studentId} className='border-b border-slate-50 hover:bg-slate-50'>
+                                    <td className='py-2.5 font-medium text-slate-800'>{row.studentName || row.studentId}</td>
+                                    <td className='py-2.5'>{Number(row.finalScore).toFixed(2)}</td>
+                                    <td className='py-2.5'>
+                                        <span className={`px-2 py-0.5 rounded-lg text-xs font-bold ${Number(row.finalScore) >= 80 ? 'bg-emerald-100 text-emerald-700' : Number(row.finalScore) >= 60 ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'}`}>
+                                            {row.finalGrade}
+                                        </span>
+                                    </td>
+                                    <td className='py-2.5 text-slate-400 text-xs'>{new Date(row.calculatedAt).toLocaleString()}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+        </div>
+    );
+};
 
 export const GradingSettings: React.FC<Props> = ({ subject, subjectId, userRole, onUpdate }) => {
     const [gradingMode, setGradingMode] = useState(subject?.gradingMode || 'five_point');
@@ -237,6 +344,8 @@ export const GradingSettings: React.FC<Props> = ({ subject, subjectId, userRole,
                     )}
                 </div>
             )}
+
+            <CourseGradesSection subjectId={subjectId} isAdmin={isAdmin} />
 
             {!isAdmin && (
                 <div className='bg-white rounded-3xl p-6 shadow-lg border border-slate-100'>
