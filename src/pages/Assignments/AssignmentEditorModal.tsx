@@ -37,6 +37,16 @@ export const AssignmentEditorModal: React.FC<Props> = ({
     const [questions, setQuestions] = useState<Question[]>(
         assignment?.questions ?? [defaultQuestion()],
     );
+    const [maxPoints, setMaxPoints] = useState(assignment?.maxPoints?.toString() ?? '');
+    const [selfAssessmentEnabled, setSelfAssessmentEnabled] = useState<boolean | null>(
+        assignment?.selfAssessmentEnabled ?? null,
+    );
+    const [selfAssessmentVisibilityDate, setSelfAssessmentVisibilityDate] = useState(
+        assignment?.selfAssessmentVisibilityDate
+            ? assignment.selfAssessmentVisibilityDate.slice(0, 16)
+            : '',
+    );
+    const [deadLine, setDeadLine] = useState(assignment?.deadLine ? assignment.deadLine.slice(0, 16) : '');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -45,6 +55,14 @@ export const AssignmentEditorModal: React.FC<Props> = ({
             setTitle(assignment.content.split('\n')[0] || '');
             setDescription(assignment.content.split('\n').slice(1).join('\n') || '');
             setQuestions(assignment.questions.length ? assignment.questions : [defaultQuestion()]);
+            setMaxPoints(assignment.maxPoints?.toString() ?? '');
+            setSelfAssessmentEnabled(assignment.selfAssessmentEnabled ?? null);
+            setSelfAssessmentVisibilityDate(
+                assignment.selfAssessmentVisibilityDate
+                    ? assignment.selfAssessmentVisibilityDate.slice(0, 16)
+                    : '',
+            );
+            setDeadLine(assignment.deadLine ? assignment.deadLine.slice(0, 16) : '');
         }
     }, [assignment]);
 
@@ -58,6 +76,12 @@ export const AssignmentEditorModal: React.FC<Props> = ({
         const payload = makeApiPayloadFromAssignment({
             content: `${title.trim()}\n${description.trim()}`.trim(),
             assignmentData: null,
+            maxPoints: maxPoints === '' ? null : Number(maxPoints),
+            selfAssessmentEnabled,
+            selfAssessmentVisibilityDate: selfAssessmentVisibilityDate
+                ? new Date(selfAssessmentVisibilityDate).toISOString()
+                : null,
+            deadLine: deadLine ? new Date(deadLine).toISOString() : null,
             questions,
         });
 
@@ -171,6 +195,63 @@ export const AssignmentEditorModal: React.FC<Props> = ({
                                 className='mt-2 w-full rounded-2xl border border-slate-200 p-4 min-h-[120px] focus:outline-none focus:border-blue-500'
                                 placeholder='Пояснение, что нужно сделать'
                             />
+                        </div>
+
+                        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                            <div>
+                                <label className='block text-sm font-medium text-slate-700'>
+                                    Максимальный балл
+                                </label>
+                                <input
+                                    type='number'
+                                    min={0}
+                                    value={maxPoints}
+                                    onChange={(e) => setMaxPoints(e.target.value)}
+                                    className='mt-2 w-full rounded-2xl border border-slate-200 p-4 focus:outline-none focus:border-blue-500'
+                                />
+                            </div>
+                            <div>
+                                <label className='block text-sm font-medium text-slate-700'>
+                                    Самооценка
+                                </label>
+                                <select
+                                    value={selfAssessmentEnabled === null ? 'inherit' : String(selfAssessmentEnabled)}
+                                    onChange={(e) =>
+                                        setSelfAssessmentEnabled(
+                                            e.target.value === 'inherit'
+                                                ? null
+                                                : e.target.value === 'true',
+                                        )
+                                    }
+                                    className='mt-2 w-full rounded-2xl border border-slate-200 p-4 focus:outline-none focus:border-blue-500'
+                                >
+                                    <option value='inherit'>Наследовать от курса</option>
+                                    <option value='true'>Включена</option>
+                                    <option value='false'>Выключена</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className='block text-sm font-medium text-slate-700'>
+                                    Дата видимости критериев
+                                </label>
+                                <input
+                                    type='datetime-local'
+                                    value={selfAssessmentVisibilityDate}
+                                    onChange={(e) => setSelfAssessmentVisibilityDate(e.target.value)}
+                                    className='mt-2 w-full rounded-2xl border border-slate-200 p-4 focus:outline-none focus:border-blue-500'
+                                />
+                            </div>
+                            <div>
+                                <label className='block text-sm font-medium text-slate-700'>
+                                    Дедлайн
+                                </label>
+                                <input
+                                    type='datetime-local'
+                                    value={deadLine}
+                                    onChange={(e) => setDeadLine(e.target.value)}
+                                    className='mt-2 w-full rounded-2xl border border-slate-200 p-4 focus:outline-none focus:border-blue-500'
+                                />
+                            </div>
                         </div>
 
                         <div>

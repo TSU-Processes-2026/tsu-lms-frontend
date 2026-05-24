@@ -32,8 +32,8 @@ const demoSubmission: Submission = {
 };
 
 const demoResults: CriterionResult[] = [
-  { id: 'r1', submissionId: 'sub1', criterionId: 'c1', value: true, assessmentType: 'SELF' },
-  { id: 'r2', submissionId: 'sub1', criterionId: 'c1', value: false, assessmentType: 'INSTRUCTOR' },
+  { id: 'r1', submissionId: 'sub1', criterionId: 'c1', value: 1, assessmentType: 'SELF' },
+  { id: 'r2', submissionId: 'sub1', criterionId: 'c1', value: 0, assessmentType: 'INSTRUCTOR' },
   { id: 'r3', submissionId: 'sub1', criterionId: 'c2', value: 80, assessmentType: 'SELF' },
   { id: 'r4', submissionId: 'sub1', criterionId: 'c2', value: 50, assessmentType: 'INSTRUCTOR' },
 ];

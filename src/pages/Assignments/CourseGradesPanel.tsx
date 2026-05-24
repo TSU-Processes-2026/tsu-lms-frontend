@@ -16,7 +16,7 @@ export const CourseGradesPanel: React.FC<Props> = ({ rows, onRecalculate }) => (
       <table className='w-full text-sm'>
         <thead><tr className='text-left text-slate-500'><th>Студент</th><th>Итоговый балл</th><th>Оценка</th><th>Пересчитано</th></tr></thead>
         <tbody>
-          {rows.map((row) => <tr key={row.studentId} className='border-t'><td className='py-2'>{row.studentName}</td><td>{row.finalScore}</td><td>{row.finalGrade}</td><td>{new Date(row.calculatedAt).toLocaleString()}</td></tr>)}
+          {rows.map((row) => <tr key={row.studentId} className='border-t'><td className='py-2'>{row.studentName ?? row.studentId}</td><td>{row.finalScore}</td><td>{row.finalGrade}</td><td>{new Date(row.calculatedAt).toLocaleString()}</td></tr>)}
         </tbody>
       </table>
     </div>

@@ -2,14 +2,23 @@ import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { QuizEngine } from './QuizEngine';
 import { Assignment, Submission, Question } from '../../types/assignments/assignments';
+import { Criterion } from '@/types/assignments/criteria';
+
+export interface SelfAssessmentDraft {
+    criterionId: string;
+    value: number;
+    comment?: string;
+}
 
 interface Props {
     assignment: Assignment;
     submission?: Submission;
     isSubmitting?: boolean;
     onClose: () => void;
-    onSubmit: (questions: Question[], answers: Record<string, any>) => Promise<boolean>;
-    onSaveDraft: (questions: Question[], answers: Record<string, any>) => Promise<boolean>;
+    criteria?: Criterion[];
+    criteriaHidden?: boolean;
+    onSubmit: (questions: Question[], answers: Record<string, any>, selfAssessments: SelfAssessmentDraft[]) => Promise<boolean>;
+    onSaveDraft: (questions: Question[], answers: Record<string, any>, selfAssessments: SelfAssessmentDraft[]) => Promise<boolean>;
     onWithdraw: (submissionId: string) => Promise<boolean>;
 }
 
@@ -18,11 +27,14 @@ export const AssignmentModal: React.FC<Props> = ({
     submission,
     isSubmitting = false,
     onClose,
+    criteria = [],
+    criteriaHidden = false,
     onSubmit,
     onSaveDraft,
     onWithdraw,
 }) => {
     const [answers, setAnswers] = useState<Record<string, any>>(submission?.answers || {});
+    const [selfAssessments, setSelfAssessments] = useState<Record<string, number>>({});
 
     const isReadOnly = submission ? submission.status !== 'Draft' : false;
     const canWithdraw = submission?.status === 'RequiresReview';
@@ -32,12 +44,15 @@ export const AssignmentModal: React.FC<Props> = ({
     }, [submission]);
 
     const handleSubmit = async () => {
-        const success = await onSubmit(assignment.questions, answers);
+        const payload = buildSelfAssessments();
+        if (!validateSelfAssessments(payload)) return;
+        const success = await onSubmit(assignment.questions, answers, payload);
         if (success) onClose();
     };
 
     const handleSaveDraft = async () => {
-        const success = await onSaveDraft(assignment.questions, answers);
+        const payload = buildSelfAssessments();
+        const success = await onSaveDraft(assignment.questions, answers, payload);
         if (success) onClose();
     };
 
@@ -45,6 +60,36 @@ export const AssignmentModal: React.FC<Props> = ({
         if (!submission) return;
         const success = await onWithdraw(submission.id);
         if (success) onClose();
+    };
+
+    const updateSelfAssessment = (criterionId: string, value: number) => {
+        setSelfAssessments((prev) => ({ ...prev, [criterionId]: value }));
+    };
+
+    const buildSelfAssessments = (): SelfAssessmentDraft[] =>
+        criteria.map((criterion) => ({
+            criterionId: criterion.id,
+            value: selfAssessments[criterion.id] ?? 0,
+        }));
+
+    const validateSelfAssessments = (payload: SelfAssessmentDraft[]) => {
+        if (criteriaHidden) {
+            alert('Критерии ещё скрыты. Отправка будет доступна после открытия самооценки.');
+            return false;
+        }
+
+        if (criteria.length === 0) {
+            return true;
+        }
+
+        const filled = payload.every((item) => item.value === 0 || item.value === 1 || item.value === 50 || item.value === 100);
+
+        if (!filled) {
+            alert('Заполните самооценку по каждому критерию.');
+            return false;
+        }
+
+        return true;
     };
 
     return (
@@ -91,6 +136,34 @@ export const AssignmentModal: React.FC<Props> = ({
                 )}
 
                 <div className='flex-1 overflow-y-auto p-6'>
+                    {criteria.length > 0 && (
+                        <div className='mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-4'>
+                            <h3 className='font-bold text-slate-800 mb-3'>Самооценка по критериям</h3>
+                            {criteriaHidden ? (
+                                <p className='text-sm text-amber-700'>Критерии станут доступны позже.</p>
+                            ) : (
+                                <div className='space-y-3'>
+                                    {criteria.map((criterion) => (
+                                        <div key={criterion.id} className='bg-white border border-slate-200 rounded-xl p-3'>
+                                            <div className='text-sm font-semibold text-slate-700'>{criterion.description}</div>
+                                            <div className='mt-2 flex flex-wrap gap-2'>
+                                                {criterion.format === 'checklist' ? (
+                                                    <>
+                                                        <button type='button' onClick={() => updateSelfAssessment(criterion.id, 1)} className={`px-3 py-1 rounded-lg text-xs ${selfAssessments[criterion.id] === 1 ? 'bg-emerald-600 text-white' : 'bg-emerald-100 text-emerald-700'}`}>Да</button>
+                                                        <button type='button' onClick={() => updateSelfAssessment(criterion.id, 0)} className={`px-3 py-1 rounded-lg text-xs ${selfAssessments[criterion.id] === 0 ? 'bg-red-600 text-white' : 'bg-red-100 text-red-700'}`}>Нет</button>
+                                                    </>
+                                                ) : (
+                                                    [0, 50, 100].map((value) => (
+                                                        <button key={value} type='button' onClick={() => updateSelfAssessment(criterion.id, value)} className={`px-3 py-1 rounded-lg text-xs ${selfAssessments[criterion.id] === value ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'}`}>{value}%</button>
+                                                    ))
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
                     <QuizEngine
                         questions={assignment.questions}
                         initialAnswers={answers}

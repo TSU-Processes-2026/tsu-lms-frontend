@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { AssignmentsPage } from './AssignmentsPage';
-import { AssignmentModal } from './AssignmentModal';
+import { AssignmentModal, SelfAssessmentDraft } from './AssignmentModal';
 import { SolutionsListPage } from './SolutionsPage';
 import { TeacherReviewModal } from './TeacherReviewModal';
 import {
@@ -81,6 +81,7 @@ export const AssignmentsContainer: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [criteriaByTask, setCriteriaByTask] = useState<Record<string, Criterion[]>>({});
+    const [criteriaHiddenByTask, setCriteriaHiddenByTask] = useState<Record<string, boolean>>({});
     const [criterionResultsBySubmission, setCriterionResultsBySubmission] = useState<Record<string, CriterionResult[]>>({});
     const [courseGrades, setCourseGrades] = useState<StudentCourseGrade[]>([]);
 
@@ -338,7 +339,12 @@ export const AssignmentsContainer: React.FC = () => {
     }, [API_BASE, assignments, subjectRoles, participantsBySubject, fetchGrade]);
 
     const upsertDraftSubmission = useCallback(
-        async (assignmentId: string, questions: Question[], answers: Record<string, any>) => {
+        async (
+            assignmentId: string,
+            questions: Question[],
+            answers: Record<string, any>,
+            selfAssessments: SelfAssessmentDraft[] = [],
+        ) => {
             const accessToken = localStorage.getItem(ACCESS_TOKEN);
             if (!accessToken) throw new Error('Требуется авторизация');
 
@@ -352,7 +358,18 @@ export const AssignmentsContainer: React.FC = () => {
                 (s) => s.assignmentId === assignmentId && s.authorId === profile.id,
             );
 
-            const response = existing
+            const shouldSendSelfAssessments = selfAssessments.length > 0;
+
+            const response = shouldSendSelfAssessments
+                ? await fetch(`${API_BASE}/tasks/${assignmentId}/submissions`, {
+                      method: 'POST',
+                      headers,
+                      body: JSON.stringify({
+                          answers: payload.answers,
+                          selfAssessments,
+                      }),
+                  })
+                : existing
                 ? await fetch(`${API_BASE}/submissions/${existing.id}`, {
                       method: 'PATCH',
                       headers,
@@ -378,10 +395,15 @@ export const AssignmentsContainer: React.FC = () => {
     );
 
     const submitAssignment = useCallback(
-        async (assignmentId: string, questions: Question[], answers: Record<string, any>) => {
+        async (
+            assignmentId: string,
+            questions: Question[],
+            answers: Record<string, any>,
+            selfAssessments: SelfAssessmentDraft[] = [],
+        ) => {
             setSubmitting(true);
             try {
-                const draft = await upsertDraftSubmission(assignmentId, questions, answers);
+                const draft = await upsertDraftSubmission(assignmentId, questions, answers, selfAssessments);
                 const accessToken = localStorage.getItem(ACCESS_TOKEN);
                 if (!accessToken) throw new Error('Требуется авторизация');
 
@@ -408,10 +430,15 @@ export const AssignmentsContainer: React.FC = () => {
     );
 
     const saveDraft = useCallback(
-        async (assignmentId: string, questions: Question[], answers: Record<string, any>) => {
+        async (
+            assignmentId: string,
+            questions: Question[],
+            answers: Record<string, any>,
+            selfAssessments: SelfAssessmentDraft[] = [],
+        ) => {
             setSubmitting(true);
             try {
-                await upsertDraftSubmission(assignmentId, questions, answers);
+                await upsertDraftSubmission(assignmentId, questions, answers, selfAssessments);
                 await refreshSubmissions();
                 return true;
             } catch (err) {
@@ -730,13 +757,14 @@ export const AssignmentsContainer: React.FC = () => {
         async (taskId: string) => {
             const accessToken = localStorage.getItem(ACCESS_TOKEN);
             if (!accessToken) return;
-            const response = await fetch(`${API_BASE}/api/tasks/${taskId}/criteria`, {
+            const response = await fetch(`${API_BASE}/tasks/${taskId}/criteria`, {
                 headers: { Authorization: `Bearer ${accessToken}` },
             });
             if (!response.ok) return;
             const payload = await response.json();
             const criteria = Array.isArray(payload) ? payload : payload.criteria ?? [];
             setCriteriaByTask((prev) => ({ ...prev, [taskId]: criteria }));
+            setCriteriaHiddenByTask((prev) => ({ ...prev, [taskId]: Boolean(payload.hidden) }));
         },
         [API_BASE],
     );
@@ -745,7 +773,7 @@ export const AssignmentsContainer: React.FC = () => {
         async (submissionId: string) => {
             const accessToken = localStorage.getItem(ACCESS_TOKEN);
             if (!accessToken) return;
-            const response = await fetch(`${API_BASE}/api/submissions/${submissionId}`, {
+            const response = await fetch(`${API_BASE}/submissions/${submissionId}`, {
                 headers: { Authorization: `Bearer ${accessToken}` },
             });
             if (!response.ok) return;
@@ -757,18 +785,18 @@ export const AssignmentsContainer: React.FC = () => {
     );
 
     const upsertInstructorResult = useCallback(
-        async (submissionId: string, criterionId: string, value: number | boolean) => {
+        async (submissionId: string, criterionId: string, value: number) => {
             const accessToken = localStorage.getItem(ACCESS_TOKEN);
             if (!accessToken) return;
 
-            await fetch(`${API_BASE}/api/submissions/${submissionId}/criteria`, {
+            await fetch(`${API_BASE}/submissions/${submissionId}/criteria`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${accessToken}`,
                 },
                 body: JSON.stringify({
-                    results: [{ criterion_id: criterionId, value, assessment_type: 'INSTRUCTOR' }],
+                    results: [{ criterionId, value }],
                 }),
             });
 
@@ -799,7 +827,7 @@ export const AssignmentsContainer: React.FC = () => {
         async (assignmentId: string, payload: Omit<Criterion, 'id' | 'taskId' | 'order'>) => {
             const accessToken = localStorage.getItem(ACCESS_TOKEN);
             if (!accessToken) return;
-            const response = await fetch(`${API_BASE}/api/tasks/${assignmentId}/criteria`, {
+            const response = await fetch(`${API_BASE}/tasks/${assignmentId}/criteria`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -809,9 +837,9 @@ export const AssignmentsContainer: React.FC = () => {
                     description: payload.description,
                     format: payload.format,
                     weight: payload.weight,
-                    max_points: payload.maxPoints,
-                    is_bonus: payload.isBonus ?? false,
-                    is_penalty: payload.isPenalty ?? false,
+                    maxPoints: payload.maxPoints,
+                    isBonus: payload.isBonus ?? false,
+                    isPenalty: payload.isPenalty ?? false,
                 }),
             });
             if (response.ok) {
@@ -845,7 +873,7 @@ export const AssignmentsContainer: React.FC = () => {
         ) => {
             const accessToken = localStorage.getItem(ACCESS_TOKEN);
             if (!accessToken) return;
-            const response = await fetch(`${API_BASE}/api/criteria/${criterionId}`, {
+            const response = await fetch(`${API_BASE}/criteria/${criterionId}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -855,9 +883,9 @@ export const AssignmentsContainer: React.FC = () => {
                     description: payload.description,
                     format: payload.format,
                     weight: payload.weight,
-                    max_points: payload.maxPoints,
-                    is_bonus: payload.isBonus,
-                    is_penalty: payload.isPenalty,
+                    maxPoints: payload.maxPoints,
+                    isBonus: payload.isBonus,
+                    isPenalty: payload.isPenalty,
                 }),
             });
             if (response.ok) {
@@ -871,7 +899,7 @@ export const AssignmentsContainer: React.FC = () => {
         async (criterionId: string, assignmentId: string) => {
             const accessToken = localStorage.getItem(ACCESS_TOKEN);
             if (!accessToken) return;
-            const response = await fetch(`${API_BASE}/api/criteria/${criterionId}`, {
+            const response = await fetch(`${API_BASE}/criteria/${criterionId}`, {
                 method: 'DELETE',
                 headers: { Authorization: `Bearer ${accessToken}` },
             });
@@ -887,12 +915,12 @@ export const AssignmentsContainer: React.FC = () => {
         if (!accessToken || assignments.length === 0) return;
         const firstSubjectId = assignments[0].subjectId;
 
-        const recalc = await fetch(`${API_BASE}/api/courses/${firstSubjectId}/calculate-grades`, {
+        const recalc = await fetch(`${API_BASE}/courses/${firstSubjectId}/calculate-grades`, {
             method: 'POST',
             headers: { Authorization: `Bearer ${accessToken}` },
         });
         if (!recalc.ok) return;
-        const list = await fetch(`${API_BASE}/api/courses/${firstSubjectId}/grades`, {
+        const list = await fetch(`${API_BASE}/courses/${firstSubjectId}/grades`, {
             headers: { Authorization: `Bearer ${accessToken}` },
         });
         if (!list.ok) return;
@@ -988,7 +1016,7 @@ export const AssignmentsContainer: React.FC = () => {
                         assignment={selectedAssignment}
                         criteria={criteriaByTask[selectedAssignment.id] ?? []}
                         isStudent={(subjectRoles[selectedAssignment.subjectId] ?? 'student') !== 'teacher'}
-                        criteriaHidden={isCriteriaHiddenForStudent(selectedAssignment)}
+                        criteriaHidden={criteriaHiddenByTask[selectedAssignment.id] ?? isCriteriaHiddenForStudent(selectedAssignment)}
                         onAdd={(payload) => addCriterion(selectedAssignment.id, payload)}
                         onUpdate={(criterionId, payload) =>
                             updateCriterion(criterionId, payload, selectedAssignment.id)
@@ -1021,17 +1049,20 @@ export const AssignmentsContainer: React.FC = () => {
                     assignment={selectedAssignment}
                     submission={selectedSubmission || undefined}
                     isSubmitting={submitting}
+                    criteria={criteriaByTask[selectedAssignment.id] ?? []}
+                    criteriaHidden={criteriaHiddenByTask[selectedAssignment.id] ?? isCriteriaHiddenForStudent(selectedAssignment)}
                     onClose={closeAll}
-                    onSaveDraft={async (questions, answers) => {
-                        const success = await saveDraft(selectedAssignment.id, questions, answers);
+                    onSaveDraft={async (questions, answers, selfAssessments) => {
+                        const success = await saveDraft(selectedAssignment.id, questions, answers, selfAssessments);
                         if (success) closeAll();
                         return success;
                     }}
-                    onSubmit={async (questions, answers) => {
+                    onSubmit={async (questions, answers, selfAssessments) => {
                         const success = await submitAssignment(
                             selectedAssignment.id,
                             questions,
                             answers,
+                            selfAssessments,
                         );
                         if (success) closeAll();
                         return success;

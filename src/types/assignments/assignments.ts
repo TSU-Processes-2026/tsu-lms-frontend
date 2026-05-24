@@ -31,6 +31,10 @@ export interface Assignment {
     content: string;
     createdAt: string;
     assignmentData?: string;
+    maxPoints?: number | null;
+    selfAssessmentEnabled?: boolean | null;
+    selfAssessmentVisibilityDate?: string | null;
+    deadLine?: string | null;
     questions: Question[];
 }
 
@@ -52,6 +56,7 @@ export interface Submission {
     isFinalTeamDecision?: boolean;
     grade?: Grade;
     comments?: Comment[];
+    criterionResults?: import('./criteria').CriterionResult[];
 }
 
 export type AnswerTypeEnum = 0 | 1 | 2;

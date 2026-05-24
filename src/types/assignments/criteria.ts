@@ -8,6 +8,7 @@ export interface Criterion {
     format: AssessmentFormat;
     weight?: number;
     maxPoints?: number;
+    points?: number;
     isBonus?: boolean;
     isPenalty?: boolean;
     order: number;
@@ -17,15 +18,17 @@ export interface CriterionResult {
     id: string;
     submissionId: string;
     criterionId: string;
-    value: number | boolean;
+    value: number;
     comment?: string;
     assessmentType: AssessmentType;
-    createdAt?: string;
+    createdBy?: string;
 }
 
 export interface StudentCourseGrade {
+    id?: string;
+    courseId?: string;
     studentId: string;
-    studentName: string;
+    studentName?: string;
     finalScore: number;
     finalGrade: string;
     calculatedAt: string;
