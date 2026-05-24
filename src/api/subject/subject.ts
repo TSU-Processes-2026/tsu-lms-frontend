@@ -33,3 +33,8 @@ export const joinSubject = async (id: string) => {
         throw error;
     }
 };
+
+export const updateSubject = async (subjectId: string, data: Record<string, unknown>) => {
+    const response = await apiClient.put(`${BASE_URL}/subjects/${subjectId}`, data);
+    return response.data;
+};

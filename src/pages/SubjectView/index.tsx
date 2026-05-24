@@ -1,6 +1,7 @@
 import { useSubjectView } from '@/hooks/subject/useSubjectView';
 import StudentsModal from '@/components/modals/StudentsModal';
 import CreateAssignmentModal from '@/components/modals/CreateAssignmentModal';
+import { GradingSettings } from './GradingSettings';
 import {
     User as UserIcon,
     Upload,
@@ -10,6 +11,7 @@ import {
     Plus,
     Dices,
     Brackets,
+    GraduationCap,
 } from 'lucide-react';
 import AnnouncementPostCard from '@/components/ui/AnnouncementPostCard';
 import MaterialPostCard from '@/components/ui/MaterialPostCard';
@@ -25,6 +27,7 @@ import { CommandCard } from '@/components/ui/CommandCard';
 import { useCommandModal } from '@/hooks/command/useCommandModal';
 import CommandParticipantsModal from '@/components/modals/ShowCommadParticipants';
 import { useEffect, useState } from 'react';
+import { Subject } from '@/types/subject/Subject';
 import { useLoadTeams } from '@/hooks/command/useLoadTeams';
 import { CreateTeamManually } from '@/components/modals/CreateTeamManually';
 import { useNavigate } from 'react-router-dom';
@@ -125,6 +128,10 @@ const SubjectView = () => {
     } = useLoadConfig(subjectId ?? '', userRole);
 
     const { showLoader } = useDelayedLoader(isConfigLoading);
+    const [subjectData, setSubjectData] = useState<Subject | null>(selectedSubject ? { ...selectedSubject as unknown as Subject } : null);
+    useEffect(() => {
+        setSubjectData(selectedSubject ? { ...selectedSubject as unknown as Subject } : null);
+    }, [selectedSubject]);
 
     const { details, handleValidateTeams, handleErrorMessages, handleWarningMessages } =
         useValidateTeams();
@@ -182,6 +189,14 @@ const SubjectView = () => {
                     >
                         Команды
                     </button>
+                    {userRole !== 'student' && (
+                        <button
+                            className={`px-6 py-3 font-semibold transition-all rounded-t-2xl flex items-center gap-1 ${activeTab === 'grading' ? 'text-blue-600 bg-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                            onClick={() => handleActiveTab('grading')}
+                        >
+                            <GraduationCap size={16} /> Оценивание
+                        </button>
+                    )}
                 </div>
                 {activeTab === 'feed' && (
                     <div className='space-y-6'>
@@ -583,6 +598,14 @@ const SubjectView = () => {
                             </div>
                         )}
                     </>
+                )}
+                {activeTab === 'grading' && (
+                    <GradingSettings
+                        subject={subjectData}
+                        subjectId={subjectId ?? ''}
+                        userRole={userRole}
+                        onUpdate={(updated) => setSubjectData(updated)}
+                    />
                 )}
             </div>
             {showModal && (
