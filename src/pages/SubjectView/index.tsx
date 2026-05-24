@@ -375,6 +375,12 @@ const SubjectView = () => {
                         >
                             Управление участниками
                         </button>
+                        <button
+                            className='ml-3 bg-linear-to-r from-emerald-600 to-emerald-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-all'
+                            onClick={() => navigate('/assignments')}
+                        >
+                            Итоговые оценки
+                        </button>
                     </div>
                 )}
                 {activeTab === 'commands' && (

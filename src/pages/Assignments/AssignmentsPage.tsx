@@ -111,6 +111,12 @@ export const AssignmentsPage: React.FC<Props> = ({
                                         >
                                             Все сдачи
                                         </button>
+                                        <button
+                                            className='px-4 py-2 bg-violet-100 text-violet-700 rounded-xl text-xs font-bold mt-2'
+                                            onClick={() => onOpenAssignment(a)}
+                                        >
+                                            Критерии
+                                        </button>
                                         {anySubs.map((sub) => (
                                             <button
                                                 key={sub.id}
