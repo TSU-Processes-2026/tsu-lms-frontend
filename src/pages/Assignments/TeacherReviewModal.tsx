@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { UserIcon, X, Trash2, PenLine, MessageSquare, Send, Save } from 'lucide-react';
+import { UserIcon, X, Trash2, PenLine, MessageSquare, Send, Save, ClipboardCheck } from 'lucide-react';
 import {
     Assignment,
     Submission,
@@ -8,6 +8,8 @@ import {
     TeamMemberGrade,
 } from '../../types/assignments/assignments';
 import { TeamMember } from '@/types/command/Team';
+import { Criterion, CriterionResult } from '@/types/assignments/criteria';
+import { CriterionAssessCard } from './CriterionAssessCard';
 
 interface TeamGradeOptions {
     teamId: string;
@@ -56,6 +58,9 @@ interface Props {
         assignmentId: string,
         studentId: string,
     ) => Promise<boolean>;
+    criteria?: Criterion[];
+    criterionResults?: CriterionResult[];
+    onUpsertInstructorCriterion?: (criterionId: string, value: number, comment?: string) => void;
 }
 
 export const TeacherReviewModal: React.FC<Props> = ({
@@ -72,6 +77,9 @@ export const TeacherReviewModal: React.FC<Props> = ({
     onLoadTeamMemberGrades,
     onUpsertTeamMemberGrade,
     onDeleteTeamMemberGrade,
+    criteria = [],
+    criterionResults = [],
+    onUpsertInstructorCriterion,
 }) => {
     const [score, setScore] = useState(submission.grade?.score?.toString() || '');
     const [verdictText, setVerdictText] = useState(submission.grade?.verdictText || '');
@@ -377,6 +385,36 @@ export const TeacherReviewModal: React.FC<Props> = ({
                             );
                         })}
                     </div>
+
+                    {criteria.length > 0 && (
+                        <div className='bg-white rounded-2xl border border-slate-200 p-6'>
+                            <h4 className='font-bold text-slate-800 mb-4 flex items-center gap-2'>
+                                <ClipboardCheck size={16} className='text-blue-500' /> Оценивание по критериям
+                            </h4>
+                            <div className='space-y-3'>
+                                {criteria.map((criterion) => {
+                                    const by = (type: 'SELF' | 'INSTRUCTOR') =>
+                                        criterionResults.find(
+                                            (r) => r.criterionId === criterion.id && r.assessmentType === type,
+                                        );
+                                    const self = by('SELF');
+                                    const instructor = by('INSTRUCTOR');
+                                    return (
+                                        <CriterionAssessCard
+                                            key={criterion.id}
+                                            criterion={criterion}
+                                            selfValue={self?.value}
+                                            instructorValue={instructor?.value}
+                                            instructorComment={instructor?.comment}
+                                            onAssess={(value, comment) =>
+                                                onUpsertInstructorCriterion?.(criterion.id, value, comment)
+                                            }
+                                        />
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
 
                     <div className='bg-slate-50 rounded-2xl border border-slate-200 p-6'>
                         <h4 className='font-bold text-slate-800 mb-4 flex items-center gap-2'>

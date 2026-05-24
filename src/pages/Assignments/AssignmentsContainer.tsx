@@ -84,6 +84,12 @@ export const AssignmentsContainer: React.FC = () => {
     const [criteriaHiddenByTask, setCriteriaHiddenByTask] = useState<Record<string, boolean>>({});
     const [criterionResultsBySubmission, setCriterionResultsBySubmission] = useState<Record<string, CriterionResult[]>>({});
     const [courseGrades, setCourseGrades] = useState<StudentCourseGrade[]>([]);
+    const [selectedGradeSubjectId, setSelectedGradeSubjectId] = useState<string | null>(null);
+    const subjectIds = [...new Set(assignments.map((a) => a.subjectId))];
+    const subjects = subjectIds.map((id) => ({
+        id,
+        title: assignments.find((a) => a.subjectId === id)?.content.split('\n')[0] || id,
+    }));
 
     const API_BASE = DEV_URL || PROD_URL || MOCK_URL;
 
@@ -785,7 +791,7 @@ export const AssignmentsContainer: React.FC = () => {
     );
 
     const upsertInstructorResult = useCallback(
-        async (submissionId: string, criterionId: string, value: number) => {
+        async (submissionId: string, criterionId: string, value: number, comment?: string) => {
             const accessToken = localStorage.getItem(ACCESS_TOKEN);
             if (!accessToken) return;
 
@@ -796,7 +802,7 @@ export const AssignmentsContainer: React.FC = () => {
                     Authorization: `Bearer ${accessToken}`,
                 },
                 body: JSON.stringify({
-                    results: [{ criterionId, value }],
+                    results: [{ criterionId, value, comment }],
                 }),
             });
 
@@ -814,6 +820,7 @@ export const AssignmentsContainer: React.FC = () => {
                             submissionId,
                             criterionId,
                             value,
+                            comment,
                             assessmentType: 'INSTRUCTOR',
                         },
                     ],
@@ -910,23 +917,41 @@ export const AssignmentsContainer: React.FC = () => {
         [API_BASE, fetchCriteria],
     );
 
-    const recalculateCourseGrades = useCallback(async () => {
+    const recalculateCourseGrades = useCallback(async (subjectId?: string) => {
         const accessToken = localStorage.getItem(ACCESS_TOKEN);
         if (!accessToken || assignments.length === 0) return;
-        const firstSubjectId = assignments[0].subjectId;
+        const targetId = subjectId || selectedGradeSubjectId || assignments[0].subjectId;
 
-        const recalc = await fetch(`${API_BASE}/courses/${firstSubjectId}/calculate-grades`, {
+        const recalc = await fetch(`${API_BASE}/courses/${targetId}/calculate-grades`, {
             method: 'POST',
             headers: { Authorization: `Bearer ${accessToken}` },
         });
         if (!recalc.ok) return;
-        const list = await fetch(`${API_BASE}/courses/${firstSubjectId}/grades`, {
+        const list = await fetch(`${API_BASE}/courses/${targetId}/grades`, {
             headers: { Authorization: `Bearer ${accessToken}` },
         });
         if (!list.ok) return;
         const rows = await list.json();
         setCourseGrades(Array.isArray(rows) ? rows : rows.grades ?? []);
-    }, [API_BASE, assignments]);
+    }, [API_BASE, assignments, selectedGradeSubjectId]);
+
+    const loadCourseGrades = useCallback(async (subjectId: string) => {
+        const accessToken = localStorage.getItem(ACCESS_TOKEN);
+        if (!accessToken) return;
+        const list = await fetch(`${API_BASE}/courses/${subjectId}/grades`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (!list.ok) return;
+        const rows = await list.json();
+        setCourseGrades(Array.isArray(rows) ? rows : rows.grades ?? []);
+    }, [API_BASE]);
+
+    useEffect(() => {
+        if (assignments.length > 0) {
+            const initialSubjectId = selectedGradeSubjectId || assignments[0].subjectId;
+            loadCourseGrades(initialSubjectId);
+        }
+    }, [assignments, selectedGradeSubjectId, loadCourseGrades]);
 
     const openAssignment = (assignment: Assignment) => {
         const mySubmission = submissions.find(
@@ -967,6 +992,13 @@ export const AssignmentsContainer: React.FC = () => {
         if (!selectedSubmission) return;
         fetchSubmissionCriteriaResults(selectedSubmission.id);
     }, [selectedSubmission, fetchSubmissionCriteriaResults]);
+
+    useEffect(() => {
+        if (reviewing) {
+            fetchSubmissionCriteriaResults(reviewing.id);
+            fetchCriteria(reviewing.assignmentId);
+        }
+    }, [reviewing, fetchSubmissionCriteriaResults, fetchCriteria]);
 
     const isCriteriaHiddenForStudent = useCallback((assignment: Assignment) => {
         const role = subjectRoles[assignment.subjectId] ?? 'student';
@@ -1036,9 +1068,22 @@ export const AssignmentsContainer: React.FC = () => {
                     />
                 </div>
             )}
-            {Object.values(subjectRoles).includes('teacher') && (
+            {subjects.length > 0 && (
                 <div className='mt-6'>
-                    <CourseGradesPanel rows={courseGrades} onRecalculate={recalculateCourseGrades} />
+                    <CourseGradesPanel
+                        rows={courseGrades}
+                        subjects={subjects}
+                        selectedSubjectId={selectedGradeSubjectId || subjects[0].id}
+                        onSelectSubject={(id) => setSelectedGradeSubjectId(id)}
+                        onRecalculate={() => recalculateCourseGrades(selectedGradeSubjectId || subjects[0].id)}
+                        onExport={() => {
+                            const targetId = selectedGradeSubjectId || subjects[0].id;
+                            const token = localStorage.getItem(ACCESS_TOKEN);
+                            if (token) window.open(`${API_BASE}/courses/${targetId}/grades/export`, '_blank');
+                        }}
+                        isTeacher={Object.values(subjectRoles).includes('teacher')}
+                        currentUserId={profile.id}
+                    />
                 </div>
             )}
                 </>
@@ -1051,6 +1096,7 @@ export const AssignmentsContainer: React.FC = () => {
                     isSubmitting={submitting}
                     criteria={criteriaByTask[selectedAssignment.id] ?? []}
                     criteriaHidden={criteriaHiddenByTask[selectedAssignment.id] ?? isCriteriaHiddenForStudent(selectedAssignment)}
+                    criterionResults={selectedSubmission ? (criterionResultsBySubmission[selectedSubmission.id] ?? []) : []}
                     onClose={closeAll}
                     onSaveDraft={async (questions, answers, selfAssessments) => {
                         const success = await saveDraft(selectedAssignment.id, questions, answers, selfAssessments);
@@ -1105,6 +1151,11 @@ export const AssignmentsContainer: React.FC = () => {
                                   assignmentId: showSolutionsList.id,
                               }
                             : undefined
+                    }
+                    criteria={criteriaByTask[showSolutionsList.id] ?? []}
+                    criterionResults={criterionResultsBySubmission[reviewing.id] ?? []}
+                    onUpsertInstructorCriterion={(criterionId, value, comment) =>
+                        upsertInstructorResult(reviewing.id, criterionId, value, comment)
                     }
                 />
             )}

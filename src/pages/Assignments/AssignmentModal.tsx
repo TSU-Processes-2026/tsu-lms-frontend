@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
+import { X, ClipboardCheck } from 'lucide-react';
 import { QuizEngine } from './QuizEngine';
 import { Assignment, Submission, Question } from '../../types/assignments/assignments';
-import { Criterion } from '@/types/assignments/criteria';
+import { Criterion, CriterionResult } from '@/types/assignments/criteria';
 
 export interface SelfAssessmentDraft {
     criterionId: string;
@@ -20,6 +20,7 @@ interface Props {
     onSubmit: (questions: Question[], answers: Record<string, any>, selfAssessments: SelfAssessmentDraft[]) => Promise<boolean>;
     onSaveDraft: (questions: Question[], answers: Record<string, any>, selfAssessments: SelfAssessmentDraft[]) => Promise<boolean>;
     onWithdraw: (submissionId: string) => Promise<boolean>;
+    criterionResults?: CriterionResult[];
 }
 
 export const AssignmentModal: React.FC<Props> = ({
@@ -32,6 +33,7 @@ export const AssignmentModal: React.FC<Props> = ({
     onSubmit,
     onSaveDraft,
     onWithdraw,
+    criterionResults = [],
 }) => {
     const [answers, setAnswers] = useState<Record<string, any>>(submission?.answers || {});
     const [selfAssessments, setSelfAssessments] = useState<Record<string, number>>({});
@@ -138,28 +140,55 @@ export const AssignmentModal: React.FC<Props> = ({
                 <div className='flex-1 overflow-y-auto p-6'>
                     {criteria.length > 0 && (
                         <div className='mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-4'>
-                            <h3 className='font-bold text-slate-800 mb-3'>Самооценка по критериям</h3>
+                            <h3 className='font-bold text-slate-800 mb-3 flex items-center gap-2'>
+                                <ClipboardCheck size={16} className='text-blue-500' /> Критерии
+                            </h3>
                             {criteriaHidden ? (
                                 <p className='text-sm text-amber-700'>Критерии станут доступны позже.</p>
                             ) : (
                                 <div className='space-y-3'>
-                                    {criteria.map((criterion) => (
-                                        <div key={criterion.id} className='bg-white border border-slate-200 rounded-xl p-3'>
-                                            <div className='text-sm font-semibold text-slate-700'>{criterion.description}</div>
-                                            <div className='mt-2 flex flex-wrap gap-2'>
-                                                {criterion.format === 'checklist' ? (
-                                                    <>
-                                                        <button type='button' onClick={() => updateSelfAssessment(criterion.id, 1)} className={`px-3 py-1 rounded-lg text-xs ${selfAssessments[criterion.id] === 1 ? 'bg-emerald-600 text-white' : 'bg-emerald-100 text-emerald-700'}`}>Да</button>
-                                                        <button type='button' onClick={() => updateSelfAssessment(criterion.id, 0)} className={`px-3 py-1 rounded-lg text-xs ${selfAssessments[criterion.id] === 0 ? 'bg-red-600 text-white' : 'bg-red-100 text-red-700'}`}>Нет</button>
-                                                    </>
-                                                ) : (
-                                                    [0, 50, 100].map((value) => (
-                                                        <button key={value} type='button' onClick={() => updateSelfAssessment(criterion.id, value)} className={`px-3 py-1 rounded-lg text-xs ${selfAssessments[criterion.id] === value ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'}`}>{value}%</button>
-                                                    ))
+                                    {criteria.map((criterion) => {
+                                        const self = criterionResults.find((r) => r.criterionId === criterion.id && r.assessmentType === 'SELF');
+                                        const instructor = criterionResults.find((r) => r.criterionId === criterion.id && r.assessmentType === 'INSTRUCTOR');
+                                        const isGraded = submission?.status === 'Graded';
+                                        const showInstructor = isGraded && instructor;
+                                        return (
+                                            <div key={criterion.id} className={`bg-white border rounded-xl p-3 ${showInstructor ? 'border-emerald-200' : 'border-slate-200'}`}>
+                                                <div className='text-sm font-semibold text-slate-700'>{criterion.description}</div>
+                                                {criterion.isBonus && <span className='text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 ml-2'>Бонус</span>}
+                                                {criterion.isPenalty && <span className='text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700 ml-2'>Штраф</span>}
+                                                
+                                                {!isGraded && !isReadOnly && !canWithdraw && (
+                                                    <div className='mt-2 flex flex-wrap gap-2'>
+                                                        {criterion.format === 'checklist' ? (
+                                                            <>
+                                                                <button type='button' onClick={() => updateSelfAssessment(criterion.id, 1)} className={`px-3 py-1 rounded-lg text-xs ${selfAssessments[criterion.id] === 1 ? 'bg-emerald-600 text-white' : 'bg-emerald-100 text-emerald-700'}`}>Да</button>
+                                                                <button type='button' onClick={() => updateSelfAssessment(criterion.id, 0)} className={`px-3 py-1 rounded-lg text-xs ${selfAssessments[criterion.id] === 0 ? 'bg-red-600 text-white' : 'bg-red-100 text-red-700'}`}>Нет</button>
+                                                            </>
+                                                        ) : (
+                                                            [0, 50, 100].map((value) => (
+                                                                <button key={value} type='button' onClick={() => updateSelfAssessment(criterion.id, value)} className={`px-3 py-1 rounded-lg text-xs ${selfAssessments[criterion.id] === value ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'}`}>{value}%</button>
+                                                            ))
+                                                        )}
+                                                    </div>
+                                                )}
+                                                
+                                                {showInstructor && (
+                                                    <div className='mt-2 text-xs'>
+                                                        <span className='text-emerald-600 font-semibold'>Оценка: {criterion.format === 'checklist' ? (instructor.value ? 'Да' : 'Нет') : `${instructor.value}%`}</span>
+                                                        {instructor.comment && <span className='text-slate-500 ml-2'>Комментарий: {instructor.comment}</span>}
+                                                    </div>
+                                                )}
+                                                
+                                                {self && (isReadOnly || canWithdraw) && !showInstructor && (
+                                                    <div className='mt-2 text-xs text-slate-500'>
+                                                        Ваша самооценка: <strong>{criterion.format === 'checklist' ? (self.value ? 'Да' : 'Нет') : `${self.value}%`}</strong>
+                                                        {!instructor && <span className='text-amber-600 ml-2'>Ожидает проверки</span>}
+                                                    </div>
                                                 )}
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>
