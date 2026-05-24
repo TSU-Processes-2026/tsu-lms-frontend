@@ -19,6 +19,11 @@ import { ApiGrade, ApiSubmission, mapSubmission } from '@/utils/submissionMapper
 import { Team } from '@/types/command/Team';
 import { TeamDecisionModal } from './TeamDecisionModal';
 
+import { Criterion, CriterionResult, StudentCourseGrade } from '@/types/assignments/criteria';
+import { CriteriaManagerPanel } from './CriteriaManagerPanel';
+import { SubmissionAssessmentPanel } from './SubmissionAssessmentPanel';
+import { CourseGradesPanel } from './CourseGradesPanel';
+
 interface Participant {
     userId: string;
     username: string;
@@ -75,6 +80,9 @@ export const AssignmentsContainer: React.FC = () => {
     const [reviewing, setReviewing] = useState<Submission | null>(null);
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [criteriaByTask, setCriteriaByTask] = useState<Record<string, Criterion[]>>({});
+    const [criterionResultsBySubmission, setCriterionResultsBySubmission] = useState<Record<string, CriterionResult[]>>({});
+    const [courseGrades, setCourseGrades] = useState<StudentCourseGrade[]>([]);
 
     const API_BASE = DEV_URL || PROD_URL || MOCK_URL;
 
@@ -114,7 +122,7 @@ export const AssignmentsContainer: React.FC = () => {
             headers: HeadersInit,
             teamsLookup?: Record<string, Team[]>,
         ): Promise<ApiGrade | null> => {
-            const teams = teamsLookup?.[subjectId] ?? teamsBySubject[subjectId] ?? [];
+            const teams = teamsLookup?.[subjectId] ?? [];
             const team = teams.find((candidateTeam) =>
                 candidateTeam.members.some((member) => member.userId === authorId),
             );
@@ -144,7 +152,7 @@ export const AssignmentsContainer: React.FC = () => {
             if (!gradeResponse.ok) return null;
             return (await gradeResponse.json()) as ApiGrade;
         },
-        [API_BASE, teamsBySubject, mapTeamGradeToApiGrade],
+        [API_BASE, mapTeamGradeToApiGrade],
     );
 
     const getRoleForSubject = (participants: Participant[]): Role => {
@@ -307,6 +315,7 @@ export const AssignmentsContainer: React.FC = () => {
                             assignment.subjectId,
                             s.authorId,
                             headers,
+                            teamsBySubject,
                         ),
                     ),
                 );
@@ -717,6 +726,180 @@ export const AssignmentsContainer: React.FC = () => {
         setReviewing(null);
     };
 
+    const fetchCriteria = useCallback(
+        async (taskId: string) => {
+            const accessToken = localStorage.getItem(ACCESS_TOKEN);
+            if (!accessToken) return;
+            const response = await fetch(`${API_BASE}/api/tasks/${taskId}/criteria`, {
+                headers: { Authorization: `Bearer ${accessToken}` },
+            });
+            if (!response.ok) return;
+            const payload = await response.json();
+            const criteria = Array.isArray(payload) ? payload : payload.criteria ?? [];
+            setCriteriaByTask((prev) => ({ ...prev, [taskId]: criteria }));
+        },
+        [API_BASE],
+    );
+
+    const fetchSubmissionCriteriaResults = useCallback(
+        async (submissionId: string) => {
+            const accessToken = localStorage.getItem(ACCESS_TOKEN);
+            if (!accessToken) return;
+            const response = await fetch(`${API_BASE}/api/submissions/${submissionId}`, {
+                headers: { Authorization: `Bearer ${accessToken}` },
+            });
+            if (!response.ok) return;
+            const payload = await response.json();
+            const results = payload.criterionResults ?? payload.criteriaResults ?? [];
+            setCriterionResultsBySubmission((prev) => ({ ...prev, [submissionId]: results }));
+        },
+        [API_BASE],
+    );
+
+    const upsertInstructorResult = useCallback(
+        async (submissionId: string, criterionId: string, value: number | boolean) => {
+            const accessToken = localStorage.getItem(ACCESS_TOKEN);
+            if (!accessToken) return;
+
+            await fetch(`${API_BASE}/api/submissions/${submissionId}/criteria`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({
+                    results: [{ criterion_id: criterionId, value, assessment_type: 'INSTRUCTOR' }],
+                }),
+            });
+
+            setCriterionResultsBySubmission((prev) => {
+                const current = prev[submissionId] ?? [];
+                const rest = current.filter(
+                    (x) => !(x.criterionId === criterionId && x.assessmentType === 'INSTRUCTOR'),
+                );
+                return {
+                    ...prev,
+                    [submissionId]: [
+                        ...rest,
+                        {
+                            id: `${submissionId}-${criterionId}-instructor`,
+                            submissionId,
+                            criterionId,
+                            value,
+                            assessmentType: 'INSTRUCTOR',
+                        },
+                    ],
+                };
+            });
+        },
+        [API_BASE],
+    );
+
+    const addCriterion = useCallback(
+        async (assignmentId: string, payload: Omit<Criterion, 'id' | 'taskId' | 'order'>) => {
+            const accessToken = localStorage.getItem(ACCESS_TOKEN);
+            if (!accessToken) return;
+            const response = await fetch(`${API_BASE}/api/tasks/${assignmentId}/criteria`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({
+                    description: payload.description,
+                    format: payload.format,
+                    weight: payload.weight,
+                    max_points: payload.maxPoints,
+                    is_bonus: payload.isBonus ?? false,
+                    is_penalty: payload.isPenalty ?? false,
+                }),
+            });
+            if (response.ok) {
+                await fetchCriteria(assignmentId);
+                return;
+            }
+            setCriteriaByTask((prev) => {
+                const current = prev[assignmentId] ?? [];
+                return {
+                    ...prev,
+                    [assignmentId]: [
+                        ...current,
+                        {
+                            ...payload,
+                            id: `${assignmentId}-${Date.now()}`,
+                            taskId: assignmentId,
+                            order: current.length + 1,
+                        },
+                    ],
+                };
+            });
+        },
+        [API_BASE, fetchCriteria],
+    );
+
+    const updateCriterion = useCallback(
+        async (
+            criterionId: string,
+            payload: Partial<Omit<Criterion, 'id' | 'taskId' | 'order'>>,
+            assignmentId: string,
+        ) => {
+            const accessToken = localStorage.getItem(ACCESS_TOKEN);
+            if (!accessToken) return;
+            const response = await fetch(`${API_BASE}/api/criteria/${criterionId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({
+                    description: payload.description,
+                    format: payload.format,
+                    weight: payload.weight,
+                    max_points: payload.maxPoints,
+                    is_bonus: payload.isBonus,
+                    is_penalty: payload.isPenalty,
+                }),
+            });
+            if (response.ok) {
+                await fetchCriteria(assignmentId);
+            }
+        },
+        [API_BASE, fetchCriteria],
+    );
+
+    const deleteCriterion = useCallback(
+        async (criterionId: string, assignmentId: string) => {
+            const accessToken = localStorage.getItem(ACCESS_TOKEN);
+            if (!accessToken) return;
+            const response = await fetch(`${API_BASE}/api/criteria/${criterionId}`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${accessToken}` },
+            });
+            if (response.ok) {
+                await fetchCriteria(assignmentId);
+            }
+        },
+        [API_BASE, fetchCriteria],
+    );
+
+    const recalculateCourseGrades = useCallback(async () => {
+        const accessToken = localStorage.getItem(ACCESS_TOKEN);
+        if (!accessToken || assignments.length === 0) return;
+        const firstSubjectId = assignments[0].subjectId;
+
+        const recalc = await fetch(`${API_BASE}/api/courses/${firstSubjectId}/calculate-grades`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (!recalc.ok) return;
+        const list = await fetch(`${API_BASE}/api/courses/${firstSubjectId}/grades`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (!list.ok) return;
+        const rows = await list.json();
+        setCourseGrades(Array.isArray(rows) ? rows : rows.grades ?? []);
+    }, [API_BASE, assignments]);
+
     const openAssignment = (assignment: Assignment) => {
         const mySubmission = submissions.find(
             (s) => s.assignmentId === assignment.id && s.authorId === profile.id,
@@ -747,6 +930,29 @@ export const AssignmentsContainer: React.FC = () => {
         openAssignment(assignment);
     }, [assignments, submissions, profile.id]);
 
+    useEffect(() => {
+        if (!selectedAssignment) return;
+        fetchCriteria(selectedAssignment.id);
+    }, [selectedAssignment, fetchCriteria]);
+
+    useEffect(() => {
+        if (!selectedSubmission) return;
+        fetchSubmissionCriteriaResults(selectedSubmission.id);
+    }, [selectedSubmission, fetchSubmissionCriteriaResults]);
+
+    const isCriteriaHiddenForStudent = useCallback((assignment: Assignment) => {
+        const role = subjectRoles[assignment.subjectId] ?? 'student';
+        if (role === 'teacher') return false;
+        try {
+            const data = assignment.assignmentData ? JSON.parse(assignment.assignmentData) : {};
+            const visibilityDate = data.self_assessment_visibility_date || data.selfAssessmentVisibilityDate;
+            if (!visibilityDate) return false;
+            return new Date().getTime() < new Date(visibilityDate).getTime();
+        } catch {
+            return false;
+        }
+    }, [subjectRoles]);
+
     const reviewTeam =
         reviewing && showSolutionsList
             ? findTeamForAuthor(showSolutionsList.subjectId, reviewing.authorId)
@@ -763,6 +969,7 @@ export const AssignmentsContainer: React.FC = () => {
             {loading ? (
                 <div className='p-10 text-center text-slate-500'>Загрузка данных...</div>
             ) : (
+                <>
                 <AssignmentsPage
                     assignments={assignments}
                     submissions={submissions}
@@ -774,9 +981,42 @@ export const AssignmentsContainer: React.FC = () => {
                     onOpenSolutionsList={(a) => setShowSolutionsList(a)}
                     onOpenTeamDecision={(a) => setTeamDecisionAssignment(a)}
                 />
-            )}
 
             {selectedAssignment && (
+                <div className='mt-6'>
+                    <CriteriaManagerPanel
+                        assignment={selectedAssignment}
+                        criteria={criteriaByTask[selectedAssignment.id] ?? []}
+                        isStudent={(subjectRoles[selectedAssignment.subjectId] ?? 'student') !== 'teacher'}
+                        criteriaHidden={isCriteriaHiddenForStudent(selectedAssignment)}
+                        onAdd={(payload) => addCriterion(selectedAssignment.id, payload)}
+                        onUpdate={(criterionId, payload) =>
+                            updateCriterion(criterionId, payload, selectedAssignment.id)
+                        }
+                        onDelete={(criterionId) => deleteCriterion(criterionId, selectedAssignment.id)}
+                    />
+                </div>
+            )}
+            {selectedSubmission && selectedAssignment && (
+                <div className='mt-6'>
+                    <SubmissionAssessmentPanel
+                        submission={selectedSubmission}
+                        criteria={criteriaByTask[selectedAssignment.id] ?? []}
+                        results={criterionResultsBySubmission[selectedSubmission.id] ?? []}
+                        onUpsertInstructor={(criterionId, value) => upsertInstructorResult(selectedSubmission.id, criterionId, value)}
+                        isTeacher={(subjectRoles[selectedAssignment.subjectId] ?? 'student') === 'teacher'}
+                    />
+                </div>
+            )}
+            {Object.values(subjectRoles).includes('teacher') && (
+                <div className='mt-6'>
+                    <CourseGradesPanel rows={courseGrades} onRecalculate={recalculateCourseGrades} />
+                </div>
+            )}
+                </>
+            )}
+
+                {selectedAssignment && (
                 <AssignmentModal
                     assignment={selectedAssignment}
                     submission={selectedSubmission || undefined}

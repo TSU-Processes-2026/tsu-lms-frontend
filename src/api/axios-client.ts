@@ -3,7 +3,7 @@ import { DEV_URL, PROD_URL, MOCK_URL } from '@/constants/config/config';
 import { TokenResponse } from '@/types/token/TokenResponse';
 import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
-const BASE_URL = DEV_URL || PROD_URL || MOCK_URL;
+const BASE_URL = import.meta.env.VITE_API_URL || DEV_URL || PROD_URL || MOCK_URL;
 const PUBLIC_URI: string[] = ['/auth/login', '/auth/register', '/auth/refresh'];
 
 export const apiClient = axios.create({

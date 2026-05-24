@@ -24,6 +24,7 @@ import { EditTeamPage } from '@/pages/Teams/EditTeamPage';
 import { RandomDistributionPage } from '@/pages/Teams/RandomDistributionPage';
 import { DraftPage } from '@/pages/Teams/DraftPage';
 import { CaptainVotingPage } from '@/pages/Teams/CaptainVotingPage';
+import { DemoAssessmentPage, DemoCourseGradesPage, DemoCriteriaPage, DemoLinksPage } from '@/pages/Assignments/CriteriaDemoPages';
 
 export const router = createBrowserRouter([
     {
@@ -83,6 +84,22 @@ export const router = createBrowserRouter([
                 ],
             },
         ],
+    },
+    {
+        path: '/demo',
+        element: <DemoLinksPage />,
+    },
+    {
+        path: '/demo/criteria',
+        element: <DemoCriteriaPage />,
+    },
+    {
+        path: '/demo/assessment',
+        element: <DemoAssessmentPage />,
+    },
+    {
+        path: '/demo/grades',
+        element: <DemoCourseGradesPage />,
     },
     {
         path: FORBIDDEN_PAGE,
