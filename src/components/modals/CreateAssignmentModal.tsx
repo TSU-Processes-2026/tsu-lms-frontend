@@ -1,22 +1,16 @@
 import React from "react";
-import { ClipboardCheck, X, Plus, Trash2, ListChecks } from "lucide-react";
+import { ClipboardCheck, X, Plus, Trash2, ListChecks, Eye, EyeOff, CalendarClock } from "lucide-react";
 import { useCreateAssignmentModal, QuestionType, CriteriaDraft } from '@/hooks/subject/useCreateAssignmentModal';
 
-const CreateAssignmentModal: React.FC<{ subjectId: string; onClose: () => void; onCreate: (a: { id: string; title: string; questions: QuestionType[]; criteria: CriteriaDraft[]; subjectId: string; type: string; status: string; subject: string }) => void }> = ({ subjectId, onClose, onCreate }) => {
+const CreateAssignmentModal: React.FC<{ subjectId: string; onClose: () => void; onCreate: (a: import('@/hooks/subject/useCreateAssignmentModal').CreateAssignmentData) => void }> = ({ subjectId, onClose, onCreate }) => {
   const {
-    title,
-    setTitle,
-    questions,
-    addQuestion,
-    removeQuestion,
-    updateQuestion,
-    updateOption,
-    criteria,
-    addCriterion,
-    updateCriterion,
-    removeCriterion,
-    handleSubmit,
-    error,
+    title, setTitle,
+    deadline, setDeadline,
+    selfAssessmentEnabled, setSelfAssessmentEnabled,
+    selfAssessmentVisibilityDate, setSelfAssessmentVisibilityDate,
+    questions, addQuestion, removeQuestion, updateQuestion, updateOption,
+    criteria, addCriterion, updateCriterion, removeCriterion,
+    handleSubmit, error,
   } = useCreateAssignmentModal(subjectId, onCreate);
 
   return (
@@ -24,7 +18,7 @@ const CreateAssignmentModal: React.FC<{ subjectId: string; onClose: () => void; 
       <div className="bg-white w-full max-w-3xl max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden">
         <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
           <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200/50">
+            <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200/50">
               <ClipboardCheck className="text-white" size={20} />
             </div>
             <h3 className="text-xl font-bold text-slate-800">Создать тест</h3>
@@ -35,27 +29,49 @@ const CreateAssignmentModal: React.FC<{ subjectId: string; onClose: () => void; 
         </div>
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8">
-          {error && (
-            <div className="text-red-500 text-sm mb-4">{error}</div>
-          )}
+          {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
           <div className="space-y-6">
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Название теста</label>
+              <input type="text" value={title} onChange={e => setTitle(e.target.value)}
+                placeholder="Тест: Основы алгебры"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
+                required />
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Название теста</label>
-                <input type="text" value={title} onChange={e => setTitle(e.target.value)}
-                  placeholder="Тест: Основы алгебры"
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                  required />
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-1">
+                  <CalendarClock size={14} /> Дедлайн
+                </label>
+                <input type="datetime-local" value={deadline} onChange={e => setDeadline(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Самооценка</label>
+                <button type="button" onClick={() => setSelfAssessmentEnabled(!selfAssessmentEnabled)}
+                  className={`w-full px-4 py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all border ${selfAssessmentEnabled ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
+                  {selfAssessmentEnabled ? <Eye size={16} /> : <EyeOff size={16} />}
+                  {selfAssessmentEnabled ? 'Включена' : 'Выключена'}
+                </button>
               </div>
             </div>
+
+            {selfAssessmentEnabled && (
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Дата видимости критериев</label>
+                <input type="datetime-local" value={selfAssessmentVisibilityDate} onChange={e => setSelfAssessmentVisibilityDate(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+                <p className="text-xs text-slate-400 mt-1">До этой даты критерии и отправка будут скрыты от студентов.</p>
+              </div>
+            )}
 
             <div className="border-t border-slate-200 pt-6">
               <div className="flex justify-between items-center mb-5">
                 <div className="flex items-center gap-3">
                   <h4 className="font-bold text-slate-800">Вопросы</h4>
-                  <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 font-semibold rounded-full text-sm ml-2">
-                    {questions.length} вопрос{questions.length === 1 ? '' : questions.length < 5 ? 'а' : 'ов'}
-                  </span>
+                  <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 font-semibold rounded-full text-sm">{questions.length}</span>
                 </div>
                 <button type="button" onClick={addQuestion}
                   className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-50 transition-all">
@@ -76,9 +92,7 @@ const CreateAssignmentModal: React.FC<{ subjectId: string; onClose: () => void; 
                         </select>
                         {questions.length > 1 && (
                           <button type="button" onClick={() => removeQuestion(idx)}
-                            className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
-                            <Trash2 size={16} />
-                          </button>
+                            className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
                         )}
                       </div>
                     </div>
@@ -92,7 +106,7 @@ const CreateAssignmentModal: React.FC<{ subjectId: string; onClose: () => void; 
                           <div key={oIdx} className="flex items-center gap-2">
                             <input type={q.type === 'single' ? 'radio' : 'checkbox'}
                               name={`correct-${idx}`}
-                              checked={q.type === 'single' ? q.correct === oIdx : Array.isArray(q.correct) && Array.isArray(q.correct) && q.correct.includes(oIdx)}
+                              checked={q.type === 'single' ? q.correct === oIdx : Array.isArray(q.correct) && q.correct.includes(oIdx)}
                               onChange={() => {
                                 if (q.type === 'single') updateQuestion(idx, 'correct', oIdx);
                                 else {
@@ -106,9 +120,6 @@ const CreateAssignmentModal: React.FC<{ subjectId: string; onClose: () => void; 
                               className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
                           </div>
                         ))}
-                        <p className="text-[10px] text-slate-400 mt-1">
-                          {q.type === 'single' ? '☝️ Выберите правильный ответ' : '☝️ Отметьте все правильные ответы'}
-                        </p>
                       </div>
                     )}
                     {q.type === 'input' && (
@@ -121,7 +132,6 @@ const CreateAssignmentModal: React.FC<{ subjectId: string; onClose: () => void; 
                   </div>
                 ))}
               </div>
-            </div>
             </div>
 
             <div className="border-t border-slate-200 pt-6">
@@ -146,7 +156,7 @@ const CreateAssignmentModal: React.FC<{ subjectId: string; onClose: () => void; 
                     </select>
                     <input type="number" value={c.weight} onChange={(e) => updateCriterion(idx, { weight: e.target.value })} placeholder="Вес" className="w-16 px-2 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
                     <input type="number" value={c.maxPoints} onChange={(e) => updateCriterion(idx, { maxPoints: e.target.value })} placeholder="Макс" className="w-16 px-2 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-                    <div className="flex items-center gap-1 text-xs">
+                    <div className="flex items-center gap-1 text-xs shrink-0">
                       <label className="flex items-center gap-0.5 cursor-pointer">
                         <input type="checkbox" checked={c.isBonus} onChange={() => updateCriterion(idx, { isBonus: !c.isBonus })} className="accent-emerald-600" />
                         <span className="text-emerald-700 font-semibold">Бонус</span>
@@ -156,22 +166,19 @@ const CreateAssignmentModal: React.FC<{ subjectId: string; onClose: () => void; 
                         <span className="text-red-700 font-semibold">Штраф</span>
                       </label>
                     </div>
-                    <button type="button" onClick={() => removeCriterion(idx)} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
+                    <button type="button" onClick={() => removeCriterion(idx)} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all shrink-0"><Trash2 size={16} /></button>
                   </div>
                 ))}
                 {criteria.length === 0 && <p className="text-sm text-slate-400">Критерии не добавлены. Можно добавить позже.</p>}
               </div>
             </div>
 
+          </div>
           <div className="flex gap-3 mt-8 pt-6 border-t border-slate-200">
             <button type="button" onClick={onClose}
-              className="flex-1 px-6 py-3 rounded-xl font-semibold text-slate-600 hover:bg-slate-100 transition-all border border-slate-200">
-              Отмена
-            </button>
+              className="flex-1 px-6 py-3 rounded-xl font-semibold text-slate-600 hover:bg-slate-100 transition-all border border-slate-200">Отмена</button>
             <button type="submit"
-              className="flex-1 bg-linear-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-200/50 hover:-translate-y-0.5 transition-all">
-              Опубликовать тест
-            </button>
+              className="flex-1 bg-linear-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-200/50 hover:-translate-y-0.5 transition-all">Опубликовать тест</button>
           </div>
         </form>
       </div>

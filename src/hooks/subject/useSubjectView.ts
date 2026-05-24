@@ -133,16 +133,7 @@ export type UseSubjectViewResult = {
      * Calls publishAssignmentPost and createAssignment, updates feed.
      * @param assignment - assignment object from modal form
      */
-    handleCreateAssignment: (assignment: {
-        id: string;
-        title: string;
-        questions: import('@/hooks/subject/useCreateAssignmentModal').QuestionType[];
-        criteria: import('@/hooks/subject/useCreateAssignmentModal').CriteriaDraft[];
-        subjectId: string;
-        type: string;
-        status: string;
-        subject: string;
-    }) => Promise<void>;
+    handleCreateAssignment: (assignment: import('@/hooks/subject/useCreateAssignmentModal').CreateAssignmentData) => Promise<void>;
     refreshFeed: () => Promise<void>;
 };
 
@@ -410,22 +401,16 @@ export function useSubjectView(): UseSubjectViewResult {
         if (type === 'multiple') return 'MultipleChoice';
         return 'Text';
     };
-    const handleCreateAssignment = async (assignment: {
-        id: string;
-        title: string;
-        questions: import('@/hooks/subject/useCreateAssignmentModal').QuestionType[];
-        criteria: import('@/hooks/subject/useCreateAssignmentModal').CriteriaDraft[];
-        subjectId: string;
-        type: string;
-        status: string;
-        subject: string;
-    }) => {
+    const handleCreateAssignment = async (assignment: import('@/hooks/subject/useCreateAssignmentModal').CreateAssignmentData) => {
         if (!subjectId) return;
         setPublishError(null);
         try {
             const upsertAssignment: import('@/types/subject/AssignmentCreate').UpsertAssignmentRequest =
                 {
                     content: assignment.title,
+                    deadLine: assignment.deadline ? new Date(assignment.deadline).toISOString() : null,
+                    selfAssessmentEnabled: assignment.selfAssessmentEnabled || null,
+                    selfAssessmentVisibilityDate: assignment.selfAssessmentVisibilityDate ? new Date(assignment.selfAssessmentVisibilityDate).toISOString() : null,
                     questions: assignment.questions.map((q) => ({
                         questionType: mapQuestionType(q.type),
                         questionData: q.text,

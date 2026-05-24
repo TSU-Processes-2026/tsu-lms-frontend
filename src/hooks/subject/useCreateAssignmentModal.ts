@@ -18,8 +18,25 @@ export type CriteriaDraft = {
   isPenalty: boolean;
 };
 
-export function useCreateAssignmentModal(subjectId: string, onCreate: (a: { id: string; title: string; questions: QuestionType[]; criteria: CriteriaDraft[]; subjectId: string; type: string; status: string; subject: string }) => void) {
+export type CreateAssignmentData = {
+  id: string;
+  title: string;
+  questions: QuestionType[];
+  criteria: CriteriaDraft[];
+  subjectId: string;
+  type: string;
+  status: string;
+  subject: string;
+  deadline?: string;
+  selfAssessmentEnabled: boolean;
+  selfAssessmentVisibilityDate?: string;
+};
+
+export function useCreateAssignmentModal(subjectId: string, onCreate: (a: CreateAssignmentData) => void) {
   const [title, setTitle] = useState("");
+  const [deadline, setDeadline] = useState("");
+  const [selfAssessmentEnabled, setSelfAssessmentEnabled] = useState(false);
+  const [selfAssessmentVisibilityDate, setSelfAssessmentVisibilityDate] = useState("");
   const [questions, setQuestions] = useState<QuestionType[]>([
     { id: "q1", type: "single", text: "", options: ["", "", "", ""], correct: 0 }
   ]);
@@ -63,6 +80,9 @@ export function useCreateAssignmentModal(subjectId: string, onCreate: (a: { id: 
       try {
         onCreate({
           id: "a" + Date.now(), title,
+          deadline: deadline || undefined,
+          selfAssessmentEnabled,
+          selfAssessmentVisibilityDate: selfAssessmentVisibilityDate || undefined,
           questions, criteria, subjectId, type: "test", status: "not_started", subject: "Предмет"
         });
       } catch {
@@ -74,6 +94,12 @@ export function useCreateAssignmentModal(subjectId: string, onCreate: (a: { id: 
   return {
     title,
     setTitle,
+    deadline,
+    setDeadline,
+    selfAssessmentEnabled,
+    setSelfAssessmentEnabled,
+    selfAssessmentVisibilityDate,
+    setSelfAssessmentVisibilityDate,
     questions,
     addQuestion,
     removeQuestion,

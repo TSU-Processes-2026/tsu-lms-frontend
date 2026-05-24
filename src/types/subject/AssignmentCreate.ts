@@ -42,11 +42,19 @@ export interface AssignmentQuestionOptionRequest {
  * Interface for creating/updating assignments.
  * @property {string} [content] - Content/title of the assignment.
  * @property {string} [assignmentData] - Assignment-specific data (JSON string).
+ * @property {number} [maxPoints] - Maximum points for cumulative grading mode.
+ * @property {boolean} [selfAssessmentEnabled] - Enable self-assessment for students.
+ * @property {string} [selfAssessmentVisibilityDate] - ISO date when criteria become visible.
+ * @property {string} [deadLine] - ISO deadline for submission.
  * @property {AssignmentQuestionRequest[]} [questions] - Questions for the assignment.
  */
 export interface UpsertAssignmentRequest {
   content?: string;
   assignmentData?: string;
+  maxPoints?: number | null;
+  selfAssessmentEnabled?: boolean | null;
+  selfAssessmentVisibilityDate?: string | null;
+  deadLine?: string | null;
   questions?: AssignmentQuestionRequest[];
 }
 
