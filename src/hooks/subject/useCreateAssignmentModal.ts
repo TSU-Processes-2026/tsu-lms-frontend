@@ -34,6 +34,7 @@ export type CreateAssignmentData = {
 
 export function useCreateAssignmentModal(subjectId: string, onCreate: (a: CreateAssignmentData) => void) {
   const [title, setTitle] = useState("");
+  const [gradingMode, setGradingMode] = useState<'five_point' | 'cumulative'>('five_point');
   const [deadline, setDeadline] = useState("");
   const [selfAssessmentEnabled, setSelfAssessmentEnabled] = useState(false);
   const [selfAssessmentVisibilityDate, setSelfAssessmentVisibilityDate] = useState("");
@@ -94,6 +95,8 @@ export function useCreateAssignmentModal(subjectId: string, onCreate: (a: Create
   return {
     title,
     setTitle,
+    gradingMode,
+    setGradingMode,
     deadline,
     setDeadline,
     selfAssessmentEnabled,

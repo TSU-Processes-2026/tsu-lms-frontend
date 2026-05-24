@@ -5,6 +5,7 @@ import { useCreateAssignmentModal, QuestionType, CriteriaDraft } from '@/hooks/s
 const CreateAssignmentModal: React.FC<{ subjectId: string; onClose: () => void; onCreate: (a: import('@/hooks/subject/useCreateAssignmentModal').CreateAssignmentData) => void }> = ({ subjectId, onClose, onCreate }) => {
   const {
     title, setTitle,
+    gradingMode, setGradingMode,
     deadline, setDeadline,
     selfAssessmentEnabled, setSelfAssessmentEnabled,
     selfAssessmentVisibilityDate, setSelfAssessmentVisibilityDate,
@@ -145,6 +146,13 @@ const CreateAssignmentModal: React.FC<{ subjectId: string; onClose: () => void; 
                   <Plus size={16} /> Добавить критерий
                 </button>
               </div>
+              <div className="flex items-center gap-3 mb-4">
+                <label className="text-sm font-semibold text-slate-600">Режим расчёта:</label>
+                <select value={gradingMode} onChange={(e) => setGradingMode(e.target.value as 'five_point' | 'cumulative')} className="border rounded-lg px-3 py-2 text-sm bg-white outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="five_point">Пятибалльная (вес)</option>
+                  <option value="cumulative">Накопительная (баллы)</option>
+                </select>
+              </div>
               <div className="space-y-2">
                 {criteria.map((c, idx) => (
                   <div key={c.id} className="flex items-center gap-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
@@ -154,8 +162,11 @@ const CreateAssignmentModal: React.FC<{ subjectId: string; onClose: () => void; 
                       <option value="percentage">percentage</option>
                       <option value="numeric">numeric</option>
                     </select>
-                    <input type="number" value={c.weight} onChange={(e) => updateCriterion(idx, { weight: e.target.value })} placeholder="Вес" className="w-16 px-2 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-                    <input type="number" value={c.maxPoints} onChange={(e) => updateCriterion(idx, { maxPoints: e.target.value })} placeholder="Макс" className="w-16 px-2 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+                    {gradingMode === 'five_point' ? (
+                      <input type="number" value={c.weight} onChange={(e) => updateCriterion(idx, { weight: e.target.value })} placeholder="Вес" className="w-16 px-2 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+                    ) : (
+                      <input type="number" value={c.maxPoints} onChange={(e) => updateCriterion(idx, { maxPoints: e.target.value })} placeholder="Макс" className="w-16 px-2 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+                    )}
                     <div className="flex items-center gap-1 text-xs shrink-0">
                       <label className="flex items-center gap-0.5 cursor-pointer">
                         <input type="checkbox" checked={c.isBonus} onChange={() => updateCriterion(idx, { isBonus: !c.isBonus })} className="accent-emerald-600" />
