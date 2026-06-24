@@ -23,6 +23,11 @@ import { Criterion, CriterionResult, StudentCourseGrade } from '@/types/assignme
 import { CriteriaManagerPanel } from './CriteriaManagerPanel';
 import { SubmissionAssessmentPanel } from './SubmissionAssessmentPanel';
 import { CourseGradesPanel } from './CourseGradesPanel';
+import { ReviewList } from './ReviewList';
+import { PeerReviewModal } from './PeerReviewModal';
+import { TeacherReviewDetail } from './TeacherReviewDetail';
+import { AnalyticsTable } from './AnalyticsTable';
+import { ReviewAssignmentDto } from '@/types/assignments/reviews';
 
 interface Participant {
     userId: string;
@@ -85,6 +90,10 @@ export const AssignmentsContainer: React.FC = () => {
     const [criterionResultsBySubmission, setCriterionResultsBySubmission] = useState<Record<string, CriterionResult[]>>({});
     const [courseGrades, setCourseGrades] = useState<StudentCourseGrade[]>([]);
     const [selectedGradeSubjectId, setSelectedGradeSubjectId] = useState<string | null>(null);
+    const [showReviewList, setShowReviewList] = useState(false);
+    const [selectedReviewAssignment, setSelectedReviewAssignment] = useState<ReviewAssignmentDto | null>(null);
+    const [showTeacherDetailFor, setShowTeacherDetailFor] = useState<Submission | null>(null);
+    const [showAnalytics, setShowAnalytics] = useState(false);
     const subjectIds = [...new Set(assignments.map((a) => a.subjectId))];
     const subjects = subjectIds.map((id) => ({
         id,
@@ -1122,6 +1131,45 @@ export const AssignmentsContainer: React.FC = () => {
                     />
                 </div>
             )}
+
+            {Object.values(subjectRoles).includes('teacher') && subjects.length > 0 && (
+                <div className='mt-4'>
+                    <button
+                        onClick={() => setShowAnalytics(!showAnalytics)}
+                        className='px-4 py-2 bg-violet-100 text-violet-700 rounded-xl text-sm font-semibold hover:bg-violet-200 transition-all'
+                    >
+                        {showAnalytics ? 'Скрыть аналитику' : 'Сводная аналитика'}
+                    </button>
+                    {showAnalytics && (
+                        <div className='mt-4'>
+                            <AnalyticsTable
+                                courseId={selectedGradeSubjectId || subjects[0].id}
+                                isTeacherOrAdmin={true}
+                            />
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {!Object.values(subjectRoles).includes('teacher') && (
+                <div className='mt-6'>
+                    <button
+                        onClick={() => setShowReviewList(!showReviewList)}
+                        className='px-6 py-3 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-all flex items-center gap-2'
+                    >
+                        {showReviewList ? 'Скрыть проверки' : 'Мои проверки'}
+                    </button>
+                    {showReviewList && (
+                        <div className='mt-4'>
+                            <ReviewList
+                                onStartReview={(a) => setSelectedReviewAssignment(a)}
+                                onContinueReview={(a) => setSelectedReviewAssignment(a)}
+                                onViewReview={(a) => setSelectedReviewAssignment(a)}
+                            />
+                        </div>
+                    )}
+                </div>
+            )}
                 </>
             )}
 
@@ -1167,6 +1215,16 @@ export const AssignmentsContainer: React.FC = () => {
             )}
 
             {reviewing && showSolutionsList && (
+                <>
+                <div className='mt-4 flex gap-2'>
+                    <button
+                        onClick={() => setShowTeacherDetailFor(showTeacherDetailFor ? null : reviewing)}
+                        className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${showTeacherDetailFor ? 'bg-slate-200 text-slate-700' : 'bg-violet-100 text-violet-700 hover:bg-violet-200'}`}
+                    >
+                        {showTeacherDetailFor ? 'Обычный просмотр' : 'Детальный просмотр'}
+                    </button>
+                </div>
+                {!showTeacherDetailFor && (
                 <TeacherReviewModal
                     assignment={showSolutionsList}
                     submission={reviewing}
@@ -1193,6 +1251,26 @@ export const AssignmentsContainer: React.FC = () => {
                     onUpsertInstructorCriterion={(criterionId, value, comment) =>
                         upsertInstructorResult(reviewing.id, criterionId, value, comment)
                     }
+                />
+                )}
+                </>
+            )}
+
+            {reviewing && showSolutionsList && showTeacherDetailFor && (
+                <TeacherReviewDetail
+                    submissionId={showTeacherDetailFor.id}
+                    assignmentId={showSolutionsList.id}
+                    courseId={showSolutionsList.subjectId}
+                    onClose={() => setShowTeacherDetailFor(null)}
+                    onRecalculate={() => recalculateCourseGrades(showSolutionsList.subjectId)}
+                />
+            )}
+
+            {selectedReviewAssignment && (
+                <PeerReviewModal
+                    assignment={selectedReviewAssignment}
+                    onClose={() => setSelectedReviewAssignment(null)}
+                    onSubmitted={() => setSelectedReviewAssignment(null)}
                 />
             )}
 
