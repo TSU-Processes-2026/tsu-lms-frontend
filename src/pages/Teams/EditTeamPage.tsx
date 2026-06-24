@@ -2,9 +2,13 @@ import { MultipleSelect } from '@/components/ui/MultipleSelect';
 import { useCreateTeamManually } from '@/hooks/command/useCreateTeamManually';
 import { useLoadTeams } from '@/hooks/command/useLoadTeams';
 import { useUpdateTeam } from '@/hooks/command/useUpdateTeam';
-import { ArrowLeft, UserIcon, X } from 'lucide-react';
+import { ArrowLeft, UserIcon, X, Crown } from 'lucide-react';
 import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { DEV_URL, PROD_URL, MOCK_URL } from '@/constants/config/config';
+import { ACCESS_TOKEN } from '@/constants/auth/auth';
+
+const API_BASE = DEV_URL || PROD_URL || MOCK_URL;
 
 export const EditTeamPage = () => {
     const { subjectId, teamId } = useParams();
@@ -15,6 +19,10 @@ export const EditTeamPage = () => {
     const selectedTeam = teams.find((item) => item.id == teamId);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [message, setMessage] = useState<string | null>(null);
+    const [currentRepresentativeId, setCurrentRepresentativeId] = useState<string | null>(
+        selectedTeam?.representativeId ?? null
+    );
+    const [repMessage, setRepMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
     const [teamMembers, setTeamMembers] = useState(selectedTeam?.members || []);
     const [studentsList, setStudentsList] = useState<any[]>([]);
     const navigate = useNavigate();
@@ -46,6 +54,34 @@ export const EditTeamPage = () => {
             setSelectedIds(selectedMemberIds);
         }
     }, [unassigned, selectedTeam]);
+
+    useEffect(() => {
+        setCurrentRepresentativeId(selectedTeam?.representativeId ?? null);
+    }, [selectedTeam?.representativeId]);
+
+    const assignRepresentative = async (userId: string) => {
+        const token = localStorage.getItem(ACCESS_TOKEN);
+        if (!token) return;
+        setRepMessage(null);
+        try {
+            const res = await fetch(`${API_BASE}/teams/${teamId}/assign-representative`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ userId }),
+            });
+            if (res.ok) {
+                setCurrentRepresentativeId(userId);
+                setRepMessage({ type: 'success', text: 'Представитель команды назначен' });
+            } else {
+                setRepMessage({ type: 'error', text: 'Ошибка назначения представителя' });
+            }
+        } catch {
+            setRepMessage({ type: 'error', text: 'Ошибка сети' });
+        }
+    };
 
     const handleSelectionChange = (newSelectedIds: string[]) => {
         setSelectedIds(newSelectedIds);
@@ -138,6 +174,7 @@ export const EditTeamPage = () => {
                                     </div>
                                 ) : (
                                     teamMembers.map((participant) => {
+                                        const isRepresentative = participant.userId === currentRepresentativeId;
                                         return (
                                             <div
                                                 key={participant.userId}
@@ -155,18 +192,34 @@ export const EditTeamPage = () => {
                                                             <p className='font-bold text-slate-800'>
                                                                 {participant.username}
                                                             </p>
+                                                            {isRepresentative && (
+                                                                <span className='px-2 py-0.5 bg-amber-100 text-amber-700 rounded-lg text-xs font-bold flex items-center gap-1'>
+                                                                    <Crown size={12} /> Представитель
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <button
-                                                    type='button'
-                                                    onClick={() => {
-                                                        handleDeleteMember(participant.userId);
-                                                    }}
-                                                    className='p-2 hover:bg-slate-100 rounded-full transition-colors'
-                                                >
-                                                    <X size={16} className='text-slate-400' />
-                                                </button>
+                                                <div className='flex items-center gap-2'>
+                                                    {!isRepresentative && (
+                                                        <button
+                                                            type='button'
+                                                            onClick={() => assignRepresentative(participant.userId)}
+                                                            className='px-3 py-1.5 bg-amber-100 text-amber-700 rounded-xl text-xs font-semibold hover:bg-amber-200 transition-all flex items-center gap-1'
+                                                        >
+                                                            <Crown size={12} /> Назначить представителем
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        type='button'
+                                                        onClick={() => {
+                                                            handleDeleteMember(participant.userId);
+                                                        }}
+                                                        className='p-2 hover:bg-slate-100 rounded-full transition-colors'
+                                                    >
+                                                        <X size={16} className='text-slate-400' />
+                                                    </button>
+                                                </div>
                                             </div>
                                         );
                                     })
@@ -187,6 +240,14 @@ export const EditTeamPage = () => {
                                         ✅ Успех
                                     </p>
                                     <p className='text-xs text-green-600'>{message}</p>
+                                </div>
+                            )}
+                            {repMessage && (
+                                <div className={`p-4 rounded-xl border ${repMessage.type === 'success' ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
+                                    <p className={`text-xs font-semibold mb-1 ${repMessage.type === 'success' ? 'text-green-700' : 'text-red-700'}`}>
+                                        {repMessage.type === 'success' ? '✅ Успех' : '❌ Ошибка'}
+                                    </p>
+                                    <p className={`text-xs ${repMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>{repMessage.text}</p>
                                 </div>
                             )}
                             <div className='flex gap-3 pt-8'>

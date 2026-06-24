@@ -46,6 +46,7 @@ export const useLoadTeams = (subjectId: string | undefined): UseLoadTeams => {
                         captainSelectionMethod: team.captainSelectionMethod ?? null,
                         captainVoting: team.captainVoting ?? null,
                         finalDecision: team.finalDecision ?? null,
+                        representativeId: team.representativeId ?? null,
                     }));
 
                     setTeams(fetchedTeams);

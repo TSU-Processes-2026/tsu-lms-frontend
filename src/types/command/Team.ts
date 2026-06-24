@@ -9,6 +9,7 @@ export interface Team {
     captainSelectionMethod?: 'Manual' | 'Voting' | null;
     captainVoting?: CaptainVotingSummary | null;
     finalDecision?: TeamFinalDecision | null;
+    representativeId?: string | null;
 }
 
 export interface TeamResponse {
