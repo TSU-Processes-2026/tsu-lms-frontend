@@ -1,16 +1,22 @@
-export type AssessmentFormat = 'checklist' | 'percentage' | 'numeric';
-export type AssessmentType = 'SELF' | 'INSTRUCTOR';
+export type AssessmentFormat = 'checklist' | 'percentage' | 'numeric' | 'boolean' | 'scale';
+export type AssessmentType = 'SELF' | 'INSTRUCTOR' | 'PEER';
 
 export interface Criterion {
     id: string;
     taskId: string;
+    title?: string;
     description: string;
+    criterionType?: 'active' | 'passive';
     format: AssessmentFormat;
     weight?: number;
     maxPoints?: number;
+    minValue?: number;
     points?: number;
     isBonus?: boolean;
     isPenalty?: boolean;
+    isRequired?: boolean;
+    isHiddenUntilVisibility?: boolean;
+    appliesTo?: 'student' | 'team' | 'both';
     order: number;
 }
 
@@ -31,5 +37,7 @@ export interface StudentCourseGrade {
     studentName?: string;
     finalScore: number;
     finalGrade: string;
+    finalSource?: 'peer' | 'teacher' | 'mixed';
+    reviewerCount?: number;
     calculatedAt: string;
 }

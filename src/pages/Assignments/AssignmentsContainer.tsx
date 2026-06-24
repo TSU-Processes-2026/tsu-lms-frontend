@@ -841,12 +841,18 @@ export const AssignmentsContainer: React.FC = () => {
                     Authorization: `Bearer ${accessToken}`,
                 },
                 body: JSON.stringify({
+                    title: payload.title,
                     description: payload.description,
+                    criterionType: payload.criterionType,
                     format: payload.format,
                     weight: payload.weight,
                     maxPoints: payload.maxPoints,
+                    minValue: payload.minValue,
                     isBonus: payload.isBonus ?? false,
                     isPenalty: payload.isPenalty ?? false,
+                    isRequired: payload.isRequired ?? false,
+                    isHiddenUntilVisibility: payload.isHiddenUntilVisibility ?? false,
+                    appliesTo: payload.appliesTo,
                 }),
             });
             if (response.ok) {
@@ -887,12 +893,18 @@ export const AssignmentsContainer: React.FC = () => {
                     Authorization: `Bearer ${accessToken}`,
                 },
                 body: JSON.stringify({
+                    title: payload.title,
                     description: payload.description,
+                    criterionType: payload.criterionType,
                     format: payload.format,
                     weight: payload.weight,
                     maxPoints: payload.maxPoints,
+                    minValue: payload.minValue,
                     isBonus: payload.isBonus,
                     isPenalty: payload.isPenalty,
+                    isRequired: payload.isRequired,
+                    isHiddenUntilVisibility: payload.isHiddenUntilVisibility,
+                    appliesTo: payload.appliesTo,
                 }),
             });
             if (response.ok) {
