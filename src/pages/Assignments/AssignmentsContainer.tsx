@@ -1015,11 +1015,13 @@ export const AssignmentsContainer: React.FC = () => {
             const visibilityDate = data.self_assessment_visibility_date || data.selfAssessmentVisibilityDate;
             if (visibilityDate && now < new Date(visibilityDate).getTime()) return true;
         } catch {}
-        if (assignment.selfAssessmentEnabled && assignment.deadLine) {
+        if (!assignment.selfAssessmentEnabled) return false;
+        if (assignment.deadLine) {
             const oneDayBefore = new Date(assignment.deadLine).getTime() - 24 * 60 * 60 * 1000;
             if (now < oneDayBefore) return true;
+            return false;
         }
-        return false;
+        return true;
     }, [subjectRoles]);
 
     const reviewTeam =

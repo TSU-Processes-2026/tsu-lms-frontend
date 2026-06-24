@@ -409,7 +409,7 @@ export function useSubjectView(): UseSubjectViewResult {
                 {
                     content: assignment.title,
                     deadLine: assignment.deadline ? new Date(assignment.deadline).toISOString() : null,
-                    selfAssessmentEnabled: assignment.selfAssessmentEnabled || null,
+                    selfAssessmentEnabled: assignment.selfAssessmentEnabled ?? null,
                     selfAssessmentVisibilityDate: assignment.selfAssessmentVisibilityDate ? new Date(assignment.selfAssessmentVisibilityDate).toISOString() : null,
                     questions: assignment.questions.map((q) => ({
                         questionType: mapQuestionType(q.type),
