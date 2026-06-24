@@ -3,7 +3,7 @@ import { Subject, GradeScaleRange } from '@/types/subject/Subject';
 import { updateSubject } from '@/api/subject/subject';
 import { DEV_URL, PROD_URL, MOCK_URL } from '@/constants/config/config';
 import { ACCESS_TOKEN } from '@/constants/auth/auth';
-import { ClipboardCheck, Plus, Trash2, Save, Download, RefreshCw } from 'lucide-react';
+import { ClipboardCheck, Plus, Trash2, Save, Download, RefreshCw, Shield, Eye, EyeOff } from 'lucide-react';
 import { StudentCourseGrade } from '@/types/assignments/criteria';
 
 interface Props {
@@ -124,6 +124,16 @@ const CourseGradesSection: React.FC<{ subjectId: string; isAdmin: boolean }> = (
 export const GradingSettings: React.FC<Props> = ({ subject, subjectId, userRole, onUpdate }) => {
     const [gradingMode, setGradingMode] = useState(subject?.gradingMode || 'five_point');
     const [selfAssessmentEnabled, setSelfAssessmentEnabled] = useState(subject?.selfAssessmentEnabled ?? false);
+    const [peerReviewEnabled, setPeerReviewEnabled] = useState(subject?.peerReviewEnabled ?? false);
+    const [peerReviewScope, setPeerReviewScope] = useState(subject?.peerReviewScope || 'individual');
+    const [peerReviewMode, setPeerReviewMode] = useState(subject?.peerReviewMode || 'all_to_all');
+    const [peerReviewDeadlinePolicy, setPeerReviewDeadlinePolicy] = useState(subject?.peerReviewDeadlinePolicy || 'task_deadline');
+    const [teacherFinalMode, setTeacherFinalMode] = useState(subject?.teacherFinalMode || 'accept_peer');
+    const [pairingStrategy, setPairingStrategy] = useState(subject?.pairingStrategy || 'ordered');
+    const [showCriteriaBeforeDeadline, setShowCriteriaBeforeDeadline] = useState(subject?.showCriteriaBeforeDeadline ?? false);
+    const [liveReviewMode, setLiveReviewMode] = useState(subject?.liveReviewMode ?? false);
+    const [defaultReviewTimeLimitMinutes, setDefaultReviewTimeLimitMinutes] = useState(subject?.defaultReviewTimeLimitMinutes ?? undefined);
+    const [teamReviewPolicy, setTeamReviewPolicy] = useState(subject?.teamReviewPolicy || 'all_members');
     const [gradeScales, setGradeScales] = useState<GradeScaleRange[]>([]);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -133,6 +143,16 @@ export const GradingSettings: React.FC<Props> = ({ subject, subjectId, userRole,
         if (subject) {
             setGradingMode(subject.gradingMode || 'five_point');
             setSelfAssessmentEnabled(subject.selfAssessmentEnabled ?? false);
+            setPeerReviewEnabled(subject.peerReviewEnabled ?? false);
+            setPeerReviewScope(subject.peerReviewScope || 'individual');
+            setPeerReviewMode(subject.peerReviewMode || 'all_to_all');
+            setPeerReviewDeadlinePolicy(subject.peerReviewDeadlinePolicy || 'task_deadline');
+            setTeacherFinalMode(subject.teacherFinalMode || 'accept_peer');
+            setPairingStrategy(subject.pairingStrategy || 'ordered');
+            setShowCriteriaBeforeDeadline(subject.showCriteriaBeforeDeadline ?? false);
+            setLiveReviewMode(subject.liveReviewMode ?? false);
+            setDefaultReviewTimeLimitMinutes(subject.defaultReviewTimeLimitMinutes ?? undefined);
+            setTeamReviewPolicy(subject.teamReviewPolicy || 'all_members');
         }
     }, [subject]);
 
@@ -161,6 +181,16 @@ export const GradingSettings: React.FC<Props> = ({ subject, subjectId, userRole,
             const updated = await updateSubject(subjectId, {
                 gradingMode,
                 selfAssessmentEnabled,
+                peerReviewEnabled,
+                peerReviewScope,
+                peerReviewMode,
+                peerReviewDeadlinePolicy,
+                teacherFinalMode,
+                pairingStrategy,
+                showCriteriaBeforeDeadline,
+                liveReviewMode,
+                defaultReviewTimeLimitMinutes,
+                teamReviewPolicy,
             });
             onUpdate(updated as Subject);
             setMessage({ type: 'success', text: 'Настройки сохранены' });
@@ -271,6 +301,155 @@ export const GradingSettings: React.FC<Props> = ({ subject, subjectId, userRole,
                 </div>
             </div>
 
+            <div className='bg-white rounded-3xl p-6 shadow-lg border border-slate-100'>
+                <h3 className='text-lg font-bold text-slate-800 mb-4 flex items-center gap-2'>
+                    <Shield size={20} className='text-violet-500' /> Взаимное оценивание
+                </h3>
+                <div className='space-y-4'>
+                    <div className='flex items-center gap-3'>
+                        <label className='text-sm font-semibold text-slate-600'>Взаимное оценивание</label>
+                        <button
+                            onClick={() => setPeerReviewEnabled(!peerReviewEnabled)}
+                            disabled={!isAdmin}
+                            className={`relative w-12 h-6 rounded-full transition-all ${peerReviewEnabled ? 'bg-blue-600' : 'bg-slate-300'} ${!isAdmin ? 'opacity-60' : ''}`}
+                        >
+                            <div className={`absolute w-5 h-5 bg-white rounded-full top-0.5 transition-all shadow-sm ${peerReviewEnabled ? 'left-6' : 'left-0.5'}`} />
+                        </button>
+                        <span className='text-sm text-slate-600'>{peerReviewEnabled ? 'Включено' : 'Выключено'}</span>
+                    </div>
+
+                    {peerReviewEnabled && (
+                        <div className='grid grid-cols-1 md:grid-cols-2 gap-4 pt-2'>
+                            <div>
+                                <label className='block text-sm font-semibold text-slate-600 mb-2'>Область оценивания</label>
+                                <select
+                                    value={peerReviewScope}
+                                    onChange={(e) => setPeerReviewScope(e.target.value)}
+                                    disabled={!isAdmin}
+                                    className='w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:opacity-60 disabled:cursor-not-allowed'
+                                >
+                                    <option value='individual'>Индивидуальное</option>
+                                    <option value='team'>Командное</option>
+                                    <option value='mixed'>Смешанное</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className='block text-sm font-semibold text-slate-600 mb-2'>Режим оценивания</label>
+                                <select
+                                    value={peerReviewMode}
+                                    onChange={(e) => setPeerReviewMode(e.target.value)}
+                                    disabled={!isAdmin}
+                                    className='w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:opacity-60 disabled:cursor-not-allowed'
+                                >
+                                    <option value='all_to_all'>Все оценивают всех</option>
+                                    <option value='pairs'>Оценивание в парах</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className='block text-sm font-semibold text-slate-600 mb-2'>Политика дедлайна</label>
+                                <select
+                                    value={peerReviewDeadlinePolicy}
+                                    onChange={(e) => setPeerReviewDeadlinePolicy(e.target.value)}
+                                    disabled={!isAdmin}
+                                    className='w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:opacity-60 disabled:cursor-not-allowed'
+                                >
+                                    <option value='task_deadline'>К дедлайну задания</option>
+                                    <option value='fixed_window'>Фиксированное окно</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className='block text-sm font-semibold text-slate-600 mb-2'>Итоговая оценка</label>
+                                <select
+                                    value={teacherFinalMode}
+                                    onChange={(e) => setTeacherFinalMode(e.target.value)}
+                                    disabled={!isAdmin}
+                                    className='w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:opacity-60 disabled:cursor-not-allowed'
+                                >
+                                    <option value='accept_peer'>Принять оценки студентов</option>
+                                    <option value='selective_replace'>Выборочная замена</option>
+                                    <option value='manual_final'>Ручной итог</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className='block text-sm font-semibold text-slate-600 mb-2'>Стратегия подбора пар</label>
+                                <select
+                                    value={pairingStrategy}
+                                    onChange={(e) => setPairingStrategy(e.target.value)}
+                                    disabled={!isAdmin}
+                                    className='w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:opacity-60 disabled:cursor-not-allowed'
+                                >
+                                    <option value='ordered'>По порядку</option>
+                                    <option value='round_robin'>Round-robin</option>
+                                    <option value='balanced'>Сбалансированная</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className='block text-sm font-semibold text-slate-600 mb-2'>Лимит времени (мин)</label>
+                                <input
+                                    type='number'
+                                    min={1}
+                                    value={defaultReviewTimeLimitMinutes ?? ''}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        setDefaultReviewTimeLimitMinutes(val === '' ? undefined : Number(val));
+                                    }}
+                                    disabled={!isAdmin}
+                                    placeholder='Без ограничений'
+                                    className='w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:opacity-60 disabled:cursor-not-allowed'
+                                />
+                            </div>
+
+                            <div className='flex items-center gap-3'>
+                                <label className='text-sm font-semibold text-slate-600'>Критерии видны до дедлайна</label>
+                                <button
+                                    onClick={() => setShowCriteriaBeforeDeadline(!showCriteriaBeforeDeadline)}
+                                    disabled={!isAdmin}
+                                    className={`relative w-12 h-6 rounded-full transition-all ${showCriteriaBeforeDeadline ? 'bg-blue-600' : 'bg-slate-300'} ${!isAdmin ? 'opacity-60' : ''}`}
+                                >
+                                    <div className={`absolute w-5 h-5 bg-white rounded-full top-0.5 transition-all shadow-sm ${showCriteriaBeforeDeadline ? 'left-6' : 'left-0.5'}`} />
+                                </button>
+                                <span className='text-sm text-slate-600'>{showCriteriaBeforeDeadline ? 'Да' : 'Нет'}</span>
+                            </div>
+
+                            <div className='flex items-center gap-3'>
+                                <label className='text-sm font-semibold text-slate-600'>Live-режим проверки</label>
+                                <button
+                                    onClick={() => setLiveReviewMode(!liveReviewMode)}
+                                    disabled={!isAdmin}
+                                    className={`relative w-12 h-6 rounded-full transition-all ${liveReviewMode ? 'bg-blue-600' : 'bg-slate-300'} ${!isAdmin ? 'opacity-60' : ''}`}
+                                >
+                                    <div className={`absolute w-5 h-5 bg-white rounded-full top-0.5 transition-all shadow-sm ${liveReviewMode ? 'left-6' : 'left-0.5'}`} />
+                                </button>
+                                <span className='text-sm text-slate-600'>{liveReviewMode ? 'Да' : 'Нет'}</span>
+                            </div>
+
+                            <div>
+                                <label className='block text-sm font-semibold text-slate-600 mb-2'>Политика командного оценивания</label>
+                                <select
+                                    value={teamReviewPolicy}
+                                    onChange={(e) => setTeamReviewPolicy(e.target.value)}
+                                    disabled={!isAdmin}
+                                    className='w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:opacity-60 disabled:cursor-not-allowed'
+                                >
+                                    <option value='all_members'>Все участники команды</option>
+                                    <option value='one_representative_reviews'>Один представитель</option>
+                                    <option value='captain_only'>Только капитан</option>
+                                </select>
+                            </div>
+                        </div>
+                    )}
+
+                    {!isAdmin && peerReviewEnabled && (
+                        <p className='text-sm text-slate-500'>Режим: {peerReviewScope === 'individual' ? 'Индивидуальное' : peerReviewScope === 'team' ? 'Командное' : 'Смешанное'} / {peerReviewMode === 'all_to_all' ? 'Все оценивают всех' : 'Оценивание в парах'}</p>
+                    )}
+                </div>
+            </div>
+
             {gradingMode === 'cumulative' && (
                 <div className='bg-white rounded-3xl p-6 shadow-lg border border-slate-100'>
                     <div className='flex items-center justify-between mb-4'>
@@ -352,6 +531,29 @@ export const GradingSettings: React.FC<Props> = ({ subject, subjectId, userRole,
                     <h3 className='text-lg font-bold text-slate-800 mb-2'>Информация об оценивании</h3>
                     <p className='text-sm text-slate-500'>Режим: {modeLabel}</p>
                     <p className='text-sm text-slate-500'>Самооценка: {selfAssessmentEnabled ? 'Включена' : 'Выключена'}</p>
+                    <p className='text-sm text-slate-500'>Взаимное оценивание: {peerReviewEnabled ? 'Включено' : 'Выключено'}</p>
+                    {peerReviewEnabled && (
+                        <div className='mt-2 space-y-1'>
+                            <p className='text-sm text-slate-500'>
+                                Область: {peerReviewScope === 'individual' ? 'Индивидуальное' : peerReviewScope === 'team' ? 'Командное' : 'Смешанное'}
+                            </p>
+                            <p className='text-sm text-slate-500'>
+                                Режим: {peerReviewMode === 'all_to_all' ? 'Все оценивают всех' : 'Оценивание в парах'}
+                            </p>
+                            <p className='text-sm text-slate-500'>
+                                Дедлайн: {peerReviewDeadlinePolicy === 'task_deadline' ? 'К дедлайну задания' : 'Фиксированное окно'}
+                            </p>
+                            <p className='text-sm text-slate-500'>
+                                Итоговая оценка: {teacherFinalMode === 'accept_peer' ? 'Принять оценки студентов' : teacherFinalMode === 'selective_replace' ? 'Выборочная замена' : 'Ручной итог'}
+                            </p>
+                            {defaultReviewTimeLimitMinutes && (
+                                <p className='text-sm text-slate-500'>Лимит времени: {defaultReviewTimeLimitMinutes} мин</p>
+                            )}
+                            <p className='text-sm text-slate-500'>
+                                Политика команд: {teamReviewPolicy === 'all_members' ? 'Все участники' : teamReviewPolicy === 'one_representative_reviews' ? 'Один представитель' : 'Только капитан'}
+                            </p>
+                        </div>
+                    )}
                     {gradeScales.length > 0 && (
                         <div className='mt-3'>
                             <p className='text-sm font-semibold text-slate-600 mb-2'>Шкала оценивания:</p>
