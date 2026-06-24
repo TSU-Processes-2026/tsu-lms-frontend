@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
-import { Download } from 'lucide-react';
+import { Download, Users, Star } from 'lucide-react';
 import { StudentCourseGrade } from '@/types/assignments/criteria';
+
+const sourceBadge: Record<string, { label: string; cls: string }> = {
+    peer: { label: 'Peer', cls: 'bg-emerald-100 text-emerald-700' },
+    teacher: { label: 'Teacher', cls: 'bg-blue-100 text-blue-700' },
+    mixed: { label: 'Mixed', cls: 'bg-purple-100 text-purple-700' },
+};
 
 interface Props {
   rows: StudentCourseGrade[];
@@ -62,6 +68,8 @@ export const CourseGradesPanel: React.FC<Props> = ({ rows, onRecalculate, onExpo
                 <th className='pb-2 font-semibold'>Студент</th>
                 <th className='pb-2 font-semibold'>Итоговый балл</th>
                 <th className='pb-2 font-semibold'>Оценка</th>
+                <th className='pb-2 font-semibold'>Источник</th>
+                <th className='pb-2 font-semibold'>Проверок</th>
                 <th className='pb-2 font-semibold'>Пересчитано</th>
               </tr>
             </thead>
@@ -79,15 +87,37 @@ export const CourseGradesPanel: React.FC<Props> = ({ rows, onRecalculate, onExpo
                         {row.finalGrade}
                       </span>
                     </td>
+                    <td className='py-3'>
+                      {row.finalSource && sourceBadge[row.finalSource] ? (
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-semibold ${sourceBadge[row.finalSource].cls}`}>
+                          <Star size={10} />
+                          {sourceBadge[row.finalSource].label}
+                        </span>
+                      ) : (
+                        <span className='text-slate-400 text-xs'>—</span>
+                      )}
+                    </td>
+                    <td className='py-3'>
+                      {row.reviewerCount !== undefined && row.reviewerCount !== null ? (
+                        <span className='inline-flex items-center gap-1 text-xs text-slate-500'>
+                          <Users size={12} />
+                          {row.reviewerCount}
+                        </span>
+                      ) : (
+                        <span className='text-slate-400 text-xs'>—</span>
+                      )}
+                    </td>
                     <td className='py-3 text-slate-400 text-xs'>{new Date(row.calculatedAt).toLocaleString()}</td>
                   </tr>
                   {expandedStudent === row.studentId && subject && (
                     <tr className='bg-slate-50'>
-                      <td colSpan={4} className='p-4'>
+                      <td colSpan={6} className='p-4'>
                         <div className='text-xs text-slate-500 space-y-1'>
                           <p>Курс: {subject.title}</p>
                           <p>Итоговый балл: {Number(row.finalScore).toFixed(2)}</p>
                           <p>Оценка: {row.finalGrade}</p>
+                          <p>Источник: {row.finalSource ? sourceBadge[row.finalSource]?.label ?? row.finalSource : '—'}</p>
+                          <p>Проверок: {row.reviewerCount ?? '—'}</p>
                           <p>Рассчитано: {new Date(row.calculatedAt).toLocaleString()}</p>
                         </div>
                       </td>
