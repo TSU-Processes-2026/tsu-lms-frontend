@@ -30,6 +30,7 @@ export type CreateAssignmentData = {
   deadline?: string;
   selfAssessmentEnabled: boolean;
   selfAssessmentVisibilityDate?: string;
+  gradingMode: 'five_point' | 'cumulative';
 };
 
 export function useCreateAssignmentModal(subjectId: string, onCreate: (a: CreateAssignmentData) => void) {
@@ -84,6 +85,7 @@ export function useCreateAssignmentModal(subjectId: string, onCreate: (a: Create
           deadline: deadline || undefined,
           selfAssessmentEnabled,
           selfAssessmentVisibilityDate: selfAssessmentVisibilityDate || undefined,
+          gradingMode,
           questions, criteria, subjectId, type: "test", status: "not_started", subject: "Предмет"
         });
       } catch {

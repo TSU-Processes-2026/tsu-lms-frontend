@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { ClipboardCheck, X, Plus, Trash2, ListChecks, Eye, EyeOff, CalendarClock } from "lucide-react";
 import { useCreateAssignmentModal, QuestionType, CriteriaDraft } from '@/hooks/subject/useCreateAssignmentModal';
 
-const CreateAssignmentModal: React.FC<{ subjectId: string; onClose: () => void; onCreate: (a: import('@/hooks/subject/useCreateAssignmentModal').CreateAssignmentData) => void }> = ({ subjectId, onClose, onCreate }) => {
+const CreateAssignmentModal: React.FC<{ subjectId: string; subjectGradingMode?: 'five_point' | 'cumulative'; onGradingModeChange?: (mode: 'five_point' | 'cumulative') => void; onClose: () => void; onCreate: (a: import('@/hooks/subject/useCreateAssignmentModal').CreateAssignmentData) => void }> = ({ subjectId, subjectGradingMode, onGradingModeChange, onClose, onCreate }) => {
   const {
     title, setTitle,
     gradingMode, setGradingMode,
@@ -13,6 +13,16 @@ const CreateAssignmentModal: React.FC<{ subjectId: string; onClose: () => void; 
     criteria, addCriterion, updateCriterion, removeCriterion,
     handleSubmit, error,
   } = useCreateAssignmentModal(subjectId, onCreate);
+
+  useEffect(() => {
+    if (subjectGradingMode) setGradingMode(subjectGradingMode);
+  }, [subjectGradingMode, setGradingMode]);
+
+  const handleGradingModeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const mode = e.target.value as 'five_point' | 'cumulative';
+    setGradingMode(mode);
+    onGradingModeChange?.(mode);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
@@ -148,7 +158,7 @@ const CreateAssignmentModal: React.FC<{ subjectId: string; onClose: () => void; 
               </div>
               <div className="flex items-center gap-3 mb-4">
                 <label className="text-sm font-semibold text-slate-600">Режим расчёта:</label>
-                <select value={gradingMode} onChange={(e) => setGradingMode(e.target.value as 'five_point' | 'cumulative')} className="border rounded-lg px-3 py-2 text-sm bg-white outline-none focus:ring-2 focus:ring-blue-500">
+                <select value={gradingMode} onChange={handleGradingModeChange} className="border rounded-lg px-3 py-2 text-sm bg-white outline-none focus:ring-2 focus:ring-blue-500">
                   <option value="five_point">Пятибалльная (вес)</option>
                   <option value="cumulative">Накопительная (баллы)</option>
                 </select>

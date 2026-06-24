@@ -38,6 +38,7 @@ import { useLoadConfig } from '@/hooks/command/useCommandConfig';
 import { useConfirmation } from '@/hooks/command/useConfirmDistribution';
 import { errorMessageMapper, warningMessageMapper } from '@/utils/messageMapper';
 import { useDelayedLoader } from '@/hooks/loader/useLoader';
+import { updateSubject } from '@/api/subject/subject';
 
 interface MaterialPostCardData extends MaterialPostResponse {
     authorUsername: string;
@@ -166,6 +167,13 @@ const SubjectView = () => {
     const isCaptain = teams.some((team) => team.captainId === profile.id);
     const handleTeamUpdate = (teamId: string, updater: (team: Team) => Team) => {
         setTeams(teams.map((team) => (team.id === teamId ? updater(team) : team)));
+    };
+    const handleGradingModeChange = async (mode: 'five_point' | 'cumulative') => {
+        if (!subjectId) return;
+        try {
+            const updated = await updateSubject(subjectId, { gradingMode: mode });
+            setSubjectData(updated as Subject);
+        } catch {}
     };
     return (
         <>
@@ -632,6 +640,8 @@ const SubjectView = () => {
             {showAssignmentModal && (
                 <CreateAssignmentModal
                     subjectId={subjectId ?? ''}
+                    subjectGradingMode={((selectedSubject as Subject | null)?.gradingMode as 'five_point' | 'cumulative') || 'five_point'}
+                    onGradingModeChange={handleGradingModeChange}
                     onClose={handleCloseAssignmentModal}
                     onCreate={handleCreateAssignment}
                 />

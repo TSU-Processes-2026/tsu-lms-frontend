@@ -424,8 +424,7 @@ export function useSubjectView(): UseSubjectViewResult {
             );
             if (assignment.criteria.length > 0) {
                 const { apiClient } = await import('@/api/axios-client');
-                const gradingMode = (selectedSubject as Subject | null)?.gradingMode || 'five_point';
-                const isCumulative = gradingMode === 'cumulative';
+                const isCumulative = assignment.gradingMode === 'cumulative';
                 await Promise.all(assignment.criteria.map((c) =>
                     apiClient.post(`/tasks/${created.id}/criteria`, {
                         description: c.description,
