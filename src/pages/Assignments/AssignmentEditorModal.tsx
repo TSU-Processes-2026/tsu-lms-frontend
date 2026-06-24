@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { Assignment, Question, Option } from '../../types/assignments/assignments';
 import { makeApiPayloadFromAssignment, mapApiAssignment } from './assignmentApi';
+import { ReviewDistributionConfig } from './ReviewDistributionConfig';
 
 interface Props {
     subjectId: string;
@@ -47,6 +48,14 @@ export const AssignmentEditorModal: React.FC<Props> = ({
             : '',
     );
     const [deadLine, setDeadLine] = useState(assignment?.deadLine ? assignment.deadLine.slice(0, 16) : '');
+    const [reviewEnabled, setReviewEnabled] = useState(false);
+    const [reviewType, setReviewType] = useState<'individual' | 'team'>('individual');
+    const [reviewMode, setReviewMode] = useState<'all_to_all' | 'pairs'>('all_to_all');
+    const [reviewDeadlineAt, setReviewDeadlineAt] = useState('');
+    const [reviewTimeLimitMinutes, setReviewTimeLimitMinutes] = useState<number | undefined>(undefined);
+    const [criteriaVisibilityAt, setCriteriaVisibilityAt] = useState('');
+    const [teacherCanEditPeerScores, setTeacherCanEditPeerScores] = useState(true);
+    const [teamReviewPolicy, setTeamReviewPolicy] = useState<'each_member_reviews' | 'one_representative_reviews'>('all_members' as 'each_member_reviews');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -83,6 +92,14 @@ export const AssignmentEditorModal: React.FC<Props> = ({
                 : null,
             deadLine: deadLine ? new Date(deadLine).toISOString() : null,
             questions,
+            reviewEnabled,
+            reviewType,
+            reviewMode,
+            reviewDeadlineAt: reviewDeadlineAt ? new Date(reviewDeadlineAt).toISOString() : null,
+            reviewTimeLimitMinutes,
+            criteriaVisibilityAt: criteriaVisibilityAt ? new Date(criteriaVisibilityAt).toISOString() : null,
+            teacherCanEditPeerScores,
+            teamReviewPolicy,
         });
 
         try {
@@ -253,6 +270,25 @@ export const AssignmentEditorModal: React.FC<Props> = ({
                                 />
                             </div>
                         </div>
+
+                        <ReviewDistributionConfig
+                            reviewEnabled={reviewEnabled}
+                            onReviewEnabledChange={setReviewEnabled}
+                            reviewType={reviewType}
+                            onReviewTypeChange={setReviewType}
+                            reviewMode={reviewMode}
+                            onReviewModeChange={setReviewMode}
+                            reviewDeadlineAt={reviewDeadlineAt}
+                            onReviewDeadlineAtChange={setReviewDeadlineAt}
+                            reviewTimeLimitMinutes={reviewTimeLimitMinutes}
+                            onReviewTimeLimitMinutesChange={setReviewTimeLimitMinutes}
+                            criteriaVisibilityAt={criteriaVisibilityAt}
+                            onCriteriaVisibilityAtChange={setCriteriaVisibilityAt}
+                            teacherCanEditPeerScores={teacherCanEditPeerScores}
+                            onTeacherCanEditPeerScoresChange={setTeacherCanEditPeerScores}
+                            teamReviewPolicy={teamReviewPolicy}
+                            onTeamReviewPolicyChange={setTeamReviewPolicy}
+                        />
 
                         <div>
                             <div className='flex items-center justify-between'>
