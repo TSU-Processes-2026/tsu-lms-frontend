@@ -988,6 +988,11 @@ export const AssignmentsContainer: React.FC = () => {
         setSelectedSubmission(mySubmission || null);
     };
 
+    const openCriteria = (assignment: Assignment) => {
+        setSelectedSubmission(null);
+        setSelectedAssignment(assignment);
+    };
+
     const openSubmission = (submission: Submission) => {
         const assignment = assignments.find((a) => a.id === submission.assignmentId) || null;
         if (!assignment) return;
@@ -1071,6 +1076,7 @@ export const AssignmentsContainer: React.FC = () => {
                     onOpenAssignment={openAssignment}
                     onOpenSolution={openSubmission}
                     onOpenSolutionsList={(a) => setShowSolutionsList(a)}
+                    onOpenCriteria={openCriteria}
                     onOpenTeamDecision={(a) => setTeamDecisionAssignment(a)}
                 />
 

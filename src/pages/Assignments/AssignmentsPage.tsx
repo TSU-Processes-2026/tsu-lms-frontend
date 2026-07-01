@@ -19,6 +19,7 @@ interface Props {
     onOpenSolution: (s: Submission) => void;
     onOpenSolutionsList: (a: Assignment) => void;
     onOpenTeamDecision: (a: Assignment) => void;
+    onOpenCriteria: (a: Assignment) => void;
 }
 
 export const AssignmentsPage: React.FC<Props> = ({
@@ -31,6 +32,7 @@ export const AssignmentsPage: React.FC<Props> = ({
     onOpenSolution,
     onOpenSolutionsList,
     onOpenTeamDecision,
+    onOpenCriteria,
 }) => {
     const [_filter] = useState<AssignmentFilter>('all');
 
@@ -113,7 +115,7 @@ export const AssignmentsPage: React.FC<Props> = ({
                                         </button>
                                         <button
                                             className='px-4 py-2 bg-violet-100 text-violet-700 rounded-xl text-xs font-bold mt-2'
-                                            onClick={() => onOpenAssignment(a)}
+                                            onClick={(e) => { e.stopPropagation(); onOpenCriteria(a); }}
                                         >
                                             Критерии
                                         </button>
