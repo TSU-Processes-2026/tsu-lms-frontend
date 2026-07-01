@@ -9,7 +9,7 @@ export default defineConfig({
     reporter: 'list',
     use: {
         baseURL: 'http://localhost:5173',
-        headless: false,
+        headless: true,
         viewport: { width: 1280, height: 900 },
         actionTimeout: 10000,
         trace: 'on-first-retry',
@@ -17,7 +17,13 @@ export default defineConfig({
     projects: [
         {
             name: 'chromium',
-            use: { ...devices['Desktop Chrome'] },
+            use: {
+                headless: true,
+                viewport: { width: 1920, height: 1080 },
+                launchOptions: {
+                    slowMo: 1000,
+                },
+            },
         },
     ],
     webServer: {
