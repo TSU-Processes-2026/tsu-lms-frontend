@@ -1227,7 +1227,7 @@ export const AssignmentsContainer: React.FC = () => {
 
             {reviewing && showSolutionsList && (
                 <>
-                <div className='mt-4 flex gap-2'>
+                <div className='mt-4 flex gap-2 relative z-[60]'>
                     <button
                         onClick={() => setShowTeacherDetailFor(showTeacherDetailFor ? null : reviewing)}
                         className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${showTeacherDetailFor ? 'bg-slate-200 text-slate-700' : 'bg-violet-100 text-violet-700 hover:bg-violet-200'}`}

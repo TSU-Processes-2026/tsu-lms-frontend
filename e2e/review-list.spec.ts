@@ -1,30 +1,63 @@
 import { test, expect } from '@playwright/test';
 import { setupStudentMocks } from './mocks/handlers';
-import { ACCESS_TOKEN_VALUE, makeReviewAssignments } from './mocks/fixtures';
+import { ACCESS_TOKEN_VALUE, makeReviewAssignments, ASSIGNMENT_ID } from './mocks/fixtures';
 
 test.describe('Сценарии 3.1 и 3.8: Список проверок', () => {
 
-    test('3.1 — студент видит список с «Ожидает» и «В процессе»', async ({ page }) => {
+    test.beforeEach(async ({ page }) => {
         await page.goto('/');
         await page.evaluate((t) => localStorage.setItem('accessToken', t), ACCESS_TOKEN_VALUE);
-        await setupStudentMocks(page, [
-            { ...makeReviewAssignments()[0], status: 'pending' },
-            { ...makeReviewAssignments()[0], id: 'rev-2', submissionId: 'sub-c', status: 'opened' },
-        ]);
-        await page.goto('/assignments');
-        await page.locator('button:has-text("Мои проверки")').click();
-        await expect(page.locator('text=Ожидает')).toBeVisible({ timeout: 5000 });
-        await expect(page.locator('text=В процессе')).toBeVisible();
-        await expect(page.locator('button:has-text("Начать проверку")')).toBeVisible();
-        await expect(page.locator('button:has-text("Продолжить")')).toBeVisible();
     });
 
-    test('3.8 — если нет проверок, показывает «Нет назначенных проверок»', async ({ page }) => {
-        await page.goto('/');
-        await page.evaluate((t) => localStorage.setItem('accessToken', t), ACCESS_TOKEN_VALUE);
-        await setupStudentMocks(page, []);
+    test('3.1 — студент видит 2 карточки: «Ожидает» с «Начать проверку» и «В процессе» с «Продолжить», с таймером', async ({ page }) => {
+        const futureDate = new Date(Date.now() + 7 * 86400000).toISOString();
+
+        await setupStudentMocks(page, [
+            {
+                id: 'rev-pending',
+                taskId: ASSIGNMENT_ID,
+                taskTitle: 'Домашнее задание №1',
+                submissionId: 'sub-b',
+                reviewTargetType: 'submission',
+                status: 'pending',
+                assignedAt: '2026-06-20T10:00:00Z',
+                dueAt: futureDate,
+            },
+            {
+                id: 'rev-opened',
+                taskId: ASSIGNMENT_ID,
+                taskTitle: 'Домашнее задание №2',
+                submissionId: 'sub-c',
+                reviewTargetType: 'submission',
+                status: 'opened',
+                assignedAt: '2026-06-20T10:00:00Z',
+                dueAt: futureDate,
+            },
+        ]);
+
         await page.goto('/assignments');
         await page.locator('button:has-text("Мои проверки")').click();
+
+        await expect(page.locator('text=Домашнее задание №1')).toBeVisible({ timeout: 5000 });
+        await expect(page.locator('text=Домашнее задание №2')).toBeVisible();
+
+        await expect(page.locator('text=Ожидает')).toBeVisible();
+        await expect(page.locator('text=В процессе')).toBeVisible();
+
+        await expect(page.locator('button:has-text("Начать проверку")')).toBeVisible();
+        await expect(page.locator('button:has-text("Продолжить")')).toBeVisible();
+
+        const timeElements = page.locator('text=/\\d+ч\\s*\\d+м/');
+        const timeCount = await timeElements.count();
+        expect(timeCount).toBeGreaterThanOrEqual(1);
+    });
+
+    test('3.8 — нет проверок: «Нет назначенных проверок»', async ({ page }) => {
+        await setupStudentMocks(page, []);
+
+        await page.goto('/assignments');
+        await page.locator('button:has-text("Мои проверки")').click();
+
         await expect(page.locator('text=Нет назначенных проверок')).toBeVisible({ timeout: 5000 });
     });
 });

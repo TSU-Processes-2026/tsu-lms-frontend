@@ -20,11 +20,23 @@ function json(page: Page, url: string | RegExp, data: unknown, status = 200) {
     });
 }
 
+export function routeJson(page: Page, url: string | RegExp, data: unknown, status = 200) {
+    return page.route(url, async (route) => {
+        await route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(data) });
+    });
+}
+
+export function routeRaw(page: Page, url: string | RegExp, options: { status?: number; contentType?: string; headers?: Record<string, string>; body: string }) {
+    return page.route(url, async (route) => {
+        await route.fulfill({ status: options.status ?? 200, contentType: options.contentType ?? 'application/json', headers: options.headers, body: options.body });
+    });
+}
+
 export function resetCriteriaStore() {
     criteriaStore = {};
 }
 
-export async function setupTeacherMocks(page: Page) {
+export async function setupTeacherMocks(page: Page, options?: { submissions?: unknown; withGrade404?: boolean }) {
     resetCriteriaStore();
     json(page, /\/api\/users\/me/, makeProfile());
     json(page, /\/api\/subjects\?/, makeSubjects());
@@ -32,7 +44,11 @@ export async function setupTeacherMocks(page: Page) {
     json(page, /\/api\/subjects\/.*\/participants/, makeParticipants());
     json(page, /\/api\/subjects\/.*\/teams/, makeTeams());
     json(page, /\/api\/subjects\/.*\/assignments/, makeAssignments());
-    json(page, /\/api\/assignments\/.*\/submissions/, makeSubmissions());
+    json(page, /\/api\/assignments\/.*\/submissions/, options?.submissions ?? makeSubmissions());
+    if (options?.withGrade404) {
+        json(page, /\/api\/submissions\/.*\/grade/, {}, 404);
+    }
+    json(page, /\/api\/submissions\/.*/, { id: 'sub-detail', criterionResults: [], criteriaResults: [] });
     json(page, /\/api\/courses\/.*\/grades/, makeCourseGrades());
     json(page, /\/api\/courses\/.*\/analytics/, makeAnalyticsRows());
     json(page, /\/api\/courses\/.*\/calculate-grades/, { success: true }, 200);
@@ -99,6 +115,47 @@ export async function setupStudentMocks(page: Page, reviewsPayload: unknown) {
     });
     await page.route(/\/api\/reviews\/.*\/submit/, async (route) => {
         await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'submitted' }) });
+    });
+}
+
+export async function setupSubjectViewMocks(page: Page) {
+    resetCriteriaStore();
+    json(page, /\/api\/users\/me/, makeProfile());
+    json(page, /\/api\/subjects\?/, makeSubjects());
+    json(page, /\/api\/subjects\/.*\/participants/, makeParticipants());
+    json(page, /\/api\/subjects\/.*\/assignments/, makeAssignments());
+    json(page, /\/api\/assignments\/.*\/submissions/, makeSubmissions());
+    json(page, /\/api\/subjects\/.*\/posts/, []);
+    json(page, /\/api\/comments/, []);
+    json(page, /\/api\/courses\/.*\/grades/, makeCourseGrades());
+    json(page, /\/api\/courses\/.*\/calculate-grades/, { success: true }, 200);
+    json(page, /\/api\/tasks\/.*\/criteria/, { criteria: [], hidden: false });
+
+    await page.route(/\/api\/subjects\/.*\/teams/, async (route) => {
+        const url = route.request().url();
+        if (url.includes('/teams/settings')) {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    subjectId: 'subject-math-101',
+                    isFinalized: false,
+                    finalizedAt: null,
+                    distributionMode: 'Random',
+                    fixedTeamsCount: 2,
+                    fixedTeamSize: 3,
+                    minTeamSize: 2,
+                    maxTeamSize: 5,
+                    warnings: [],
+                }),
+            });
+        } else {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify([]),
+            });
+        }
     });
 }
 
