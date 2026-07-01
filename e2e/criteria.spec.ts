@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { setupAllMocks, resetCriteriaStore } from './mocks/handlers';
-import { ACCESS_TOKEN_VALUE, ASSIGNMENT_ID } from './mocks/fixtures';
+import { setupTeacherMocks } from './mocks/handlers';
+import { ACCESS_TOKEN_VALUE } from './mocks/fixtures';
 
 test.describe('Feature 1: Настройка критериев', () => {
     test.beforeEach(async ({ page }) => {
@@ -8,7 +8,7 @@ test.describe('Feature 1: Настройка критериев', () => {
         await page.evaluate((token) => {
             localStorage.setItem('accessToken', token);
         }, ACCESS_TOKEN_VALUE);
-        await setupAllMocks(page);
+        await setupTeacherMocks(page);
     });
 
     test.describe('Scenario 1.2: Создание критерия с типом «активный»', () => {

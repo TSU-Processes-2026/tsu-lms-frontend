@@ -1,5 +1,5 @@
 export const TEACHER_ID = 'teacher-uuid-001';
-export const TEACHER_NAME = 'prподаватель';
+export const TEACHER_NAME = 'преподаватель';
 export const SUBJECT_ID = 'subject-math-101';
 export const ASSIGNMENT_ID = 'assignment-task-001';
 export const ACCESS_TOKEN_VALUE = 'e2e-mock-token';
@@ -62,4 +62,30 @@ export function makeCriteria() {
 
 export function makeCourseGrades() {
     return [];
+}
+
+export function makeAnalyticsRows() {
+    return {
+        courseId: SUBJECT_ID,
+        taskTitles: ['Домашнее задание №1'],
+        rows: [
+            {
+                studentId: 'student-a',
+                studentName: 'Студент А',
+                taskGrades: [
+                    { taskId: ASSIGNMENT_ID, taskTitle: 'Домашнее задание №1',
+                      score: 8, source: 'peer', reviewerCount: 3 },
+                ],
+                finalCourseGrade: 8,
+            },
+        ],
+    };
+}
+
+export function makeReviewAssignments() {
+    return [
+        { id: 'rev-pending', taskId: ASSIGNMENT_ID, taskTitle: 'Домашнее задание №1',
+          submissionId: 'sub-b', reviewTargetType: 'submission', status: 'pending',
+          assignedAt: '2026-06-20T10:00:00Z', dueAt: '2026-12-31T23:59:00Z' },
+    ];
 }
