@@ -90,6 +90,7 @@ export const AssignmentsContainer: React.FC = () => {
     const [criterionResultsBySubmission, setCriterionResultsBySubmission] = useState<Record<string, CriterionResult[]>>({});
     const [courseGrades, setCourseGrades] = useState<StudentCourseGrade[]>([]);
     const [selectedGradeSubjectId, setSelectedGradeSubjectId] = useState<string | null>(null);
+    const [showAssignmentModal, setShowAssignmentModal] = useState(false);
     const [showReviewList, setShowReviewList] = useState(false);
     const [selectedReviewAssignment, setSelectedReviewAssignment] = useState<ReviewAssignmentDto | null>(null);
     const [showTeacherDetailFor, setShowTeacherDetailFor] = useState<Submission | null>(null);
@@ -766,6 +767,7 @@ export const AssignmentsContainer: React.FC = () => {
         setShowSolutionsList(null);
         setTeamDecisionAssignment(null);
         setReviewing(null);
+        setShowAssignmentModal(false);
     };
 
     const fetchCriteria = useCallback(
@@ -986,11 +988,13 @@ export const AssignmentsContainer: React.FC = () => {
         );
         setSelectedAssignment(assignment);
         setSelectedSubmission(mySubmission || null);
+        setShowAssignmentModal(true);
     };
 
     const openCriteria = (assignment: Assignment) => {
         setSelectedSubmission(null);
         setSelectedAssignment(assignment);
+        setShowAssignmentModal(false);
     };
 
     const openSubmission = (submission: Submission) => {
@@ -1004,6 +1008,7 @@ export const AssignmentsContainer: React.FC = () => {
         }
         setSelectedAssignment(assignment);
         setSelectedSubmission(submission);
+        setShowAssignmentModal(true);
     };
 
     useEffect(() => {
@@ -1179,7 +1184,7 @@ export const AssignmentsContainer: React.FC = () => {
                 </>
             )}
 
-                {selectedAssignment && (
+                {selectedAssignment && showAssignmentModal && (
                 <AssignmentModal
                     assignment={selectedAssignment}
                     submission={selectedSubmission || undefined}

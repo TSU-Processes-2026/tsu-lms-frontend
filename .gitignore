@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 db.json
 .env
+test-results/
+playwright-report/
