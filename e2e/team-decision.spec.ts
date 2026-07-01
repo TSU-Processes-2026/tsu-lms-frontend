@@ -66,12 +66,12 @@ test.describe('Team Decision Voting (Голосование за решение 
         await expect(page.locator('text=Выбор итогового решения команды').first()).toBeVisible({ timeout: 5000 });
     });
 
-    test('студент запускает голосование и голосует ЗА решение', async ({ page }) => {
-        let initiateCalled = false;
+    test('студент голосует ЗА решение команды', async ({ page }) => {
         let voteCalled = false;
         let voteBody: Record<string, unknown> | null = null;
 
         await setupStudentInTeam(page, [
+            { id: 'sub-a', assignmentId: ASSIGNMENT_ID, authorId: 'student-a', authorName: 'Студент А', status: 'RequiresReview', answers: [], submittedAt: '2026-06-20T10:00:00Z' },
             { id: 'sub-b', assignmentId: ASSIGNMENT_ID, authorId: 'student-b', authorName: 'Студент Б', status: 'RequiresReview', answers: [], submittedAt: '2026-06-20T11:00:00Z' },
         ]);
 
@@ -80,13 +80,6 @@ test.describe('Team Decision Voting (Голосование за решение 
             hasCurrentUserDecided: false, approvalsCount: 0, rejectionsCount: 0,
         });
         routeJson(page, '**/api/submissions/*/decision/votes', { totalVotes: 0, approvalsCount: 0, rejectionsCount: 0 });
-
-        await page.route('**/api/submissions/*/decision/initiate', async (route) => {
-            if (route.request().method() === 'POST') {
-                initiateCalled = true;
-                await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ mode: 'Voting', startedAt: new Date().toISOString() }) });
-            } else { await route.continue(); }
-        });
 
         await page.route('**/api/submissions/*/decision/vote', async (route) => {
             if (route.request().method() === 'POST') {
@@ -103,12 +96,6 @@ test.describe('Team Decision Voting (Голосование за решение 
         await page.locator('text=Студент Б').first().click();
         await page.waitForTimeout(1000);
 
-        const initBtn = page.locator('button:has-text("Запустить голосование")');
-        await expect(initBtn).toBeVisible({ timeout: 5000 });
-        await initBtn.click();
-        await page.waitForTimeout(1000);
-        expect(initiateCalled).toBe(true);
-
         const approveBtn = page.locator('button:has-text("Поддержать решение")');
         await expect(approveBtn).toBeVisible({ timeout: 5000 });
         await approveBtn.click();
@@ -121,6 +108,7 @@ test.describe('Team Decision Voting (Голосование за решение 
         let captainApproved = false;
 
         await setupStudentInTeam(page, [
+            { id: 'sub-a', assignmentId: ASSIGNMENT_ID, authorId: 'student-a', authorName: 'Студент А', status: 'RequiresReview', answers: [], submittedAt: '2026-06-20T10:00:00Z' },
             { id: 'sub-b', assignmentId: ASSIGNMENT_ID, authorId: 'student-b', authorName: 'Студент Б', status: 'RequiresReview', answers: [], submittedAt: '2026-06-20T11:00:00Z' },
         ]);
 
