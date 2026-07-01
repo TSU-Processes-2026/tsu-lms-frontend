@@ -36,8 +36,39 @@ export function resetCriteriaStore() {
     criteriaStore = {};
 }
 
+export async function mockAuthLogin(page: Page, username: string = 'teacher-uuid-001', password: string = 'password123') {
+    await page.route('**/api/auth/login', async (route) => {
+        if (route.request().method() === 'POST') {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    tokenType: 'Bearer',
+                    accessToken: 'e2e-mock-token',
+                    refreshToken: 'e2e-mock-refresh',
+                    expiresIn: 900,
+                    refreshExpiresIn: 604800,
+                    userId: username,
+                    sessionId: 'e2e-mock-session',
+                }),
+            });
+        } else {
+            await route.continue();
+        }
+    });
+}
+
+export async function loginAs(page: Page, username: string = 'teacher-uuid-001', password: string = 'password123') {
+    await page.goto('/login');
+    await page.locator('input[type="text"]').fill(username);
+    await page.locator('input[type="password"]').fill(password);
+    await page.locator('button[type="submit"]').click();
+    await page.waitForURL('**/home', { timeout: 10000 });
+}
+
 export async function setupTeacherMocks(page: Page, options?: { submissions?: unknown; withGrade404?: boolean }) {
     resetCriteriaStore();
+    mockAuthLogin(page);
     json(page, /\/api\/users\/me/, makeProfile());
     json(page, /\/api\/subjects\?/, makeSubjects());
     json(page, /\/api\/subjects\/.*\/roles/, makeSubjectRoles());
@@ -103,6 +134,7 @@ export async function setupStudentMocks(page: Page, reviewsPayload: unknown) {
     ]);
     json(page, /\/api\/courses\/.*\/grades/, makeCourseGrades());
     json(page, /\/api\/tasks\/.*\/criteria/, []);
+    json(page, /\/api\/submissions\/.*\/grade/, {}, 404);
 
     json(page, /\/api\/reviews\/me/, reviewsPayload);
 
@@ -121,7 +153,7 @@ export async function setupStudentMocks(page: Page, reviewsPayload: unknown) {
 export async function setupSubjectViewMocks(page: Page) {
     resetCriteriaStore();
     json(page, /\/api\/users\/me/, makeProfile());
-    json(page, /\/api\/subjects\?/, makeSubjects());
+    json(page, /\/api\/subjects(\?|$)/, makeSubjects());
     json(page, /\/api\/subjects\/.*\/participants/, makeParticipants());
     json(page, /\/api\/subjects\/.*\/assignments/, makeAssignments());
     json(page, /\/api\/assignments\/.*\/submissions/, makeSubmissions());

@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupTeacherMocks, routeJson } from './mocks/handlers';
-import { ACCESS_TOKEN_VALUE } from './mocks/fixtures';
+import { setupTeacherMocks, loginAs, routeJson } from './mocks/handlers';
 
 test.describe('Сценарий 5.4: Контроль преподавателя', () => {
 
@@ -36,9 +35,7 @@ test.describe('Сценарий 5.4: Контроль преподавателя
             }
         });
 
-        await page.goto('/');
-        await page.evaluate((t) => localStorage.setItem('accessToken', t), ACCESS_TOKEN_VALUE);
-
+        await loginAs(page);
         await page.goto('/assignments');
         await expect(page.locator('text=Итоговые оценки')).toBeVisible({ timeout: 10000 });
         await expect(page.locator('text=Нет оценок')).toBeVisible({ timeout: 5000 });

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupTeacherMocks, routeJson } from './mocks/handlers';
+import { setupTeacherMocks, loginAs, routeJson } from './mocks/handlers';
 import { ACCESS_TOKEN_VALUE, ASSIGNMENT_ID } from './mocks/fixtures';
 
 const API_BASE = 'http://localhost:14823/api';
@@ -18,11 +18,13 @@ async function callGenerateReviews(page: import('@playwright/test').Page, taskId
 test.describe('Feature 2: Распределение проверок', () => {
 
     test.beforeEach(async ({ page }) => {
-        await page.goto('/');
-        await page.evaluate((t) => localStorage.setItem('accessToken', t), ACCESS_TOKEN_VALUE);
         await setupTeacherMocks(page);
+        await loginAs(page);
     });
 
+    // Backend distribution logic — no "Generate reviews" button exists in the frontend UI.
+    // The assignment editor (AssignmentEditorModal) sends review configuration to the API on save,
+    // but the actual generate-reviews call is server-side only.
     test('2.1 — all-to-all: 3 студента → 6 назначений, без self-review', async ({ page }) => {
         const assignments = [
             { id: 'rev-1', reviewerUserId: 'student-a', authorId: 'student-b' },
@@ -43,6 +45,7 @@ test.describe('Feature 2: Распределение проверок', () => {
         }
     });
 
+    // Backend distribution logic — no UI button for generate-reviews.
     test('2.2 — pairs: 4 студента → циркулярная цепочка из 4 назначений', async ({ page }) => {
         const assignments = [
             { id: 'rev-1', reviewerUserId: 'student-a', authorId: 'student-b' },
@@ -62,6 +65,7 @@ test.describe('Feature 2: Распределение проверок', () => {
         expect(result.assignments[3].authorId).toBe('student-a');
     });
 
+    // Backend distribution logic — no UI button for generate-reviews.
     test('2.3 — pairs: 3 студента → триплет из 3 назначений', async ({ page }) => {
         const assignments = [
             { id: 'rev-1', reviewerUserId: 'student-a', authorId: 'student-b' },
@@ -76,6 +80,7 @@ test.describe('Feature 2: Распределение проверок', () => {
         expect(result.assignments).toHaveLength(3);
     });
 
+    // Backend distribution logic — no UI button for generate-reviews.
     test('2.4 — повторная генерация: "Assignments already exist"', async ({ page }) => {
         routeJson(page, '**/api/tasks/*/generate-reviews', { count: 0, message: 'Assignments already exist' });
 
@@ -85,6 +90,7 @@ test.describe('Feature 2: Распределение проверок', () => {
         expect(result.message).toBe('Assignments already exist');
     });
 
+    // Backend distribution logic — no UI button for generate-reviews.
     test('2.5 — назначение с дедлайном: due_at = review_deadline_at, status = pending', async ({ page }) => {
         const dueAt = '2026-06-28T23:59:00Z';
         const assignments = [

@@ -1,12 +1,15 @@
 import { test, expect } from '@playwright/test';
-import { setupStudentMocks } from './mocks/handlers';
-import { ACCESS_TOKEN_VALUE, makeReviewAssignments, ASSIGNMENT_ID } from './mocks/fixtures';
+import { setupStudentMocks, mockAuthLogin, loginAs } from './mocks/handlers';
+import { makeReviewAssignments, ASSIGNMENT_ID } from './mocks/fixtures';
 
 test.describe('Сценарии 3.1 и 3.8: Список проверок', () => {
 
     test.beforeEach(async ({ page }) => {
-        await page.goto('/');
-        await page.evaluate((t) => localStorage.setItem('accessToken', t), ACCESS_TOKEN_VALUE);
+        await page.route(/\/api\/users\/me/, async (route) => {
+            await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ id: 'student-a', username: 'Студент А' }) });
+        });
+        await mockAuthLogin(page, 'student-a');
+        await loginAs(page, 'student-a');
     });
 
     test('3.1 — студент видит 2 карточки: «Ожидает» с «Начать проверку» и «В процессе» с «Продолжить», с таймером', async ({ page }) => {

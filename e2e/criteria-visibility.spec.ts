@@ -1,28 +1,23 @@
-import { test, expect, Page } from '@playwright/test';
-import { setupTeacherMocks } from './mocks/handlers';
-import { ACCESS_TOKEN_VALUE } from './mocks/fixtures';
+import { test, expect } from '@playwright/test';
+import { mockAuthLogin, loginAs, routeJson } from './mocks/handlers';
+import { SUBJECT_ID } from './mocks/fixtures';
 
-function routeJson(page: Page, url: string | RegExp, data: unknown, status = 200) {
-    return page.route(url, async (route) => {
-        await route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(data) });
-    });
-}
-
-test.describe('Сценарии 1.4 и 1.5: Видимость критериев', () => {
-
+test.describe('Сценарии 1.4 и 1.5: Видимость критериев для студента', () => {
     test('1.4 — скрытые критерии: студент видит «Критерии будут доступны позже.»', async ({ page }) => {
-        routeJson(page, /\/api\/users\/me/, { id: 'student-a', username: 'Студент А' });
-        routeJson(page, /\/api\/subjects\?/, [{ id: 'subject-math-101', title: 'Математика' }]);
-        routeJson(page, /\/api\/subjects\/.*\/participants/, [
+        await mockAuthLogin(page, 'student-a');
+
+        await routeJson(page, /\/api\/users\/me/, { id: 'student-a', username: 'Студент А' });
+        await routeJson(page, /\/api\/subjects\?/, [{ id: SUBJECT_ID, title: 'Математика' }]);
+        await routeJson(page, /\/api\/subjects\/.*\/participants/, [
             { userId: 'teacher-uuid-001', username: 'преподаватель', role: 'teacher' },
             { userId: 'student-a', username: 'Студент А', role: 'student' },
         ]);
-        routeJson(page, /\/api\/subjects\/.*\/roles/, [{ subjectId: 'subject-math-101', userId: 'student-a', role: 'student' }]);
-        routeJson(page, /\/api\/subjects\/.*\/teams/, { teams: [] });
-        routeJson(page, /\/api\/subjects\/.*\/assignments/, [
+        await routeJson(page, /\/api\/subjects\/.*\/roles/, [{ subjectId: SUBJECT_ID, userId: 'student-a', role: 'student' }]);
+        await routeJson(page, /\/api\/subjects\/.*\/teams/, { teams: [] });
+        await routeJson(page, /\/api\/subjects\/.*\/assignments/, [
             {
                 id: 'assignment-task-001',
-                subjectId: 'subject-math-101',
+                subjectId: SUBJECT_ID,
                 authorId: 'teacher-uuid-001',
                 postType: 'Assignment',
                 content: 'Домашнее задание №1\nРешить задачи.',
@@ -34,38 +29,34 @@ test.describe('Сценарии 1.4 и 1.5: Видимость критерие�
                 questions: [],
             },
         ]);
-        routeJson(page, /\/api\/assignments\/.*\/submissions/, []);
-        routeJson(page, /\/api\/courses\/.*\/grades/, []);
-        routeJson(page, /\/api\/tasks\/.*\/criteria/, { criteria: [], hidden: true });
+        await routeJson(page, /\/api\/assignments\/.*\/submissions/, []);
+        await routeJson(page, /\/api\/courses\/.*\/grades/, []);
+        await routeJson(page, /\/api\/tasks\/.*\/criteria/, { criteria: [], hidden: true });
 
-        await page.goto('/');
-        await page.evaluate((t) => localStorage.setItem('accessToken', t), ACCESS_TOKEN_VALUE);
-
+        await loginAs(page, 'student-a');
         await page.goto('/assignments');
 
-        const openButton = page.locator('button:has-text("Начать выполнение")').first();
-        await expect(openButton).toBeVisible({ timeout: 10000 });
-        await openButton.click();
-
+        await page.locator('button:has-text("Начать выполнение")').first().click();
         await page.waitForTimeout(2000);
 
-        const hiddenMessage = page.locator('text=Критерии будут доступны позже.');
-        await expect(hiddenMessage).toBeVisible({ timeout: 5000 });
+        await expect(page.locator('text=Критерии будут доступны позже.')).toBeVisible({ timeout: 5000 });
     });
 
     test('1.5 — студент видит критерии с форматами и весами', async ({ page }) => {
-        routeJson(page, /\/api\/users\/me/, { id: 'student-a', username: 'Студент А' });
-        routeJson(page, /\/api\/subjects\?/, [{ id: 'subject-math-101', title: 'Математика' }]);
-        routeJson(page, /\/api\/subjects\/.*\/participants/, [
+        await mockAuthLogin(page, 'student-a');
+
+        await routeJson(page, /\/api\/users\/me/, { id: 'student-a', username: 'Студент А' });
+        await routeJson(page, /\/api\/subjects\?/, [{ id: SUBJECT_ID, title: 'Математика' }]);
+        await routeJson(page, /\/api\/subjects\/.*\/participants/, [
             { userId: 'teacher-uuid-001', username: 'преподаватель', role: 'teacher' },
             { userId: 'student-a', username: 'Студент А', role: 'student' },
         ]);
-        routeJson(page, /\/api\/subjects\/.*\/roles/, [{ subjectId: 'subject-math-101', userId: 'student-a', role: 'student' }]);
-        routeJson(page, /\/api\/subjects\/.*\/teams/, { teams: [] });
-        routeJson(page, /\/api\/subjects\/.*\/assignments/, [
+        await routeJson(page, /\/api\/subjects\/.*\/roles/, [{ subjectId: SUBJECT_ID, userId: 'student-a', role: 'student' }]);
+        await routeJson(page, /\/api\/subjects\/.*\/teams/, { teams: [] });
+        await routeJson(page, /\/api\/subjects\/.*\/assignments/, [
             {
                 id: 'assignment-task-001',
-                subjectId: 'subject-math-101',
+                subjectId: SUBJECT_ID,
                 authorId: 'teacher-uuid-001',
                 postType: 'Assignment',
                 content: 'Домашнее задание №1\nРешить задачи.',
@@ -77,24 +68,19 @@ test.describe('Сценарии 1.4 и 1.5: Видимость критерие�
                 questions: [],
             },
         ]);
-        routeJson(page, /\/api\/assignments\/.*\/submissions/, []);
-        routeJson(page, /\/api\/courses\/.*\/grades/, []);
+        await routeJson(page, /\/api\/assignments\/.*\/submissions/, []);
+        await routeJson(page, /\/api\/courses\/.*\/grades/, []);
 
         const visibleCriteria = [
             { id: 'crit-1', taskId: 'assignment-task-001', order: 1, title: 'Качество', description: 'Качество кода', criterionType: 'active', format: 'numeric', appliesTo: 'student', weight: 1.0, maxPoints: 10, isBonus: false, isPenalty: false, isRequired: true },
             { id: 'crit-2', taskId: 'assignment-task-001', order: 2, title: 'Сроки', description: 'Соблюдение сроков', criterionType: 'passive', format: 'checklist', appliesTo: 'student', isBonus: false, isPenalty: true, isRequired: false },
         ];
-        routeJson(page, /\/api\/tasks\/.*\/criteria/, { criteria: visibleCriteria, hidden: false });
+        await routeJson(page, /\/api\/tasks\/.*\/criteria/, { criteria: visibleCriteria, hidden: false });
 
-        await page.goto('/');
-        await page.evaluate((t) => localStorage.setItem('accessToken', t), ACCESS_TOKEN_VALUE);
-
+        await loginAs(page, 'student-a');
         await page.goto('/assignments');
 
-        const openButton = page.locator('button:has-text("Начать выполнение")').first();
-        await expect(openButton).toBeVisible({ timeout: 10000 });
-        await openButton.click();
-
+        await page.locator('button:has-text("Начать выполнение")').first().click();
         await page.waitForTimeout(2000);
 
         await expect(page.locator('text=Качество кода').first()).toBeVisible({ timeout: 5000 });

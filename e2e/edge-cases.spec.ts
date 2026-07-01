@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupTeacherMocks, setupStudentMocks, routeJson } from './mocks/handlers';
+import { setupTeacherMocks, setupStudentMocks, mockAuthLogin, loginAs, routeJson } from './mocks/handlers';
 import { ACCESS_TOKEN_VALUE, makeReviewAssignments, ASSIGNMENT_ID } from './mocks/fixtures';
 
 const API_BASE = 'http://localhost:14823/api';
@@ -19,12 +19,12 @@ test.describe('Feature 8: Крайние случаи', () => {
 
     test.describe('Scenario 8.1: Студент не успел выставить оценку', () => {
         test('expired статус отображается в ReviewList', async ({ page }) => {
-            await page.goto('/');
-            await page.evaluate((t) => localStorage.setItem('accessToken', t), ACCESS_TOKEN_VALUE);
             const pastDue = new Date(Date.now() - 86400000).toISOString();
+            await mockAuthLogin(page, 'student-a');
             await setupStudentMocks(page, [
                 { ...makeReviewAssignments()[0], id: 'rev-expired', status: 'expired', dueAt: pastDue },
             ]);
+            await loginAs(page, 'student-a');
             await page.goto('/assignments');
             await page.locator('button:has-text("Мои проверки")').click();
             await expect(page.locator('text=Просрочена')).toBeVisible({ timeout: 5000 });
@@ -33,9 +33,9 @@ test.describe('Feature 8: Крайние случаи', () => {
 
     test.describe('Scenario 8.2: Частичная оценка — черновик не идёт в зачёт', () => {
         test('opened (черновик) не отображается как «Завершена»', async ({ page }) => {
-            await page.goto('/');
-            await page.evaluate((t) => localStorage.setItem('accessToken', t), ACCESS_TOKEN_VALUE);
+            await mockAuthLogin(page, 'student-a');
             await setupStudentMocks(page, [{ ...makeReviewAssignments()[0], status: 'opened' }]);
+            await loginAs(page, 'student-a');
             await page.goto('/assignments');
             await page.locator('button:has-text("Мои проверки")').click();
             await expect(page.locator('text=В процессе')).toBeVisible({ timeout: 5000 });
@@ -44,10 +44,11 @@ test.describe('Feature 8: Крайние случаи', () => {
     });
 
     test.describe('Scenario 8.3: Пересечение дедлайнов', () => {
+        // Backend validation only — the frontend doesn't expose the /posts/{id} endpoint.
+        // The AssignmentEditorModal sends review settings to /api/assignments/{id}, not this endpoint.
         test('review_deadline < task_deadline → 403 Forbidden', async ({ page }) => {
-            await page.goto('/');
-            await page.evaluate((t) => localStorage.setItem('accessToken', t), ACCESS_TOKEN_VALUE);
             await setupTeacherMocks(page);
+            await loginAs(page);
 
             await page.route('**/api/subjects/*/posts/*', async (route) => {
                 await route.fulfill({ status: 403, contentType: 'application/json', body: JSON.stringify({ title: 'Forbidden', status: 403, detail: 'Review deadline must be after task deadline' }) });
@@ -64,9 +65,8 @@ test.describe('Feature 8: Крайние случаи', () => {
 
     test.describe('Scenario 8.4: Самооценка не смешивается с peer-оценкой', () => {
         test('CourseGradesPanel показывает только peer/teacher/mixed, не SELF', async ({ page }) => {
-            await page.goto('/');
-            await page.evaluate((t) => localStorage.setItem('accessToken', t), ACCESS_TOKEN_VALUE);
             await setupTeacherMocks(page);
+            await loginAs(page);
             routeJson(page, '**/api/courses/*/grades', [{
                 studentId: 'student-a', studentName: 'Студент А',
                 finalScore: 7.5, finalGrade: '4', finalSource: 'peer', reviewerCount: 2,
@@ -80,10 +80,12 @@ test.describe('Feature 8: Крайние случаи', () => {
     });
 
     test.describe('Scenario 8.5: Команда не может оценивать своё решение', () => {
+        // Backend-only logic — no "Generate reviews" button exists in the frontend UI.
+        // The review distribution is configured via AssignmentEditorModal but the actual
+        // generate-reviews API call is triggered server-side.
         test('generate-reviews пропускает targetTeam == reviewerTeam', async ({ page }) => {
-            await page.goto('/');
-            await page.evaluate((t) => localStorage.setItem('accessToken', t), ACCESS_TOKEN_VALUE);
             await setupTeacherMocks(page);
+            await loginAs(page);
 
             const assignments = [
                 { id: 'rev-1', reviewerTeamId: 'team-x', targetTeamId: 'team-y' },
@@ -101,10 +103,10 @@ test.describe('Feature 8: Крайние случаи', () => {
     });
 
     test.describe('Scenario 8.6: Студент не может оценивать свою работу', () => {
+        // Backend-only logic — no UI button for generate-reviews exists.
         test('generate-reviews пропускает self-review', async ({ page }) => {
-            await page.goto('/');
-            await page.evaluate((t) => localStorage.setItem('accessToken', t), ACCESS_TOKEN_VALUE);
             await setupTeacherMocks(page);
+            await loginAs(page);
 
             const assignments = [
                 { id: 'rev-1', reviewerUserId: 'student-a', authorId: 'student-b' },
@@ -122,11 +124,11 @@ test.describe('Feature 8: Крайние случаи', () => {
 
     test.describe('Scenario 8.7: Отмена проверки', () => {
         test('cancelled статус отображается в ReviewList', async ({ page }) => {
-            await page.goto('/');
-            await page.evaluate((t) => localStorage.setItem('accessToken', t), ACCESS_TOKEN_VALUE);
+            await mockAuthLogin(page, 'student-a');
             await setupStudentMocks(page, [
                 { ...makeReviewAssignments()[0], id: 'rev-cancelled', status: 'cancelled' },
             ]);
+            await loginAs(page, 'student-a');
             await page.goto('/assignments');
             await page.locator('button:has-text("Мои проверки")').click();
             await expect(page.locator('text=Отменена')).toBeVisible({ timeout: 5000 });
@@ -134,10 +136,10 @@ test.describe('Feature 8: Крайние случаи', () => {
     });
 
     test.describe('Scenario 8.8: Нечётное число в pairs — триплет', () => {
+        // Backend-only logic — no UI button for generate-reviews exists.
         test('5 студентов: 1 пара + 1 триплет = 4 назначения', async ({ page }) => {
-            await page.goto('/');
-            await page.evaluate((t) => localStorage.setItem('accessToken', t), ACCESS_TOKEN_VALUE);
             await setupTeacherMocks(page);
+            await loginAs(page);
 
             const assignments = [
                 { id: 'rev-1', reviewerUserId: 'student-a', authorId: 'student-b' },
@@ -155,9 +157,8 @@ test.describe('Feature 8: Крайние случаи', () => {
 
     test.describe('Scenario 8.9: Все форматы критериев', () => {
         test('checklist, percentage, numeric, boolean, scale — все отображаются', async ({ page }) => {
-            await page.goto('/');
-            await page.evaluate((t) => localStorage.setItem('accessToken', t), ACCESS_TOKEN_VALUE);
             await setupTeacherMocks(page);
+            await loginAs(page);
 
             const allFormats = [
                 { id: 'c-1', title: 'Чеклист', description: 'Чеклист', criterionType: 'active', format: 'checklist', order: 1, weight: 1, maxPoints: 2 },
@@ -184,10 +185,11 @@ test.describe('Feature 8: Крайние случаи', () => {
     });
 
     test.describe('Scenario 8.10: Представитель не назначен — капитан замещает', () => {
+        // Backend-only logic — there is no "Start review" button for arbitrary users in the UI.
+        // The review start is triggered from the PeerReviewModal for the current user only.
         test('RepresentativeUserId ?? CaptainUserId → капитан допускается', async ({ page }) => {
-            await page.goto('/');
-            await page.evaluate((t) => localStorage.setItem('accessToken', t), ACCESS_TOKEN_VALUE);
             await setupTeacherMocks(page);
+            await loginAs(page);
 
             await page.route('**/api/reviews/*/start', async (route) => {
                 const body = route.request().postDataJSON();
@@ -207,10 +209,16 @@ test.describe('Feature 8: Крайние случаи', () => {
     });
 
     test.describe('Scenario 8.11: Преподаватель не может отклонить teacher-оценку', () => {
+        // There IS a reject button in TeacherReviewDetail for peer reviews, but the scenario
+        // specifically tests rejecting a TEACHER review. The TeacherReviewDetail component
+        // only shows reject buttons for peer reviews (not teacher reviews) and when the API
+        // returns 404 it shows an alert dialog. Since the button only exists for peer reviews
+        // and the scenario tests teacher review rejection at the API level, we keep this as
+        // an API test. A UI variant was attempted but TeacherReviewDetail has missing mock
+        // coverage (submission detail, assignment detail endpoints) causing it to crash.
         test('POST /reviews/{id}/reject для teacher-оценки → 404', async ({ page }) => {
-            await page.goto('/');
-            await page.evaluate((t) => localStorage.setItem('accessToken', t), ACCESS_TOKEN_VALUE);
             await setupTeacherMocks(page);
+            await loginAs(page);
 
             await page.route('**/api/reviews/*/reject', async (route) => {
                 await route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ title: 'Not Found', status: 404 }) });
@@ -224,11 +232,11 @@ test.describe('Feature 8: Крайние случаи', () => {
 
     test.describe('Scenario 8.12: Дедлайн не задан — проверка не протухает', () => {
         test('dueAt = undefined → статус остаётся «Ожидает», не «Просрочена»', async ({ page }) => {
-            await page.goto('/');
-            await page.evaluate((t) => localStorage.setItem('accessToken', t), ACCESS_TOKEN_VALUE);
+            await mockAuthLogin(page, 'student-a');
             await setupStudentMocks(page, [
                 { ...makeReviewAssignments()[0], status: 'pending', dueAt: undefined },
             ]);
+            await loginAs(page, 'student-a');
             await page.goto('/assignments');
             await page.locator('button:has-text("Мои проверки")').click();
             await expect(page.locator('text=Ожидает')).toBeVisible({ timeout: 5000 });
@@ -237,10 +245,12 @@ test.describe('Feature 8: Крайние случаи', () => {
     });
 
     test.describe('Scenario 8.13: Студент не видит чужие проверки', () => {
+        // Backend-only — the frontend has no route for viewing an arbitrary review by ID.
+        // Reviews are accessed through ReviewList which only loads the current user's assignments.
         test('GET /api/reviews/{id} для чужой проверки → 403', async ({ page }) => {
-            await page.goto('/');
-            await page.evaluate((t) => localStorage.setItem('accessToken', t), ACCESS_TOKEN_VALUE);
+            await mockAuthLogin(page, 'student-a');
             await setupStudentMocks(page, [makeReviewAssignments()[0]]);
+            await loginAs(page, 'student-a');
 
             await page.route('**/api/reviews/rev-other**', async (route) => {
                 await route.fulfill({ status: 403, contentType: 'application/json', body: JSON.stringify({ title: 'Forbidden', status: 403 }) });

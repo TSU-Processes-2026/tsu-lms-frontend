@@ -1,13 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { setupTeacherMocks, routeJson } from './mocks/handlers';
-import { ACCESS_TOKEN_VALUE, SUBJECT_ID, ASSIGNMENT_ID } from './mocks/fixtures';
+import { setupTeacherMocks, loginAs, routeJson } from './mocks/handlers';
+import { SUBJECT_ID, ASSIGNMENT_ID } from './mocks/fixtures';
 
 test.describe('Сценарии 7.1–7.4: Аналитика и экспорт', () => {
 
     test.beforeEach(async ({ page }) => {
-        await page.goto('/');
-        await page.evaluate((t) => localStorage.setItem('accessToken', t), ACCESS_TOKEN_VALUE);
         await setupTeacherMocks(page);
+        await loginAs(page);
     });
 
     test('7.1 — таблица: Peer-зелёный, Teacher-синий, Mixed-фиолетовый', async ({ page }) => {
